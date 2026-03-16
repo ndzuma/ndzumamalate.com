@@ -79,3 +79,52 @@ Fully native Go, no external auth service:
 The full repo is public on GitHub and linked from the "This Website" page,
 which documents the stack, design tokens, architecture diagrams, and component
 inventory.
+
+## API Endpoints
+
+- `GET /health`
+- `GET /api/v1/public/projects`
+- `GET /api/v1/public/projects/:slug`
+- `GET /api/v1/public/blogs`
+- `GET /api/v1/public/blogs/:slug`
+- `GET /api/v1/public/skills`
+- `GET /api/v1/public/experience`
+- `GET /api/v1/public/profile`
+- `GET /api/v1/public/cv/active`
+- `POST /api/v1/public/contact`
+- `GET /api/v1/public/events`
+- `POST /api/v1/auth/login`
+- `POST /api/v1/auth/refresh`
+- `POST /api/v1/auth/logout`
+- `GET /api/v1/auth/me`
+- `POST /api/v1/auth/change-password`
+- `GET /api/v1/admin/tags`
+- `POST /api/v1/admin/tags`
+- `PUT /api/v1/admin/tags/:id`
+- `DELETE /api/v1/admin/tags/:id`
+- `GET /api/v1/admin/projects`
+- `POST /api/v1/admin/projects`
+- `PUT /api/v1/admin/projects/:id`
+- `DELETE /api/v1/admin/projects/:id`
+- `GET /api/v1/admin/blogs`
+- `POST /api/v1/admin/blogs`
+- `PUT /api/v1/admin/blogs/:id`
+- `DELETE /api/v1/admin/blogs/:id`
+- `GET /api/v1/admin/skills`
+- `POST /api/v1/admin/skills`
+- `PUT /api/v1/admin/skills/:id`
+- `DELETE /api/v1/admin/skills/:id`
+- `GET /api/v1/admin/experience`
+- `POST /api/v1/admin/experience`
+- `PUT /api/v1/admin/experience/:id`
+- `DELETE /api/v1/admin/experience/:id`
+- `GET /api/v1/admin/cv`
+- `POST /api/v1/admin/cv`
+- `PUT /api/v1/admin/cv/:id`
+- `DELETE /api/v1/admin/cv/:id`
+- `GET /api/v1/admin/profile`
+- `PUT /api/v1/admin/profile`
+- `GET /api/v1/admin/webhooks`
+- `POST /api/v1/admin/webhooks`
+- `PUT /api/v1/admin/webhooks/:id`
+- `DELETE /api/v1/admin/webhooks/:id`

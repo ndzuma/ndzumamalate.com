@@ -1,0 +1,797 @@
+package db
+
+import (
+	"context"
+	"errors"
+	"fmt"
+	"strings"
+	"time"
+
+	"ndzumamalate.com/apps/api/internal/models"
+
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
+)
+
+type Store struct {
+	pool *pgxpool.Pool
+}
+
+func NewStore(ctx context.Context, databaseURL string) (*Store, error) {
+	if strings.TrimSpace(databaseURL) == "" {
+		return nil, fmt.Errorf("DATABASE_URL is required")
+	}
+
+	pool, err := pgxpool.New(ctx, databaseURL)
+	if err != nil {
+		return nil, fmt.Errorf("connect postgres: %w", err)
+	}
+
+	if err := pool.Ping(ctx); err != nil {
+		pool.Close()
+		return nil, fmt.Errorf("ping postgres: %w", err)
+	}
+
+	return &Store{pool: pool}, nil
+}
+
+func (s *Store) Close() {
+	if s != nil && s.pool != nil {
+		s.pool.Close()
+	}
+}
+
+func (s *Store) Ping(ctx context.Context) error {
+	return s.pool.Ping(ctx)
+}
+
+func (s *Store) BootstrapAdmin(ctx context.Context, email, passwordHash string) (*models.AdminUser, bool, error) {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, false, err
+	}
+	defer tx.Rollback(ctx)
+
+	var count int
+	if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM admin_users`).Scan(&count); err != nil {
+		return nil, false, err
+	}
+	if count > 0 {
+		return nil, false, nil
+	}
+
+	user := &models.AdminUser{}
+	err = tx.QueryRow(ctx, `
+		INSERT INTO admin_users (email, password_hash)
+		VALUES ($1, $2)
+		RETURNING id, email, password_hash, created_at, updated_at, last_login_at
+	`, strings.ToLower(email), passwordHash).Scan(
+		&user.ID,
+		&user.Email,
+		&user.PasswordHash,
+		&user.CreatedAt,
+		&user.UpdatedAt,
+		&user.LastLoginAt,
+	)
+	if err != nil {
+		return nil, false, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, false, err
+	}
+
+	return user, true, nil
+}
+
+func (s *Store) GetAdminByEmail(ctx context.Context, email string) (*models.AdminUser, error) {
+	row := s.pool.QueryRow(ctx, `
+		SELECT id, email, password_hash, created_at, updated_at, last_login_at
+		FROM admin_users
+		WHERE email = $1
+	`, strings.ToLower(email))
+
+	user := &models.AdminUser{}
+	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *Store) GetAdminByID(ctx context.Context, id string) (*models.AdminUser, error) {
+	row := s.pool.QueryRow(ctx, `
+		SELECT id, email, password_hash, created_at, updated_at, last_login_at
+		FROM admin_users
+		WHERE id = $1
+	`, id)
+
+	user := &models.AdminUser{}
+	err := row.Scan(&user.ID, &user.Email, &user.PasswordHash, &user.CreatedAt, &user.UpdatedAt, &user.LastLoginAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (s *Store) UpdateAdminPassword(ctx context.Context, userID, passwordHash string) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE admin_users
+		SET password_hash = $2, updated_at = NOW()
+		WHERE id = $1
+	`, userID, passwordHash)
+	return err
+}
+
+func (s *Store) UpdateAdminLastLogin(ctx context.Context, userID string, at time.Time) error {
+	_, err := s.pool.Exec(ctx, `
+		UPDATE admin_users
+		SET last_login_at = $2, updated_at = NOW()
+		WHERE id = $1
+	`, userID, at)
+	return err
+}
+
+func (s *Store) ListTags(ctx context.Context) ([]models.Tag, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, name, slug, created_at FROM tags ORDER BY name ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	tags := make([]models.Tag, 0)
+	for rows.Next() {
+		var tag models.Tag
+		if err := rows.Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt); err != nil {
+			return nil, err
+		}
+		tags = append(tags, tag)
+	}
+
+	return tags, rows.Err()
+}
+
+func (s *Store) CreateTag(ctx context.Context, input models.TagInput) (*models.Tag, error) {
+	tag := &models.Tag{}
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO tags (name, slug)
+		VALUES ($1, $2)
+		RETURNING id, name, slug, created_at
+	`, input.Name, input.Slug).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return tag, nil
+}
+
+func (s *Store) UpdateTag(ctx context.Context, id string, input models.TagInput) (*models.Tag, error) {
+	tag := &models.Tag{}
+	err := s.pool.QueryRow(ctx, `
+		UPDATE tags
+		SET name = $2, slug = $3
+		WHERE id = $1
+		RETURNING id, name, slug, created_at
+	`, id, input.Name, input.Slug).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return tag, nil
+}
+
+func (s *Store) DeleteTag(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM tags WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.Project, error) {
+	query := `
+		SELECT
+			p.id,
+			p.title,
+			p.slug,
+			COALESCE(p.summary, ''),
+			COALESCE(p.content, ''),
+			COALESCE(p.image_url, ''),
+			COALESCE(p.live_url, ''),
+			COALESCE(p.repo_url, ''),
+			p.featured,
+			p.published,
+			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			p.created_at,
+			p.updated_at
+		FROM projects p
+		LEFT JOIN project_tags pt ON pt.project_id = p.id
+		LEFT JOIN tags t ON t.id = pt.tag_id
+	`
+	if publishedOnly {
+		query += ` WHERE p.published = TRUE`
+	}
+	query += ` GROUP BY p.id ORDER BY p.featured DESC, p.updated_at DESC`
+
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	projects := make([]models.Project, 0)
+	for rows.Next() {
+		var project models.Project
+		if err := rows.Scan(
+			&project.ID,
+			&project.Title,
+			&project.Slug,
+			&project.Summary,
+			&project.Content,
+			&project.ImageURL,
+			&project.LiveURL,
+			&project.RepoURL,
+			&project.Featured,
+			&project.Published,
+			&project.Tags,
+			&project.CreatedAt,
+			&project.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		projects = append(projects, project)
+	}
+
+	return projects, rows.Err()
+}
+
+func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly bool) (*models.Project, error) {
+	query := `
+		SELECT
+			p.id,
+			p.title,
+			p.slug,
+			COALESCE(p.summary, ''),
+			COALESCE(p.content, ''),
+			COALESCE(p.image_url, ''),
+			COALESCE(p.live_url, ''),
+			COALESCE(p.repo_url, ''),
+			p.featured,
+			p.published,
+			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			p.created_at,
+			p.updated_at
+		FROM projects p
+		LEFT JOIN project_tags pt ON pt.project_id = p.id
+		LEFT JOIN tags t ON t.id = pt.tag_id
+		WHERE p.slug = $1
+	`
+	if publishedOnly {
+		query += ` AND p.published = TRUE`
+	}
+	query += ` GROUP BY p.id`
+
+	project := &models.Project{}
+	err := s.pool.QueryRow(ctx, query, slug).Scan(
+		&project.ID,
+		&project.Title,
+		&project.Slug,
+		&project.Summary,
+		&project.Content,
+		&project.ImageURL,
+		&project.LiveURL,
+		&project.RepoURL,
+		&project.Featured,
+		&project.Published,
+		&project.Tags,
+		&project.CreatedAt,
+		&project.UpdatedAt,
+	)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return project, nil
+}
+
+func (s *Store) CreateProject(ctx context.Context, input models.ProjectInput) (*models.Project, error) {
+	return s.upsertProject(ctx, "", input, true)
+}
+
+func (s *Store) UpdateProject(ctx context.Context, id string, input models.ProjectInput) (*models.Project, error) {
+	return s.upsertProject(ctx, id, input, false)
+}
+
+func (s *Store) upsertProject(ctx context.Context, id string, input models.ProjectInput, create bool) (*models.Project, error) {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	project := &models.Project{}
+	if create {
+		err = tx.QueryRow(ctx, `
+			INSERT INTO projects (title, slug, summary, content, image_url, live_url, repo_url, featured, published)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, created_at, updated_at
+		`, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.CreatedAt, &project.UpdatedAt,
+		)
+	} else {
+		err = tx.QueryRow(ctx, `
+			UPDATE projects
+			SET title = $2, slug = $3, summary = $4, content = $5, image_url = $6, live_url = $7, repo_url = $8, featured = $9, published = $10
+			WHERE id = $1
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, created_at, updated_at
+		`, id, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.CreatedAt, &project.UpdatedAt,
+		)
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if _, err := tx.Exec(ctx, `DELETE FROM project_tags WHERE project_id = $1`, project.ID); err != nil {
+		return nil, err
+	}
+	for _, tagID := range input.TagIDs {
+		if _, err := tx.Exec(ctx, `INSERT INTO project_tags (project_id, tag_id) VALUES ($1, $2)`, project.ID, tagID); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.QueryRow(ctx, `
+		SELECT COALESCE(array_remove(array_agg(t.slug), NULL), '{}')
+		FROM project_tags pt
+		LEFT JOIN tags t ON t.id = pt.tag_id
+		WHERE pt.project_id = $1
+	`, project.ID).Scan(&project.Tags); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
+	return project, nil
+}
+
+func (s *Store) DeleteProject(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM projects WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) ListBlogs(ctx context.Context, publishedOnly bool) ([]models.Blog, error) {
+	query := `SELECT id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at FROM blogs`
+	if publishedOnly {
+		query += ` WHERE published = TRUE`
+	}
+	query += ` ORDER BY COALESCE(published_at, created_at) DESC`
+
+	rows, err := s.pool.Query(ctx, query)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	blogs := make([]models.Blog, 0)
+	for rows.Next() {
+		var blog models.Blog
+		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt); err != nil {
+			return nil, err
+		}
+		blogs = append(blogs, blog)
+	}
+
+	return blogs, rows.Err()
+}
+
+func (s *Store) GetBlogBySlug(ctx context.Context, slug string, publishedOnly bool) (*models.Blog, error) {
+	query := `SELECT id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at FROM blogs WHERE slug = $1`
+	if publishedOnly {
+		query += ` AND published = TRUE`
+	}
+
+	blog := &models.Blog{}
+	err := s.pool.QueryRow(ctx, query, slug).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return blog, nil
+}
+
+func (s *Store) CreateBlog(ctx context.Context, input models.BlogInput) (*models.Blog, error) {
+	return s.upsertBlog(ctx, "", input, true)
+}
+
+func (s *Store) UpdateBlog(ctx context.Context, id string, input models.BlogInput) (*models.Blog, error) {
+	return s.upsertBlog(ctx, id, input, false)
+}
+
+func (s *Store) upsertBlog(ctx context.Context, id string, input models.BlogInput, create bool) (*models.Blog, error) {
+	publishedAt, err := nullableTimestamp(input.PublishedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	blog := &models.Blog{}
+	if create {
+		err = s.pool.QueryRow(ctx, `
+			INSERT INTO blogs (title, slug, summary, content, cover_image_url, published, published_at)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at
+		`, input.Title, input.Slug, input.Summary, input.Content, input.CoverImageURL, input.Published, publishedAt).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			UPDATE blogs
+			SET title = $2, slug = $3, summary = $4, content = $5, cover_image_url = $6, published = $7, published_at = $8
+			WHERE id = $1
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at
+		`, id, input.Title, input.Slug, input.Summary, input.Content, input.CoverImageURL, input.Published, publishedAt).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return blog, nil
+}
+
+func (s *Store) DeleteBlog(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM blogs WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) ListSkills(ctx context.Context) ([]models.Skill, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, name, category, COALESCE(icon_url, ''), proficiency, sort_order, created_at FROM skills ORDER BY sort_order ASC, name ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	skills := make([]models.Skill, 0)
+	for rows.Next() {
+		var skill models.Skill
+		if err := rows.Scan(&skill.ID, &skill.Name, &skill.Category, &skill.IconURL, &skill.Proficiency, &skill.SortOrder, &skill.CreatedAt); err != nil {
+			return nil, err
+		}
+		skills = append(skills, skill)
+	}
+
+	return skills, rows.Err()
+}
+
+func (s *Store) CreateSkill(ctx context.Context, input models.SkillInput) (*models.Skill, error) {
+	skill := &models.Skill{}
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO skills (name, category, icon_url, proficiency, sort_order)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, name, category, COALESCE(icon_url, ''), proficiency, sort_order, created_at
+	`, input.Name, input.Category, input.IconURL, input.Proficiency, input.SortOrder).Scan(&skill.ID, &skill.Name, &skill.Category, &skill.IconURL, &skill.Proficiency, &skill.SortOrder, &skill.CreatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return skill, nil
+}
+
+func (s *Store) UpdateSkill(ctx context.Context, id string, input models.SkillInput) (*models.Skill, error) {
+	skill := &models.Skill{}
+	err := s.pool.QueryRow(ctx, `
+		UPDATE skills
+		SET name = $2, category = $3, icon_url = $4, proficiency = $5, sort_order = $6
+		WHERE id = $1
+		RETURNING id, name, category, COALESCE(icon_url, ''), proficiency, sort_order, created_at
+	`, id, input.Name, input.Category, input.IconURL, input.Proficiency, input.SortOrder).Scan(&skill.ID, &skill.Name, &skill.Category, &skill.IconURL, &skill.Proficiency, &skill.SortOrder, &skill.CreatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return skill, nil
+}
+
+func (s *Store) DeleteSkill(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM skills WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) ListExperience(ctx context.Context) ([]models.Experience, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at FROM experience ORDER BY start_date DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.Experience, 0)
+	for rows.Next() {
+		var item models.Experience
+		if err := rows.Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, rows.Err()
+}
+
+func (s *Store) CreateExperience(ctx context.Context, input models.ExperienceInput) (*models.Experience, error) {
+	return s.upsertExperience(ctx, "", input, true)
+}
+
+func (s *Store) UpdateExperience(ctx context.Context, id string, input models.ExperienceInput) (*models.Experience, error) {
+	return s.upsertExperience(ctx, id, input, false)
+}
+
+func (s *Store) upsertExperience(ctx context.Context, id string, input models.ExperienceInput, create bool) (*models.Experience, error) {
+	startDate, err := time.Parse("2006-01-02", input.StartDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start_date: %w", err)
+	}
+	endDate, err := nullableDate(input.EndDate)
+	if err != nil {
+		return nil, err
+	}
+
+	item := &models.Experience{}
+	if create {
+		err = s.pool.QueryRow(ctx, `
+			INSERT INTO experience (company, role, location, description, start_date, end_date)
+			VALUES ($1, $2, $3, $4, $5, $6)
+			RETURNING id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
+		`, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
+	} else {
+		err = s.pool.QueryRow(ctx, `
+			UPDATE experience
+			SET company = $2, role = $3, location = $4, description = $5, start_date = $6, end_date = $7
+			WHERE id = $1
+			RETURNING id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
+		`, id, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *Store) DeleteExperience(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM experience WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) ListCVs(ctx context.Context) ([]models.CV, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, file_url, COALESCE(label, ''), is_active, uploaded_at FROM cv ORDER BY uploaded_at DESC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.CV, 0)
+	for rows.Next() {
+		var item models.CV
+		if err := rows.Scan(&item.ID, &item.FileURL, &item.Label, &item.IsActive, &item.UploadedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, rows.Err()
+}
+
+func (s *Store) GetActiveCV(ctx context.Context) (*models.CV, error) {
+	item := &models.CV{}
+	err := s.pool.QueryRow(ctx, `SELECT id, file_url, COALESCE(label, ''), is_active, uploaded_at FROM cv WHERE is_active = TRUE LIMIT 1`).Scan(&item.ID, &item.FileURL, &item.Label, &item.IsActive, &item.UploadedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *Store) CreateCV(ctx context.Context, input models.CVInput) (*models.CV, error) {
+	return s.upsertCV(ctx, "", input, true)
+}
+
+func (s *Store) UpdateCV(ctx context.Context, id string, input models.CVInput) (*models.CV, error) {
+	return s.upsertCV(ctx, id, input, false)
+}
+
+func (s *Store) upsertCV(ctx context.Context, id string, input models.CVInput, create bool) (*models.CV, error) {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
+	if input.IsActive {
+		if _, err := tx.Exec(ctx, `UPDATE cv SET is_active = FALSE WHERE is_active = TRUE`); err != nil {
+			return nil, err
+		}
+	}
+
+	item := &models.CV{}
+	if create {
+		err = tx.QueryRow(ctx, `
+			INSERT INTO cv (file_url, label, is_active)
+			VALUES ($1, $2, $3)
+			RETURNING id, file_url, COALESCE(label, ''), is_active, uploaded_at
+		`, input.FileURL, input.Label, input.IsActive).Scan(&item.ID, &item.FileURL, &item.Label, &item.IsActive, &item.UploadedAt)
+	} else {
+		err = tx.QueryRow(ctx, `
+			UPDATE cv
+			SET file_url = $2, label = $3, is_active = $4
+			WHERE id = $1
+			RETURNING id, file_url, COALESCE(label, ''), is_active, uploaded_at
+		`, id, input.FileURL, input.Label, input.IsActive).Scan(&item.ID, &item.FileURL, &item.Label, &item.IsActive, &item.UploadedAt)
+	}
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *Store) DeleteCV(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM cv WHERE id = $1`, id)
+	return err
+}
+
+func (s *Store) GetProfile(ctx context.Context) (*models.Profile, error) {
+	profile := &models.Profile{}
+	err := s.pool.QueryRow(ctx, `
+		SELECT id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
+		FROM profile
+		WHERE id = 1
+	`).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
+func (s *Store) UpsertProfile(ctx context.Context, input models.ProfileInput) (*models.Profile, error) {
+	profile := &models.Profile{}
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO profile (id, open_to_work, spotify_url, apple_music_url, currently_reading_title, currently_reading_url, github_url, twitter_url, linkedin_url, website_url)
+		VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9)
+		ON CONFLICT (id) DO UPDATE
+		SET open_to_work = EXCLUDED.open_to_work,
+			spotify_url = EXCLUDED.spotify_url,
+			apple_music_url = EXCLUDED.apple_music_url,
+			currently_reading_title = EXCLUDED.currently_reading_title,
+			currently_reading_url = EXCLUDED.currently_reading_url,
+			github_url = EXCLUDED.github_url,
+			twitter_url = EXCLUDED.twitter_url,
+			linkedin_url = EXCLUDED.linkedin_url,
+			website_url = EXCLUDED.website_url,
+			updated_at = NOW()
+		RETURNING id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
+	`, input.OpenToWork, input.SpotifyURL, input.AppleMusicURL, input.CurrentlyReadingTitle, input.CurrentlyReadingURL, input.GitHubURL, input.TwitterURL, input.LinkedInURL, input.WebsiteURL).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return profile, nil
+}
+
+func (s *Store) ListWebhookEndpoints(ctx context.Context) ([]models.WebhookEndpoint, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, url, COALESCE(secret, ''), is_active, created_at, updated_at FROM webhook_endpoints ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.WebhookEndpoint, 0)
+	for rows.Next() {
+		var item models.WebhookEndpoint
+		if err := rows.Scan(&item.ID, &item.URL, &item.Secret, &item.IsActive, &item.CreatedAt, &item.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, rows.Err()
+}
+
+func (s *Store) ListActiveWebhookEndpoints(ctx context.Context) ([]models.WebhookEndpoint, error) {
+	rows, err := s.pool.Query(ctx, `SELECT id, url, COALESCE(secret, ''), is_active, created_at, updated_at FROM webhook_endpoints WHERE is_active = TRUE ORDER BY created_at ASC`)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	items := make([]models.WebhookEndpoint, 0)
+	for rows.Next() {
+		var item models.WebhookEndpoint
+		if err := rows.Scan(&item.ID, &item.URL, &item.Secret, &item.IsActive, &item.CreatedAt, &item.UpdatedAt); err != nil {
+			return nil, err
+		}
+		items = append(items, item)
+	}
+
+	return items, rows.Err()
+}
+
+func (s *Store) CreateWebhookEndpoint(ctx context.Context, input models.WebhookEndpointInput) (*models.WebhookEndpoint, error) {
+	item := &models.WebhookEndpoint{}
+	err := s.pool.QueryRow(ctx, `
+		INSERT INTO webhook_endpoints (url, secret, is_active)
+		VALUES ($1, $2, $3)
+		RETURNING id, url, COALESCE(secret, ''), is_active, created_at, updated_at
+	`, input.URL, input.Secret, input.IsActive).Scan(&item.ID, &item.URL, &item.Secret, &item.IsActive, &item.CreatedAt, &item.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *Store) UpdateWebhookEndpoint(ctx context.Context, id string, input models.WebhookEndpointInput) (*models.WebhookEndpoint, error) {
+	item := &models.WebhookEndpoint{}
+	err := s.pool.QueryRow(ctx, `
+		UPDATE webhook_endpoints
+		SET url = $2, secret = $3, is_active = $4, updated_at = NOW()
+		WHERE id = $1
+		RETURNING id, url, COALESCE(secret, ''), is_active, created_at, updated_at
+	`, id, input.URL, input.Secret, input.IsActive).Scan(&item.ID, &item.URL, &item.Secret, &item.IsActive, &item.CreatedAt, &item.UpdatedAt)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil
+	}
+	if err != nil {
+		return nil, err
+	}
+	return item, nil
+}
+
+func (s *Store) DeleteWebhookEndpoint(ctx context.Context, id string) error {
+	_, err := s.pool.Exec(ctx, `DELETE FROM webhook_endpoints WHERE id = $1`, id)
+	return err
+}
+
+func nullableDate(value string) (*time.Time, error) {
+	if strings.TrimSpace(value) == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse("2006-01-02", value)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end_date: %w", err)
+	}
+	return &parsed, nil
+}
+
+func nullableTimestamp(value string) (*time.Time, error) {
+	if strings.TrimSpace(value) == "" {
+		return nil, nil
+	}
+	parsed, err := time.Parse(time.RFC3339, value)
+	if err != nil {
+		return nil, fmt.Errorf("invalid published_at: %w", err)
+	}
+	return &parsed, nil
+}
