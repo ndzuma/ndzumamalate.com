@@ -4,11 +4,13 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
 
 	"ndzumamalate.com/apps/api/internal/auth"
+	"ndzumamalate.com/apps/api/internal/logging"
 	"ndzumamalate.com/apps/api/internal/models"
 	"ndzumamalate.com/apps/api/internal/realtime"
 
@@ -24,6 +26,7 @@ type API struct {
 	resendClient    ContactSender
 	rateLimitMax    int
 	rateLimitWindow time.Duration
+	logger          *slog.Logger
 }
 
 type Store interface {
@@ -77,7 +80,7 @@ type ContactSender interface {
 	SendContact(context.Context, models.ContactMessage) error
 }
 
-func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration) *API {
+func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration, logger *slog.Logger) *API {
 	return &API{
 		store:           store,
 		authService:     authService,
@@ -86,6 +89,7 @@ func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, web
 		resendClient:    resendClient,
 		rateLimitMax:    rateLimitMax,
 		rateLimitWindow: rateLimitWindow,
+		logger:          logger,
 	}
 }
 
@@ -94,6 +98,7 @@ func (a *API) Register(e *echo.Echo) {
 	e.HidePort = true
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
+	e.Use(logging.RequestLogger(a.logger))
 	e.Use(middleware.CORS())
 
 	e.GET("/health", a.health)
@@ -216,8 +221,10 @@ func (a *API) sendContact(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "name, email, subject, and message are required")
 	}
 	if err := a.resendClient.SendContact(c.Request().Context(), input); err != nil {
+		a.logger.Error("contact submission failed", slog.String("email", input.Email), slog.String("error", err.Error()))
 		return echo.NewHTTPError(http.StatusBadGateway, err.Error())
 	}
+	a.logger.Info("contact submission accepted", slog.String("email", input.Email))
 	return c.JSON(http.StatusAccepted, map[string]string{"status": "accepted"})
 }
 
@@ -241,6 +248,7 @@ func (a *API) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if !allowed {
+		a.logger.Warn("login rate limit exceeded", slog.String("email", identifier), slog.String("ip", c.RealIP()))
 		return echo.NewHTTPError(http.StatusTooManyRequests, "too many login attempts")
 	}
 
@@ -249,6 +257,7 @@ func (a *API) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	if user == nil || auth.ComparePassword(user.PasswordHash, input.Password) != nil {
+		a.logger.Warn("login failed", slog.String("email", identifier), slog.String("ip", c.RealIP()))
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
@@ -257,6 +266,7 @@ func (a *API) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	_ = a.store.UpdateAdminLastLogin(c.Request().Context(), user.ID, time.Now().UTC())
+	a.logger.Info("login succeeded", slog.String("user_id", user.ID), slog.String("email", user.Email), slog.String("ip", c.RealIP()))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
 	c.SetCookie(a.authService.BuildRefreshCookie(session.RefreshToken))
@@ -272,8 +282,10 @@ func (a *API) refresh(c echo.Context) error {
 
 	session, err := a.authService.RotateRefreshToken(c.Request().Context(), refreshCookie.Value)
 	if err != nil {
+		a.logger.Warn("refresh failed", slog.String("error", err.Error()))
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
+	a.logger.Info("session refreshed", slog.String("user_id", session.UserID), slog.String("email", session.Email))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
 	c.SetCookie(a.authService.BuildRefreshCookie(session.RefreshToken))
@@ -285,6 +297,7 @@ func (a *API) logout(c echo.Context) error {
 	if refreshCookie, err := c.Cookie(auth.RefreshCookieName); err == nil {
 		_ = a.authService.RevokeRefreshToken(c.Request().Context(), refreshCookie.Value)
 	}
+	a.logger.Info("logout completed")
 	c.SetCookie(a.authService.ClearAccessCookie())
 	c.SetCookie(a.authService.ClearRefreshCookie())
 	return c.NoContent(http.StatusNoContent)
@@ -338,6 +351,7 @@ func (a *API) changePassword(c echo.Context) error {
 	}
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
 	c.SetCookie(a.authService.BuildRefreshCookie(session.RefreshToken))
+	a.logger.Info("password changed", slog.String("user_id", actor.UserID), slog.String("email", actor.Email))
 
 	a.publishEvent(c, "auth.password_changed", "admin_users", "password_changed", actor.UserID, nil)
 	return c.NoContent(http.StatusNoContent)
@@ -763,6 +777,7 @@ func (a *API) publishEvent(c echo.Context, eventType, resource, action, resource
 	}
 	a.broker.Publish(event)
 	a.webhookDispatch.Dispatch(c.Request().Context(), event)
+	a.logger.Info("domain event published", slog.String("type", event.Type), slog.String("resource", resource), slog.String("action", action), slog.String("resource_id", resourceID))
 }
 
 func writeSSE(res *echo.Response, event models.Event) error {

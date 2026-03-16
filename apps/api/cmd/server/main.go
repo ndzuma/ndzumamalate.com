@@ -3,7 +3,7 @@ package main
 import (
 	"context"
 	"errors"
-	"log"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -14,6 +14,7 @@ import (
 	"ndzumamalate.com/apps/api/internal/config"
 	"ndzumamalate.com/apps/api/internal/db"
 	"ndzumamalate.com/apps/api/internal/handlers"
+	"ndzumamalate.com/apps/api/internal/logging"
 	"ndzumamalate.com/apps/api/internal/notifications"
 	"ndzumamalate.com/apps/api/internal/realtime"
 
@@ -23,21 +24,26 @@ import (
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+	logger := logging.NewLogger("api")
 
 	if err := run(ctx); err != nil && !errors.Is(err, context.Canceled) {
-		log.Fatal(err)
+		logger.Error("server exited", slog.String("error", err.Error()))
+		os.Exit(1)
 	}
 }
 
 func run(ctx context.Context) error {
+	logger := logging.NewLogger("api")
 	cfg, err := config.Load()
 	if err != nil {
 		return err
 	}
+	logger.Info("configuration loaded", slog.String("app_env", cfg.AppEnv), slog.String("port", cfg.Port))
 
 	if err := db.RunMigrations(ctx, cfg.DatabaseURL); err != nil {
 		return err
 	}
+	logger.Info("database migrations applied")
 
 	store, err := db.NewStore(ctx, cfg.DatabaseURL)
 	if err != nil {
@@ -54,6 +60,7 @@ func run(ctx context.Context) error {
 	if err := redisStore.Ping(ctx); err != nil {
 		return err
 	}
+	logger.Info("dependencies connected")
 
 	if email := os.Getenv("BOOTSTRAP_ADMIN_EMAIL"); email != "" {
 		password := os.Getenv("BOOTSTRAP_ADMIN_PASSWORD")
@@ -68,6 +75,7 @@ func run(ctx context.Context) error {
 		if err != nil {
 			return err
 		}
+		logger.Info("bootstrap admin processed", slog.String("email", email))
 	}
 
 	authService := auth.NewService(cfg.JWTIssuer, cfg.AccessTTL, cfg.RefreshTTL, cfg.PrivateKey, redisStore, cfg.CookieDomain, cfg.CookieSecure)
@@ -76,10 +84,11 @@ func run(ctx context.Context) error {
 		store,
 		authService,
 		broker,
-		notifications.NewDispatcher(store, cfg.WebhookTargets, cfg.WebhookSecret),
-		notifications.NewResendClient(cfg.ResendAPIKey, cfg.ContactFromEmail, cfg.ContactToEmail),
+		notifications.NewDispatcher(store, cfg.WebhookTargets, cfg.WebhookSecret, logger),
+		notifications.NewResendClient(cfg.ResendAPIKey, cfg.ContactFromEmail, cfg.ContactToEmail, logger),
 		cfg.RateLimitMax,
 		cfg.RateLimitWindow,
+		logger,
 	)
 
 	e := echo.New()
@@ -87,11 +96,13 @@ func run(ctx context.Context) error {
 
 	serverErr := make(chan error, 1)
 	go func() {
+		logger.Info("server starting", slog.String("addr", ":"+cfg.Port))
 		serverErr <- e.Start(":" + cfg.Port)
 	}()
 
 	select {
 	case <-ctx.Done():
+		logger.Info("server shutting down")
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		return e.Shutdown(shutdownCtx)

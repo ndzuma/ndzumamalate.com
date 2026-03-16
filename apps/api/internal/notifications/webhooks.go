@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -23,9 +24,10 @@ type Dispatcher struct {
 	store         WebhookSource
 	staticTargets []models.WebhookEndpoint
 	httpClient    *http.Client
+	logger        *slog.Logger
 }
 
-func NewDispatcher(store WebhookSource, targets []string, sharedSecret string) *Dispatcher {
+func NewDispatcher(store WebhookSource, targets []string, sharedSecret string, logger *slog.Logger) *Dispatcher {
 	staticTargets := make([]models.WebhookEndpoint, 0, len(targets))
 	for _, target := range targets {
 		trimmed := strings.TrimSpace(target)
@@ -39,6 +41,7 @@ func NewDispatcher(store WebhookSource, targets []string, sharedSecret string) *
 		store:         store,
 		staticTargets: staticTargets,
 		httpClient:    &http.Client{Timeout: 5 * time.Second},
+		logger:        logger,
 	}
 }
 
@@ -68,8 +71,12 @@ func (d *Dispatcher) Dispatch(ctx context.Context, event models.Event) {
 }
 
 func (d *Dispatcher) send(target models.WebhookEndpoint, payload []byte) {
+	start := time.Now()
 	req, err := http.NewRequest(http.MethodPost, target.URL, bytes.NewReader(payload))
 	if err != nil {
+		if d.logger != nil {
+			d.logger.Error("webhook request build failed", slog.String("target", target.URL), slog.String("error", err.Error()))
+		}
 		return
 	}
 	req.Header.Set("Content-Type", "application/json")
@@ -80,9 +87,25 @@ func (d *Dispatcher) send(target models.WebhookEndpoint, payload []byte) {
 
 	resp, err := d.httpClient.Do(req)
 	if err != nil {
+		if d.logger != nil {
+			d.logger.Error("webhook delivery failed", slog.String("target", target.URL), slog.Int64("duration_ms", time.Since(start).Milliseconds()), slog.String("error", err.Error()))
+		}
 		return
 	}
 	resp.Body.Close()
+	if d.logger != nil {
+		level := slog.LevelInfo
+		message := "webhook delivered"
+		if resp.StatusCode >= http.StatusMultipleChoices {
+			level = slog.LevelError
+			message = "webhook delivery rejected"
+		}
+		d.logger.Log(context.Background(), level, message,
+			slog.String("target", target.URL),
+			slog.Int("status", resp.StatusCode),
+			slog.Int64("duration_ms", time.Since(start).Milliseconds()),
+		)
+	}
 }
 
 func signPayload(payload []byte, secret string) string {

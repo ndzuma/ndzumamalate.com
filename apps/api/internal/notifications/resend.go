@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"strings"
 	"time"
@@ -17,19 +18,25 @@ type ResendClient struct {
 	fromEmail  string
 	toEmail    string
 	httpClient *http.Client
+	logger     *slog.Logger
 }
 
-func NewResendClient(apiKey, fromEmail, toEmail string) *ResendClient {
+func NewResendClient(apiKey, fromEmail, toEmail string, logger *slog.Logger) *ResendClient {
 	return &ResendClient{
 		apiKey:     apiKey,
 		fromEmail:  fromEmail,
 		toEmail:    toEmail,
 		httpClient: &http.Client{Timeout: 10 * time.Second},
+		logger:     logger,
 	}
 }
 
 func (c *ResendClient) SendContact(ctx context.Context, message models.ContactMessage) error {
+	start := time.Now()
 	if strings.TrimSpace(c.apiKey) == "" {
+		if c.logger != nil {
+			c.logger.Info("contact email skipped", slog.String("reason", "missing_api_key"), slog.String("email", message.Email))
+		}
 		return nil
 	}
 
@@ -54,12 +61,21 @@ func (c *ResendClient) SendContact(ctx context.Context, message models.ContactMe
 
 	resp, err := c.httpClient.Do(req)
 	if err != nil {
+		if c.logger != nil {
+			c.logger.Error("contact email failed", slog.String("email", message.Email), slog.Int64("duration_ms", time.Since(start).Milliseconds()), slog.String("error", err.Error()))
+		}
 		return err
 	}
 	defer resp.Body.Close()
 
 	if resp.StatusCode >= http.StatusMultipleChoices {
+		if c.logger != nil {
+			c.logger.Error("contact email rejected", slog.String("email", message.Email), slog.Int("status", resp.StatusCode), slog.Int64("duration_ms", time.Since(start).Milliseconds()))
+		}
 		return fmt.Errorf("resend returned status %d", resp.StatusCode)
+	}
+	if c.logger != nil {
+		c.logger.Info("contact email sent", slog.String("email", message.Email), slog.Int("status", resp.StatusCode), slog.Int64("duration_ms", time.Since(start).Milliseconds()))
 	}
 	return nil
 }

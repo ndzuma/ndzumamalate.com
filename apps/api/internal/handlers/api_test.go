@@ -6,6 +6,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"encoding/json"
+	"log/slog"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -153,6 +154,7 @@ func TestLoginSetsCookies(t *testing.T) {
 		&noopResend{},
 		5,
 		time.Minute,
+		slog.Default(),
 	)
 
 	e := echo.New()
