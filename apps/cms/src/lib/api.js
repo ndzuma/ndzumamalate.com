@@ -64,6 +64,7 @@ export const projects = {
   create: (data) => request('POST', '/admin/projects', data),
   update: (id, data) => request('PUT', `/admin/projects/${id}`, data),
   delete: (id) => request('DELETE', `/admin/projects/${id}`),
+  reorder: (id, direction) => request('POST', `/admin/projects/${id}/reorder`, { direction }),
 };
 
 export const blogs = {

@@ -3,14 +3,27 @@
   import BottomNav from '../components/BottomNav.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { projects, blogs, tags as tagsApi } from '../lib/api.js';
+  import { toast } from '../lib/toast.svelte.js';
   import markdownit from 'markdown-it';
-  import { ArrowLeft, FloppyDisk, Eye, CloudCheck, Warning } from 'phosphor-svelte';
+  import { ArrowLeft, FloppyDisk, Eye, CaretDown, Plus } from 'phosphor-svelte';
 
   /** @type {{ type: string, id: string | null }} */
   let { type = 'project', id = null } = $props();
 
   const isProject = $derived(type === 'project');
   const pageName = $derived(id ? `Edit ${isProject ? 'Project' : 'Blog'}` : `New ${isProject ? 'Project' : 'Blog'}`);
+
+  // ── Type switcher ──
+  let typeSwitcherOpen = $state(false);
+
+  function switchType(newType) {
+    typeSwitcherOpen = false;
+    if (newType === type) return;
+    if (id || title || content) {
+      if (!confirm(`Switch to ${newType}? Unsaved changes will be lost.`)) return;
+    }
+    navigate(`/editor/${newType}`);
+  }
 
   const md = markdownit({
     html: true,
@@ -32,12 +45,20 @@
   let published = $state(false);
   let tagIds = $state([]);
   let publishedAt = $state('');
+  let sortOrder = $state(0);
 
   let allTags = $state([]);
   let saving = $state(false);
-  let saveStatus = $state(''); // 'saved' | 'error' | ''
   let loading = $state(false);
   let optionsPanelOpen = $state(true);
+
+  // ── Image aspect ratio toggle ──
+  const ratioOptions = ['original', '16:9', '4:3'];
+  let coverRatio = $state('original');
+
+  // ── Inline tag creation ──
+  let newTagName = $state('');
+  let creatingTag = $state(false);
 
   // ── Derived preview ──
   const rendered = $derived(md.render(content || ''));
@@ -71,6 +92,7 @@
           repoUrl = item.repo_url || '';
           featured = item.featured || false;
           published = item.published || false;
+          sortOrder = item.sort_order ?? 0;
           tagIds = item.tags || [];
         }
       } else {
@@ -84,6 +106,7 @@
           coverImageUrl = item.cover_image_url || '';
           published = item.published || false;
           publishedAt = item.published_at ? item.published_at.split('T')[0] : '';
+          tagIds = item.tags || [];
         }
       }
     } catch (_) {}
@@ -104,50 +127,57 @@
   // ── Save ──
   async function save(andPublish = false) {
     saving = true;
-    saveStatus = '';
     try {
       if (andPublish) published = true;
 
       if (isProject) {
+        // Resolve tag slugs to IDs
+        const resolvedTagIds = resolveTagIds();
         const data = {
           title, slug, summary, content,
           image_url: imageUrl,
           live_url: liveUrl,
           repo_url: repoUrl,
           featured, published,
-          tag_ids: tagIds,
+          sort_order: sortOrder,
+          tag_ids: resolvedTagIds,
         };
         if (id) {
           await projects.update(id, data);
+          toast('Project updated');
         } else {
           const created = await projects.create(data);
           if (created?.id) {
             id = created.id;
             navigate(`/editor/project/${created.id}`);
+            toast('Project created');
           }
         }
       } else {
+        // Resolve tag slugs to IDs
+        const resolvedTagIds = resolveTagIds();
         const data = {
           title, slug, summary, content,
           cover_image_url: coverImageUrl,
           published,
           published_at: publishedAt || '',
+          tag_ids: resolvedTagIds,
         };
         if (id) {
           await blogs.update(id, data);
+          toast('Blog updated');
         } else {
           const created = await blogs.create(data);
           if (created?.id) {
             id = created.id;
             navigate(`/editor/blog/${created.id}`);
+            toast('Blog created');
           }
         }
       }
-      saveStatus = 'saved';
-      setTimeout(() => saveStatus = '', 2500);
+      if (andPublish) toast('Published', 'success');
     } catch (e) {
-      saveStatus = 'error';
-      setTimeout(() => saveStatus = '', 3000);
+      toast('Failed to save', 'error');
     }
     saving = false;
   }
@@ -179,10 +209,62 @@
       tagIds = [...tagIds, tagId];
     }
   }
+
+  // Resolve tagIds which might be slugs (from load) to UUIDs for save
+  function resolveTagIds() {
+    return tagIds.map(idOrSlug => {
+      // If it looks like a UUID, use as-is
+      if (idOrSlug.length === 36 && idOrSlug.includes('-')) return idOrSlug;
+      // Otherwise find by slug
+      const found = allTags.find(t => t.slug === idOrSlug);
+      return found?.id || idOrSlug;
+    });
+  }
+
+  // ── Inline tag creation ──
+  async function createTag() {
+    if (!newTagName.trim()) return;
+    creatingTag = true;
+    try {
+      const tagSlug = newTagName.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+      const created = await tagsApi.create({ name: newTagName.trim(), slug: tagSlug });
+      if (created?.id) {
+        allTags = [...allTags, created];
+        tagIds = [...tagIds, created.id];
+      }
+      newTagName = '';
+    } catch (_) {}
+    creatingTag = false;
+  }
 </script>
 
+<svelte:window onclick={(e) => {
+  if (typeSwitcherOpen && !e.target.closest('.type-switcher')) typeSwitcherOpen = false;
+}} />
+
 <div class="editor-page">
-  <TopBar pageName={pageName} />
+  <TopBar pageName={pageName}>
+    {#snippet actions()}
+      {#if !id}
+        <div class="type-switcher">
+          <button class="type-trigger" onclick={() => typeSwitcherOpen = !typeSwitcherOpen}>
+            <span class="mono">{isProject ? 'PROJECT' : 'BLOG'}</span>
+            <CaretDown size={10} />
+          </button>
+          {#if typeSwitcherOpen}
+            <div class="type-menu">
+              <button class="type-option" class:active={isProject} onclick={() => switchType('project')}>
+                Project
+              </button>
+              <button class="type-option" class:active={!isProject} onclick={() => switchType('blog')}>
+                Blog
+              </button>
+            </div>
+          {/if}
+        </div>
+      {/if}
+    {/snippet}
+  </TopBar>
 
   {#if loading}
     <div class="loader-center">Loading...</div>
@@ -237,22 +319,6 @@
                     <span>Published</span>
                   </label>
                 </div>
-                {#if allTags.length > 0}
-                  <div class="opt-group">
-                    <label class="mono">TAGS</label>
-                    <div class="tags-grid">
-                      {#each allTags as tag}
-                        <button
-                          class="tag-chip"
-                          class:active={tagIds.includes(tag.id)}
-                          onclick={() => toggleTag(tag.id)}
-                        >
-                          {tag.name}
-                        </button>
-                      {/each}
-                    </div>
-                  </div>
-                {/if}
               {:else}
                 <div class="opt-group">
                   <label class="mono">COVER IMAGE URL</label>
@@ -270,10 +336,52 @@
                 </div>
               {/if}
 
+              <!-- Tags section (shared for both projects and blogs) -->
+              <div class="opt-group">
+                <label class="mono">TAGS</label>
+                {#if allTags.length > 0}
+                  <div class="tags-grid">
+                    {#each allTags as tag}
+                      <button
+                        class="tag-chip"
+                        class:active={tagIds.includes(tag.id) || tagIds.includes(tag.slug)}
+                        onclick={() => toggleTag(tag.id)}
+                      >
+                        {tag.name}
+                      </button>
+                    {/each}
+                  </div>
+                {:else}
+                  <span class="tags-empty">No tags yet</span>
+                {/if}
+                <div class="tag-create-row">
+                  <input
+                    class="tag-create-input"
+                    bind:value={newTagName}
+                    placeholder="New tag name"
+                    onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), createTag())}
+                  />
+                  <button class="tag-create-btn" onclick={createTag} disabled={creatingTag || !newTagName.trim()}>
+                    <Plus size={12} />
+                  </button>
+                </div>
+              </div>
+
               {#if imageUrl || coverImageUrl}
                 <div class="opt-group">
-                  <label class="mono">COVER IMAGE</label>
-                  <div class="cover-preview">
+                  <div class="ratio-header">
+                    <label class="mono">COVER IMAGE</label>
+                    <div class="ratio-toggle">
+                      {#each ratioOptions as r}
+                        <button
+                          class="ratio-btn"
+                          class:active={coverRatio === r}
+                          onclick={() => coverRatio = r}
+                        >{r === 'original' ? 'Auto' : r}</button>
+                      {/each}
+                    </div>
+                  </div>
+                  <div class="cover-preview" class:ratio-16-9={coverRatio === '16:9'} class:ratio-4-3={coverRatio === '4:3'}>
                     <img src={isProject ? imageUrl : coverImageUrl} alt="Cover" />
                   </div>
                 </div>
@@ -314,7 +422,7 @@
             <h1 class="preview-title">{title}</h1>
           {/if}
           {#if (isProject && imageUrl) || (!isProject && coverImageUrl)}
-            <div class="preview-cover">
+            <div class="preview-cover" class:ratio-16-9={coverRatio === '16:9'} class:ratio-4-3={coverRatio === '4:3'}>
               <img src={isProject ? imageUrl : coverImageUrl} alt="Cover" />
             </div>
           {/if}
@@ -325,18 +433,6 @@
       </div>
     </div>
 
-    <!-- Save status bar -->
-    {#if saveStatus}
-      <div class="status-bar" class:error={saveStatus === 'error'}>
-        {#if saveStatus === 'saved'}
-          <CloudCheck size={16} />
-          <span>Saved</span>
-        {:else}
-          <Warning size={16} />
-          <span>Failed to save</span>
-        {/if}
-      </div>
-    {/if}
   {/if}
 
   <BottomNav />
@@ -522,6 +618,50 @@
     border-color: #111;
   }
 
+  .tags-empty {
+    font-size: 11px;
+    color: #bbb;
+  }
+
+  .tag-create-row {
+    display: flex;
+    gap: 4px;
+    margin-top: 4px;
+  }
+
+  .tag-create-input {
+    flex: 1;
+    padding: 5px 8px;
+    font-size: 11px;
+    border: 1px solid #e5e5e5;
+    border-radius: 5px;
+    background: #fafafa;
+  }
+
+  .tag-create-input:focus {
+    border-color: #111;
+    background: #fff;
+    outline: none;
+  }
+
+  .tag-create-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 1px solid #e5e5e5;
+    border-radius: 5px;
+    background: #fff;
+    color: #666;
+    cursor: pointer;
+    transition: all 0.1s;
+    flex-shrink: 0;
+  }
+
+  .tag-create-btn:hover { border-color: #111; color: #111; }
+  .tag-create-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
   .cover-preview {
     border-radius: 6px;
     overflow: hidden;
@@ -530,9 +670,96 @@
 
   .cover-preview img {
     width: 100%;
-    height: 100px;
+    height: auto;
     object-fit: cover;
     display: block;
+  }
+
+  .cover-preview.ratio-16-9 {
+    aspect-ratio: 16 / 9;
+  }
+  .cover-preview.ratio-16-9 img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .cover-preview.ratio-4-3 {
+    aspect-ratio: 4 / 3;
+  }
+  .cover-preview.ratio-4-3 img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .ratio-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 6px;
+  }
+
+  .ratio-toggle {
+    display: flex;
+    gap: 2px;
+    background: #f5f5f5;
+    border-radius: 5px;
+    padding: 2px;
+  }
+
+  .ratio-btn {
+    padding: 2px 7px;
+    font-size: 10px;
+    font-weight: 500;
+    color: #999;
+    border: none;
+    border-radius: 4px;
+    background: none;
+    cursor: pointer;
+    transition: all 0.1s;
+    white-space: nowrap;
+  }
+
+  .ratio-btn:hover { color: #555; }
+  .ratio-btn.active {
+    background: #fff;
+    color: #111;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  }
+
+  /* ── Preview cover aspect ratios ── */
+  .preview-cover {
+    margin-bottom: 24px;
+    border-radius: 8px;
+    overflow: hidden;
+  }
+
+  .preview-cover img {
+    width: 100%;
+    max-height: 400px;
+    object-fit: cover;
+    display: block;
+  }
+
+  .preview-cover.ratio-16-9 {
+    aspect-ratio: 16 / 9;
+  }
+  .preview-cover.ratio-16-9 img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
+  }
+
+  .preview-cover.ratio-4-3 {
+    aspect-ratio: 4 / 3;
+  }
+  .preview-cover.ratio-4-3 img {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    object-fit: cover;
   }
 
   .opt-actions {
@@ -613,19 +840,6 @@
     margin-bottom: 24px;
   }
 
-  .preview-cover {
-    margin-bottom: 24px;
-    border-radius: 8px;
-    overflow: hidden;
-  }
-
-  .preview-cover img {
-    width: 100%;
-    max-height: 300px;
-    object-fit: cover;
-    display: block;
-  }
-
   /* ── Markdown rendered content ── */
   .markdown-content {
     font-size: 15px;
@@ -699,33 +913,64 @@
     font-weight: 600;
   }
 
-  /* ── Status bar ── */
-  .status-bar {
-    position: fixed;
-    bottom: 80px;
-    left: 50%;
-    transform: translateX(-50%);
+  /* ── Type switcher ── */
+  .type-switcher {
+    position: relative;
+    margin-left: 8px;
+  }
+
+  .type-trigger {
     display: flex;
     align-items: center;
-    gap: 6px;
-    padding: 8px 18px;
-    background: #111;
-    color: #fff;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 500;
+    color: #666;
+    border: 1px solid #e5e5e5;
+    border-radius: 5px;
+    background: #fff;
+    cursor: pointer;
+    transition: border-color 0.12s;
+  }
+
+  .type-trigger:hover { border-color: #111; color: #111; }
+
+  .type-menu {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    background: #fff;
+    border: 1px solid #e5e5e5;
     border-radius: 8px;
+    padding: 4px;
+    min-width: 120px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+    z-index: 50;
+    animation: type-menu-in 0.1s ease-out;
+  }
+
+  @keyframes type-menu-in {
+    from { opacity: 0; transform: translateY(-4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .type-option {
+    display: block;
+    width: 100%;
+    padding: 7px 12px;
     font-size: 13px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
-    animation: status-in 0.2s ease-out;
-    z-index: 999;
+    color: #555;
+    border-radius: 5px;
+    background: none;
+    border: none;
+    cursor: pointer;
+    text-align: left;
+    transition: background 0.1s;
   }
 
-  .status-bar.error {
-    background: #dc2626;
-  }
-
-  @keyframes status-in {
-    from { opacity: 0; transform: translateX(-50%) translateY(8px); }
-    to { opacity: 1; transform: translateX(-50%) translateY(0); }
-  }
+  .type-option:hover { background: #f5f5f5; }
+  .type-option.active { color: #111; font-weight: 500; }
 
   @media (max-width: 768px) {
     .editor-layout {

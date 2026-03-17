@@ -3,6 +3,7 @@
   import BottomNav from '../components/BottomNav.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { changePassword } from '../lib/auth.svelte.js';
+  import { toast } from '../lib/toast.svelte.js';
   import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
 
   let currentPassword = $state('');
@@ -10,25 +11,27 @@
   let confirmPassword = $state('');
   let saving = $state(false);
   let error = $state('');
-  let success = $state(false);
 
   async function save() {
     error = '';
     if (newPassword !== confirmPassword) {
       error = 'Passwords do not match';
+      toast(error, 'error');
       return;
     }
     if (newPassword.length < 8) {
       error = 'Password must be at least 8 characters';
+      toast(error, 'error');
       return;
     }
     saving = true;
     const result = await changePassword(currentPassword, newPassword);
     if (result.ok) {
-      success = true;
-      setTimeout(() => navigate('/dashboard'), 1500);
+      toast('Password changed');
+      navigate('/dashboard');
     } else {
       error = result.error || 'Failed to change password';
+      toast(error, 'error');
     }
     saving = false;
   }
@@ -43,35 +46,31 @@
       <span>Back to dashboard</span>
     </button>
 
-    {#if success}
-      <div class="success mono">Password changed. Redirecting...</div>
-    {:else}
-      <form onsubmit={(e) => { e.preventDefault(); save(); }}>
-        <div class="field">
-          <label class="mono">CURRENT PASSWORD</label>
-          <input type="password" bind:value={currentPassword} required />
-        </div>
+    <form onsubmit={(e) => { e.preventDefault(); save(); }}>
+      <div class="field">
+        <label class="mono">CURRENT PASSWORD</label>
+        <input type="password" bind:value={currentPassword} required />
+      </div>
 
-        <div class="field">
-          <label class="mono">NEW PASSWORD</label>
-          <input type="password" bind:value={newPassword} required />
-        </div>
+      <div class="field">
+        <label class="mono">NEW PASSWORD</label>
+        <input type="password" bind:value={newPassword} required />
+      </div>
 
-        <div class="field">
-          <label class="mono">CONFIRM NEW PASSWORD</label>
-          <input type="password" bind:value={confirmPassword} required />
-        </div>
+      <div class="field">
+        <label class="mono">CONFIRM NEW PASSWORD</label>
+        <input type="password" bind:value={confirmPassword} required />
+      </div>
 
-        {#if error}
-          <div class="error mono">{error}</div>
-        {/if}
+      {#if error}
+        <div class="error mono">{error}</div>
+      {/if}
 
-        <button type="submit" class="submit-btn" disabled={saving}>
-          <FloppyDisk size={14} />
-          {saving ? 'Saving...' : 'Change Password'}
-        </button>
-      </form>
-    {/if}
+      <button type="submit" class="submit-btn" disabled={saving}>
+        <FloppyDisk size={14} />
+        {saving ? 'Saving...' : 'Change Password'}
+      </button>
+    </form>
   </main>
 
   <BottomNav />
@@ -144,15 +143,6 @@
     padding: 8px 12px;
     background: #fef2f2;
     border-radius: 6px;
-  }
-
-  .success {
-    font-size: 13px;
-    color: #16a34a;
-    padding: 12px 16px;
-    background: #f0fdf4;
-    border: 1px solid #bbf7d0;
-    border-radius: 8px;
   }
 
   .submit-btn {

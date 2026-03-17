@@ -1,10 +1,11 @@
 <script>
   import TopBar from '../components/TopBar.svelte';
   import BottomNav from '../components/BottomNav.svelte';
+  import { toast } from '../lib/toast.svelte.js';
   import { navigate } from '../lib/router.svelte.js';
   import { getUser } from '../lib/auth.svelte.js';
   import { projects, blogs, skills, experience, cv, tags } from '../lib/api.js';
-  import { Star, Article, Lightning, Briefcase, FilePdf, Tag, Trash, PencilSimple, Plus, CaretDown } from 'phosphor-svelte';
+  import { Star, Article, Lightning, Briefcase, FilePdf, Tag, Trash, PencilSimple, Plus, CaretDown, ArrowUp, ArrowDown, CheckCircle } from 'phosphor-svelte';
 
   // ── Data ──
   let featuredProjects = $state([]);
@@ -108,13 +109,66 @@
     } catch (_) {}
   }
 
-  async function deleteItem(item) {
-    if (!confirm(`Delete this ${activeTab.replace(/s$/, '')}?`)) return;
+  // ── Project reorder ──
+  async function moveProject(index, direction) {
+    const sorted = [...allProjects];
+    const item = sorted[index];
+    if (!item) return;
+
+    try {
+      await projects.reorder(item.id, direction);
+      await loadData();
+      toast('Project order updated');
+    } catch (_) {
+      toast('Failed to reorder', 'error');
+    }
+  }
+
+  // ── CV active toggle ──
+  async function toggleCvActive(item) {
+    try {
+      await cv.update(item.id, {
+        file_url: item.file_url,
+        label: item.label,
+        is_active: !item.is_active,
+      });
+      await loadData();
+      toast(item.is_active ? 'CV deactivated' : 'CV set as active');
+    } catch (_) {
+      toast('Failed to update CV', 'error');
+    }
+  }
+
+  // ── Inline two-click delete ──
+  let deleteConfirmId = $state(null);
+  let deleteTimeout = $state(null);
+
+  function requestDelete(item) {
+    if (deleteConfirmId === item.id) {
+      // Second click — execute delete
+      clearTimeout(deleteTimeout);
+      executeDelete(item);
+    } else {
+      // First click — enter confirm state
+      clearTimeout(deleteTimeout);
+      deleteConfirmId = item.id;
+      deleteTimeout = setTimeout(() => {
+        deleteConfirmId = null;
+      }, 3000);
+    }
+  }
+
+  async function executeDelete(item) {
+    deleteConfirmId = null;
     try {
       const api = { projects, blogs, skills, experience, cv, tags }[activeTab];
       await api.delete(item.id);
       await loadData();
-    } catch (_) {}
+      const label = activeTab.replace(/s$/, '');
+      toast(`${label.charAt(0).toUpperCase() + label.slice(1)} deleted`);
+    } catch (_) {
+      toast('Failed to delete', 'error');
+    }
   }
 
   function formatCell(value) {
@@ -250,7 +304,7 @@
               </tr>
             </thead>
             <tbody>
-              {#each getTableData() as item}
+              {#each getTableData() as item, idx}
                 <tr>
                   {#each getTableColumns() as col}
                     <td>
@@ -260,6 +314,16 @@
                           bind:value={tagForm[col]}
                           onkeydown={(e) => e.key === 'Enter' && saveTag()}
                         />
+                      {:else if col === 'is_active' && activeTab === 'cv'}
+                        <button
+                          class="active-badge"
+                          class:is-active={item.is_active}
+                          onclick={() => toggleCvActive(item)}
+                          title={item.is_active ? 'Active CV (click to deactivate)' : 'Click to set as active'}
+                        >
+                          <CheckCircle size={12} weight={item.is_active ? 'fill' : 'regular'} />
+                          <span>{item.is_active ? 'Active' : 'Inactive'}</span>
+                        </button>
                       {:else}
                         {formatCell(item[col])}
                       {/if}
@@ -267,6 +331,24 @@
                   {/each}
                   <td class="actions-col">
                     <div class="row-actions">
+                      {#if activeTab === 'projects'}
+                        <button
+                          class="icon-btn"
+                          onclick={() => moveProject(idx, -1)}
+                          disabled={idx === 0}
+                          title="Move up"
+                        >
+                          <ArrowUp size={14} />
+                        </button>
+                        <button
+                          class="icon-btn"
+                          onclick={() => moveProject(idx, 1)}
+                          disabled={idx === getTableData().length - 1}
+                          title="Move down"
+                        >
+                          <ArrowDown size={14} />
+                        </button>
+                      {/if}
                       {#if editingTag === item.id && activeTab === 'tags'}
                         <button class="icon-btn" onclick={saveTag} title="Save">
                           <PencilSimple size={14} weight="fill" />
@@ -278,8 +360,17 @@
                         <button class="icon-btn" onclick={() => editItem(item)} title="Edit">
                           <PencilSimple size={14} />
                         </button>
-                        <button class="icon-btn danger" onclick={() => deleteItem(item)} title="Delete">
-                          <Trash size={14} />
+                        <button
+                          class="delete-btn"
+                          class:confirming={deleteConfirmId === item.id}
+                          onclick={() => requestDelete(item)}
+                          title={deleteConfirmId === item.id ? 'Click again to confirm' : 'Delete'}
+                        >
+                          {#if deleteConfirmId === item.id}
+                            <span class="delete-confirm-text">Are you sure?</span>
+                          {:else}
+                            <Trash size={14} />
+                          {/if}
                         </button>
                       {/if}
                     </div>
@@ -549,6 +640,44 @@
     color: #dc2626;
   }
 
+  .delete-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    min-width: 28px;
+    border-radius: 6px;
+    color: #666;
+    background: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.15s;
+    padding: 0 4px;
+  }
+
+  .delete-btn:hover {
+    background: #fef2f2;
+    color: #dc2626;
+  }
+
+  .delete-btn.confirming {
+    background: #dc2626;
+    color: #fff;
+    border-radius: 6px;
+    padding: 0 10px;
+  }
+
+  .delete-btn.confirming:hover {
+    background: #b91c1c;
+    color: #fff;
+  }
+
+  .delete-confirm-text {
+    font-size: 11px;
+    font-weight: 500;
+    white-space: nowrap;
+  }
+
   .inline-edit {
     padding: 4px 8px;
     font-size: 13px;
@@ -556,6 +685,41 @@
     border-radius: 4px;
     width: 100%;
     max-width: 200px;
+  }
+
+  .icon-btn:disabled {
+    opacity: 0.2;
+    cursor: not-allowed;
+    pointer-events: none;
+  }
+
+  .active-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px;
+    font-size: 11px;
+    border-radius: 20px;
+    border: 1px solid #e5e5e5;
+    background: #fafafa;
+    color: #999;
+    cursor: pointer;
+    transition: all 0.12s;
+  }
+
+  .active-badge:hover {
+    border-color: #111;
+    color: #111;
+  }
+
+  .active-badge.is-active {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+
+  .active-badge.is-active:hover {
+    opacity: 0.85;
   }
 
   .table-empty {

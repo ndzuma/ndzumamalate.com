@@ -34,6 +34,7 @@ type Project struct {
 	RepoURL   string    `json:"repo_url,omitempty"`
 	Featured  bool      `json:"featured"`
 	Published bool      `json:"published"`
+	SortOrder int       `json:"sort_order"`
 	Tags      []string  `json:"tags"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
@@ -49,6 +50,7 @@ type ProjectInput struct {
 	RepoURL   string   `json:"repo_url"`
 	Featured  bool     `json:"featured"`
 	Published bool     `json:"published"`
+	SortOrder int      `json:"sort_order"`
 	TagIDs    []string `json:"tag_ids"`
 }
 
@@ -61,18 +63,20 @@ type Blog struct {
 	CoverImageURL string     `json:"cover_image_url,omitempty"`
 	Published     bool       `json:"published"`
 	PublishedAt   *time.Time `json:"published_at,omitempty"`
+	Tags          []string   `json:"tags"`
 	CreatedAt     time.Time  `json:"created_at"`
 	UpdatedAt     time.Time  `json:"updated_at"`
 }
 
 type BlogInput struct {
-	Title         string `json:"title"`
-	Slug          string `json:"slug"`
-	Summary       string `json:"summary"`
-	Content       string `json:"content"`
-	CoverImageURL string `json:"cover_image_url"`
-	Published     bool   `json:"published"`
-	PublishedAt   string `json:"published_at"`
+	Title         string   `json:"title"`
+	Slug          string   `json:"slug"`
+	Summary       string   `json:"summary"`
+	Content       string   `json:"content"`
+	CoverImageURL string   `json:"cover_image_url"`
+	Published     bool     `json:"published"`
+	PublishedAt   string   `json:"published_at"`
+	TagIDs        []string `json:"tag_ids"`
 }
 
 type SkillCategory string

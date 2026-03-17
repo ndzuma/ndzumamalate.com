@@ -205,6 +205,7 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 			COALESCE(p.repo_url, ''),
 			p.featured,
 			p.published,
+			COALESCE(p.sort_order, 0),
 			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
 			p.created_at,
 			p.updated_at
@@ -215,7 +216,7 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 	if publishedOnly {
 		query += ` WHERE p.published = TRUE`
 	}
-	query += ` GROUP BY p.id ORDER BY p.featured DESC, p.updated_at DESC`
+	query += ` GROUP BY p.id ORDER BY p.sort_order ASC, p.featured DESC, p.updated_at DESC`
 
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
@@ -237,6 +238,7 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 			&project.RepoURL,
 			&project.Featured,
 			&project.Published,
+			&project.SortOrder,
 			&project.Tags,
 			&project.CreatedAt,
 			&project.UpdatedAt,
@@ -262,6 +264,7 @@ func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly
 			COALESCE(p.repo_url, ''),
 			p.featured,
 			p.published,
+			COALESCE(p.sort_order, 0),
 			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
 			p.created_at,
 			p.updated_at
@@ -287,6 +290,7 @@ func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly
 		&project.RepoURL,
 		&project.Featured,
 		&project.Published,
+		&project.SortOrder,
 		&project.Tags,
 		&project.CreatedAt,
 		&project.UpdatedAt,
@@ -317,21 +321,30 @@ func (s *Store) upsertProject(ctx context.Context, id string, input models.Proje
 
 	project := &models.Project{}
 	if create {
+		// Auto-assign sort_order: always append to end (0-based)
+		sortOrder := input.SortOrder
+		if sortOrder == 0 {
+			var count int
+			if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM projects`).Scan(&count); err != nil {
+				return nil, err
+			}
+			sortOrder = count // 0-based: if 3 projects exist (0,1,2), new one gets 3
+		}
 		err = tx.QueryRow(ctx, `
-			INSERT INTO projects (title, slug, summary, content, image_url, live_url, repo_url, featured, published)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, created_at, updated_at
-		`, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published).Scan(
-			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.CreatedAt, &project.UpdatedAt,
+			INSERT INTO projects (title, slug, summary, content, image_url, live_url, repo_url, featured, published, sort_order)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), created_at, updated_at
+		`, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, sortOrder).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.CreatedAt, &project.UpdatedAt,
 		)
 	} else {
 		err = tx.QueryRow(ctx, `
 			UPDATE projects
-			SET title = $2, slug = $3, summary = $4, content = $5, image_url = $6, live_url = $7, repo_url = $8, featured = $9, published = $10
+			SET title = $2, slug = $3, summary = $4, content = $5, image_url = $6, live_url = $7, repo_url = $8, featured = $9, published = $10, sort_order = $11
 			WHERE id = $1
-			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, created_at, updated_at
-		`, id, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published).Scan(
-			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.CreatedAt, &project.UpdatedAt,
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), created_at, updated_at
+		`, id, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, input.SortOrder).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.CreatedAt, &project.UpdatedAt,
 		)
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -367,16 +380,90 @@ func (s *Store) upsertProject(ctx context.Context, id string, input models.Proje
 }
 
 func (s *Store) DeleteProject(ctx context.Context, id string) error {
-	_, err := s.pool.Exec(ctx, `DELETE FROM projects WHERE id = $1`, id)
-	return err
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Get the sort_order of the project being deleted
+	var deletedOrder int
+	err = tx.QueryRow(ctx, `SELECT COALESCE(sort_order, 0) FROM projects WHERE id = $1`, id).Scan(&deletedOrder)
+	if err != nil {
+		return err
+	}
+
+	// Delete the project
+	if _, err := tx.Exec(ctx, `DELETE FROM projects WHERE id = $1`, id); err != nil {
+		return err
+	}
+
+	// Shift all projects above the deleted one down by 1 to keep contiguous ordering
+	if _, err := tx.Exec(ctx, `UPDATE projects SET sort_order = sort_order - 1 WHERE sort_order > $1`, deletedOrder); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
+}
+
+func (s *Store) SwapProjectOrder(ctx context.Context, id string, direction int) error {
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback(ctx)
+
+	// Get current sort_order for the source project
+	var currentOrder int
+	err = tx.QueryRow(ctx, `SELECT COALESCE(sort_order, 0) FROM projects WHERE id = $1`, id).Scan(&currentOrder)
+	if err != nil {
+		return fmt.Errorf("project not found")
+	}
+
+	targetOrder := currentOrder + direction
+
+	// Ensure target is in valid range
+	var count int
+	if err := tx.QueryRow(ctx, `SELECT COUNT(*) FROM projects`).Scan(&count); err != nil {
+		return err
+	}
+	if targetOrder < 0 || targetOrder >= count {
+		return fmt.Errorf("cannot move further in that direction")
+	}
+
+	// Swap: set the project at targetOrder to currentOrder, and source to targetOrder
+	if _, err := tx.Exec(ctx, `UPDATE projects SET sort_order = $1 WHERE sort_order = $2 AND id != $3`, currentOrder, targetOrder, id); err != nil {
+		return err
+	}
+	if _, err := tx.Exec(ctx, `UPDATE projects SET sort_order = $1 WHERE id = $2`, targetOrder, id); err != nil {
+		return err
+	}
+
+	return tx.Commit(ctx)
 }
 
 func (s *Store) ListBlogs(ctx context.Context, publishedOnly bool) ([]models.Blog, error) {
-	query := `SELECT id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at FROM blogs`
+	query := `
+		SELECT
+			b.id,
+			b.title,
+			b.slug,
+			COALESCE(b.summary, ''),
+			COALESCE(b.content, ''),
+			COALESCE(b.cover_image_url, ''),
+			b.published,
+			b.published_at,
+			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			b.created_at,
+			b.updated_at
+		FROM blogs b
+		LEFT JOIN blog_tags bt ON bt.blog_id = b.id
+		LEFT JOIN tags t ON t.id = bt.tag_id
+	`
 	if publishedOnly {
-		query += ` WHERE published = TRUE`
+		query += ` WHERE b.published = TRUE`
 	}
-	query += ` ORDER BY COALESCE(published_at, created_at) DESC`
+	query += ` GROUP BY b.id ORDER BY COALESCE(b.published_at, b.created_at) DESC`
 
 	rows, err := s.pool.Query(ctx, query)
 	if err != nil {
@@ -387,7 +474,7 @@ func (s *Store) ListBlogs(ctx context.Context, publishedOnly bool) ([]models.Blo
 	blogs := make([]models.Blog, 0)
 	for rows.Next() {
 		var blog models.Blog
-		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt); err != nil {
+		if err := rows.Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.Tags, &blog.CreatedAt, &blog.UpdatedAt); err != nil {
 			return nil, err
 		}
 		blogs = append(blogs, blog)
@@ -397,13 +484,31 @@ func (s *Store) ListBlogs(ctx context.Context, publishedOnly bool) ([]models.Blo
 }
 
 func (s *Store) GetBlogBySlug(ctx context.Context, slug string, publishedOnly bool) (*models.Blog, error) {
-	query := `SELECT id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at FROM blogs WHERE slug = $1`
+	query := `
+		SELECT
+			b.id,
+			b.title,
+			b.slug,
+			COALESCE(b.summary, ''),
+			COALESCE(b.content, ''),
+			COALESCE(b.cover_image_url, ''),
+			b.published,
+			b.published_at,
+			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			b.created_at,
+			b.updated_at
+		FROM blogs b
+		LEFT JOIN blog_tags bt ON bt.blog_id = b.id
+		LEFT JOIN tags t ON t.id = bt.tag_id
+		WHERE b.slug = $1
+	`
 	if publishedOnly {
-		query += ` AND published = TRUE`
+		query += ` AND b.published = TRUE`
 	}
+	query += ` GROUP BY b.id`
 
 	blog := &models.Blog{}
-	err := s.pool.QueryRow(ctx, query, slug).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt)
+	err := s.pool.QueryRow(ctx, query, slug).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.Tags, &blog.CreatedAt, &blog.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -427,15 +532,21 @@ func (s *Store) upsertBlog(ctx context.Context, id string, input models.BlogInpu
 		return nil, err
 	}
 
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return nil, err
+	}
+	defer tx.Rollback(ctx)
+
 	blog := &models.Blog{}
 	if create {
-		err = s.pool.QueryRow(ctx, `
+		err = tx.QueryRow(ctx, `
 			INSERT INTO blogs (title, slug, summary, content, cover_image_url, published, published_at)
 			VALUES ($1, $2, $3, $4, $5, $6, $7)
 			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(cover_image_url, ''), published, published_at, created_at, updated_at
 		`, input.Title, input.Slug, input.Summary, input.Content, input.CoverImageURL, input.Published, publishedAt).Scan(&blog.ID, &blog.Title, &blog.Slug, &blog.Summary, &blog.Content, &blog.CoverImageURL, &blog.Published, &blog.PublishedAt, &blog.CreatedAt, &blog.UpdatedAt)
 	} else {
-		err = s.pool.QueryRow(ctx, `
+		err = tx.QueryRow(ctx, `
 			UPDATE blogs
 			SET title = $2, slug = $3, summary = $4, content = $5, cover_image_url = $6, published = $7, published_at = $8
 			WHERE id = $1
@@ -448,6 +559,30 @@ func (s *Store) upsertBlog(ctx context.Context, id string, input models.BlogInpu
 	if err != nil {
 		return nil, err
 	}
+
+	// Manage blog_tags
+	if _, err := tx.Exec(ctx, `DELETE FROM blog_tags WHERE blog_id = $1`, blog.ID); err != nil {
+		return nil, err
+	}
+	for _, tagID := range input.TagIDs {
+		if _, err := tx.Exec(ctx, `INSERT INTO blog_tags (blog_id, tag_id) VALUES ($1, $2)`, blog.ID, tagID); err != nil {
+			return nil, err
+		}
+	}
+
+	if err := tx.QueryRow(ctx, `
+		SELECT COALESCE(array_remove(array_agg(t.slug), NULL), '{}')
+		FROM blog_tags bt
+		LEFT JOIN tags t ON t.id = bt.tag_id
+		WHERE bt.blog_id = $1
+	`, blog.ID).Scan(&blog.Tags); err != nil {
+		return nil, err
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return nil, err
+	}
+
 	return blog, nil
 }
 

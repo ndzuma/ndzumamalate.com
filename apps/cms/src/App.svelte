@@ -9,9 +9,13 @@
   import CvForm from './pages/CvForm.svelte';
   import ProfileForm from './pages/ProfileForm.svelte';
   import ChangePassword from './pages/ChangePassword.svelte';
+  import WebhookForm from './pages/WebhookForm.svelte';
+  import Toast from './components/Toast.svelte';
 
   checkAuth();
 </script>
+
+<Toast />
 
 {#if isLoading()}
   <div class="loader">
@@ -46,6 +50,8 @@
   <ProfileForm />
 {:else if getPath() === '/change-password'}
   <ChangePassword />
+{:else if getPath() === '/webhooks'}
+  <WebhookForm />
 {:else}
   <Dashboard />
 {/if}

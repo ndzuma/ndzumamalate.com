@@ -1,13 +1,18 @@
 <script>
-  /** @type {{ pageName: string }} */
-  let { pageName = 'Dashboard' } = $props();
+  import logoIcon from '../assets/logo-icon-black.svg';
+
+  /** @type {{ pageName: string, actions?: import('svelte').Snippet }} */
+  let { pageName = 'Dashboard', actions } = $props();
 </script>
 
 <header class="topbar">
   <div class="breadcrumb">
-    <span class="brand mono">MALATE CMS</span>
+    <img src={logoIcon} alt="Malate" class="brand-logo" />
     <span class="separator">\</span>
     <span class="page-name mono">{pageName.toUpperCase()}</span>
+    {#if actions}
+      {@render actions()}
+    {/if}
   </div>
 </header>
 
@@ -30,11 +35,9 @@
     gap: 10px;
   }
 
-  .brand {
-    font-size: 13px;
-    font-weight: 600;
-    letter-spacing: 0.08em;
-    color: #111;
+  .brand-logo {
+    width: 22px;
+    height: 22px;
   }
 
   .separator {

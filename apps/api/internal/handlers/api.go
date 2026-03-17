@@ -45,6 +45,7 @@ type Store interface {
 	CreateProject(context.Context, models.ProjectInput) (*models.Project, error)
 	UpdateProject(context.Context, string, models.ProjectInput) (*models.Project, error)
 	DeleteProject(context.Context, string) error
+	SwapProjectOrder(context.Context, string, int) error
 	ListBlogs(context.Context, bool) ([]models.Blog, error)
 	GetBlogBySlug(context.Context, string, bool) (*models.Blog, error)
 	CreateBlog(context.Context, models.BlogInput) (*models.Blog, error)
@@ -131,6 +132,7 @@ func (a *API) Register(e *echo.Echo) {
 
 	admin.GET("/projects", a.listProjects)
 	admin.POST("/projects", a.createProject)
+	admin.POST("/projects/:id/reorder", a.reorderProject)
 	admin.PUT("/projects/:id", a.updateProject)
 	admin.DELETE("/projects/:id", a.deleteProject)
 
@@ -565,6 +567,23 @@ func (a *API) deleteProject(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	a.publishEvent(c, "project.deleted", "projects", "deleted", c.Param("id"), nil)
+	return c.NoContent(http.StatusNoContent)
+}
+
+func (a *API) reorderProject(c echo.Context) error {
+	var body struct {
+		Direction int `json:"direction"`
+	}
+	if err := c.Bind(&body); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "invalid request body")
+	}
+	if body.Direction != 1 && body.Direction != -1 {
+		return echo.NewHTTPError(http.StatusBadRequest, "direction must be 1 or -1")
+	}
+	if err := a.store.SwapProjectOrder(c.Request().Context(), c.Param("id"), body.Direction); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, err.Error())
+	}
+	a.publishEvent(c, "project.reordered", "projects", "reordered", c.Param("id"), nil)
 	return c.NoContent(http.StatusNoContent)
 }
 

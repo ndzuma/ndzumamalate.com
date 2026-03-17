@@ -3,6 +3,7 @@
   import BottomNav from '../components/BottomNav.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { profile } from '../lib/api.js';
+  import { toast } from '../lib/toast.svelte.js';
   import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
 
   let openToWork = $state(false);
@@ -52,9 +53,11 @@
         linkedin_url: linkedinUrl,
         website_url: websiteUrl,
       });
+      toast('Profile updated');
       navigate('/dashboard');
     } catch (e) {
       error = e.message || 'Failed to save';
+      toast(error, 'error');
     }
     saving = false;
   }
