@@ -11,6 +11,7 @@ import (
 	"time"
 
 	"ndzumamalate.com/apps/api/internal/auth"
+	"ndzumamalate.com/apps/api/internal/cms"
 	"ndzumamalate.com/apps/api/internal/config"
 	"ndzumamalate.com/apps/api/internal/db"
 	"ndzumamalate.com/apps/api/internal/handlers"
@@ -93,6 +94,9 @@ func run(ctx context.Context) error {
 
 	e := echo.New()
 	api.Register(e)
+	if err := cms.Register(e); err != nil {
+		return err
+	}
 
 	serverErr := make(chan error, 1)
 	go func() {
