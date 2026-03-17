@@ -62,11 +62,7 @@ src/
     auth.svelte.js         Auth state management
     toast.svelte.js        Toast notification state
   assets/
-    logo-icon-black.svg    Icon logo (dark on light)
-    logo-icon-white.svg    Icon logo (light on dark)
-    logo-full-black.svg    Icon + "MALATE" text
-    logo-full-white.svg    Icon + "MALATE" text (inverted)
-    logo-wordmark-*.svg    "NDZUMA MALATE" text only
+    Face logo.svg          Primary CMS brand mark
 ```
 
 ## Go API

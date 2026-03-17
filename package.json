@@ -7,9 +7,10 @@
     "apps/cms"
   ],
   "scripts": {
-    "dev": "turbo run dev dev:api --filter=./apps/cms --filter=// --parallel --ui=tui",
+    "dev": "turbo run dev dev:api --filter=./apps/web --filter=./apps/cms --filter=// --parallel --ui=tui",
     "dev:api": "cd apps/api && go run ./cmd/server",
-    "build": "turbo build"
+    "build": "turbo run build --filter=./apps/web --filter=./apps/cms",
+    "test:cms": "bun run --cwd apps/cms test"
   },
   "devDependencies": {
     "turbo": "^2.8.17"

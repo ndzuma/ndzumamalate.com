@@ -117,6 +117,7 @@ func (s *stubStore) UpdateWebhookEndpoint(context.Context, string, models.Webhoo
 	return &models.WebhookEndpoint{ID: "wh-1"}, nil
 }
 func (s *stubStore) DeleteWebhookEndpoint(context.Context, string) error { return nil }
+func (s *stubStore) SwapProjectOrder(context.Context, string, int) error { return nil }
 
 type noopResend struct{}
 

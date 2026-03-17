@@ -1,1 +1,37 @@
-# Workflow to be added during implementation.
+name: CMS
+
+on:
+  push:
+    paths:
+      - "apps/cms/**"
+      - ".github/workflows/cms.yml"
+      - "package.json"
+      - "bun.lock"
+      - "turbo.json"
+  pull_request:
+    paths:
+      - "apps/cms/**"
+      - ".github/workflows/cms.yml"
+      - "package.json"
+      - "bun.lock"
+      - "turbo.json"
+
+jobs:
+  test-and-build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: "1.3.10"
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Run CMS tests
+        run: bun run --cwd apps/cms test
+
+      - name: Build CMS
+        run: bun run --cwd apps/cms build

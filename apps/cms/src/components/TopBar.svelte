@@ -1,5 +1,5 @@
 <script>
-  import logoIcon from '../assets/logo-icon-black.svg';
+  import logoIcon from '../assets/Face logo.svg';
 
   /** @type {{ pageName: string, actions?: import('svelte').Snippet }} */
   let { pageName = 'Dashboard', actions } = $props();
