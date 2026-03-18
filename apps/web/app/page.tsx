@@ -1,74 +1,6 @@
-import Image from "next/image";
-import Link from "next/link";
-
-const logos = [
-  { name: "TypeScript", path: "M4 4h16v16H4V4zm8 10.3c0-.3-.1-.5-.2-.7-.1-.2-.3-.3-.5-.4l-.8-.3c-.3-.1-.5-.2-.6-.3-.1-.1-.2-.3-.2-.5 0-.2.1-.4.2-.6.1-.1.3-.2.5-.2.2 0 .4.1.5.2.1.1.2.3.2.5h1.7c-.1-.5-.3-.9-.6-1.2-.3-.3-.8-.5-1.4-.5-.6 0-1.1.2-1.5.5-.3.4-.5.8-.5 1.4 0 .4.1.7.3.9.2.2.4.4.7.5l.8.3c.3.1.5.2.7.4.2.2.3.4.3.7 0 .3-.1.5-.3.7-.2.2-.5.3-.8.3-.3 0-.6-.1-.8-.3-.2-.2-.3-.5-.4-.8H7.3c.1.7.4 1.2.8 1.6.4.4 1 .6 1.7.6.7 0 1.2-.2 1.6-.6.4-.4.6-.9.6-1.5zM15 8h-4.3v1.6H13v5.4h1.8v-5.4h2.2V8z" },
-  { name: "React", path: "M11.955 4.545c-2.484 0-4.838.41-6.793 1.155C3.125 6.474 2 7.426 2 8.5s1.125 2.026 3.162 2.8c1.955.744 4.31 1.155 6.793 1.155s4.838-.41 6.793-1.155c2.037-.774 3.162-1.726 3.162-2.8s-1.125-2.026-3.162-2.8c-1.955-.744-4.31-1.155-6.793-1.155zM11.955 6.25c2.19 0 4.218.334 5.864.912 1.402.493 2.136 1.05 2.136 1.338 0 .288-.734.845-2.136 1.338-1.646.578-3.674.912-5.864.912s-4.218-.334-5.864-.912c-1.402-.493-2.136-1.05-2.136-1.338 0-.288.734-.845 2.136-1.338 1.646-.578 3.674-.912 5.864-.912zm0 1.25a1 1 0 100 2 1 1 0 000-2z" },
-  { name: "Go", path: "M8.4 8.7c.3.5.7.8 1.2 1 .5.2 1.1.2 1.7 0 .5-.2.9-.6 1.2-1.1.2-.5.3-1.1.1-1.6-.2-.5-.6-.9-1.1-1.2-.5-.3-1.1-.3-1.6-.1-.5.2-.9.6-1.1 1.1-.3.5-.3 1.1-.1 1.6l1.2-.8c-.1-.3 0-.5.2-.7.2-.2.5-.2.7-.1.2.1.4.3.4.5.1.2 0 .5-.2.7-.2.2-.5.3-.7.1L8.4 8.7zm7.6-3.4c-.6-.6-1.5-.9-2.4-.7-.9.1-1.7.6-2.1 1.4l1.3.8c.2-.5.6-.8 1.1-.8.5 0 1 .1 1.3.5.3.3.4.8.4 1.2v.3c-1.5 0-2.8.5-3.8 1.4-.9.9-1.4 2.1-1.4 3.4s.5 2.5 1.4 3.4c.9.9 2.1 1.4 3.4 1.4s2.5-.5 3.4-1.4c.9-.9 1.4-2.1 1.4-3.4v-4.8c0-1.1-.4-2.1-1.2-2.9zm-.8 6.5c-.3.4-.8.7-1.3.8-.5.1-1.1 0-1.5-.3-.4-.3-.7-.8-.8-1.3-.1-.5 0-1.1.3-1.5.3-.4.8-.7 1.3-.8.5-.1 1.1 0 1.5.3.4.3.7.8.8 1.3.1.5 0 1.1-.3 1.5v.3zM4 11.2c-.4 0-.8.1-1.1.3-.3.2-.6.5-.8.8-.2.3-.3.7-.3 1.1s.1.8.3 1.1c.2.3.5.6.8.8.3.2.7.3 1.1.3s.8-.1 1.1-.3c.3-.2.6-.5.8-.8.2-.3.3-.7.3-1.1s-.1-.8-.3-1.1c-.2-.3-.5-.6-.8-.8-.3-.2-.7-.3-1.1-.3z" },
-  { name: "Node.js", path: "M12 2l8.66 5v10L12 22l-8.66-5V7L12 2zm0 1.54L4.85 7.85v8.3L12 20.46l7.15-4.31v-8.3L12 3.54zm3.62 10.95c-.37.38-.85.57-1.44.57s-1.07-.19-1.44-.57c-.37-.38-.56-.88-.56-1.49V9.89h-1.5v3.1c0 1.04.3 1.83.91 2.38.61.55 1.41.83 2.39.83s1.78-.28 2.39-.83c.61-.55.91-1.34.91-2.38V9.89h-1.5v3.1c0 .61-.19 1.11-.56 1.49zm-6.02-3.13c-.15-.17-.37-.25-.66-.25s-.51.08-.66.25c-.15.17-.23.4-.23.68v2.44c0 .28.08.51.23.68.15.17.37.25.66.25s.51-.08.66-.25c.15-.17.23-.4.23-.68v-2.44c0-.28-.08-.51-.23-.68zm1.5 3.12c0 .6-.18 1.09-.54 1.47-.36.38-.83.57-1.41.57s-1.05-.19-1.41-.57c-.36-.38-.54-.87-.54-1.47v-2.44c0-.6.18-1.09.54-1.47.36-.38.83-.57 1.41-.57s1.05.19 1.41.57c.36.38.54.87.54 1.47v2.44z" },
-  { name: "Python", path: "M11.96 2c-2.73 0-3.04.48-3.04 1.53v1.51h6.14v.45H8.79C6.01 5.49 5.3 6.94 5.3 9.49c0 2.51.64 3.82 2.65 4.02h.81v-1.15c0-1.78.96-3.23 3.06-3.23h3.58c1.32 0 2.45-1.06 2.45-2.4V4.54C17.85 2.4 16.51 2 11.96 2zM9.9 3.51a.63.63 0 01.63.63.63.63 0 01-.63.63.63.63 0 01-.63-.63.63.63 0 01.63-.63zm8.79 6.2c0 1.78-.96 3.23-3.06 3.23h-3.58c-1.32 0-2.45 1.06-2.45 2.4v2.18c0 2.14 1.34 2.54 5.89 2.54 2.73 0 3.04-.48 3.04-1.53v-1.51H12.4v-.45h6.27c2.78 0 3.49-1.45 3.49-4 0-2.51-.64-3.82-2.65-4.02h-.81v1.16zm-4.58 8.65a.63.63 0 01.63.63.63.63 0 01-.63.63.63.63 0 01-.63-.63.63.63 0 01.63-.63z" },
-  { name: "PostgreSQL", path: "M21 15v-5l-4-2.5V5l-4-2.5-1-1-1 1L7 5v2.5L3 10v5l4 2.5V20l4 2.5 1 1 1-1 4-2.5v-2.5l4-2.5zM12 4.1l3 1.9v3.8l-3 1.9-3-1.9V6l3-1.9zm-4 6.3l3 1.9-3 1.9-3-1.9 3-1.9zm8 3.8l-3 1.9v-3.8l3-1.9v3.8zm-4 6.3l-3-1.9v-3.8l3 1.9v3.8z" },
-  { name: "Git", path: "M22.65 10.3l-8.9-8.9a2.53 2.53 0 00-3.6 0l-1.3 1.3 2.5 2.5a1.86 1.86 0 012.3 2.3l2.8 2.8a1.87 1.87 0 11-1.3 1.4l-2.7-2.7v6.3a1.86 1.86 0 11-1.8 0v-5.7L8 6.7 1.4 13.3a2.53 2.53 0 000 3.6l8.9 8.9a2.53 2.53 0 003.6 0l8.7-8.8a2.53 2.53 0 00.05-3.6v-.1zM10.8 17.6a.9.9 0 10.9-.9.9.9 0 00-.9.9zm.9-8.4a.9.9 0 10-.9-.9.9.9 0 00.9.9zm4.2 3.6a.9.9 0 10-.9-.9.9.9 0 00.9.9z" },
-  { name: "Vercel", path: "M12 2L2 20h20L12 2z" },
-  { name: "Docker", path: "M20.3 11c-.1-1-.8-1.8-1.8-2-.2-1.3-1.3-2.3-2.6-2.3H5v2.8h2.3V11h-2.1v2.8h11.9c1 0 1.9-.8 2-1.8zM5 16.5h11.9c1 0 1.9-.8 2-1.8H5v1.8zm2.4-12v2.8h2.3V4.5H7.4zm4.8 0v2.8h2.3V4.5h-2.3z" }
-];
-
-function TickerRow({ reverse = false, offset = 0 }) {
-  // Rotate the array so each row looks a bit different
-  const shiftedLogos = [...logos.slice(offset), ...logos.slice(0, offset)];
-
-  return (
-    <div 
-      className={`flex w-max hover:[animation-play-state:paused] ${reverse ? 'animate-scroll-right' : 'animate-scroll-left'}`}
-    >
-      {[0, 1].map((group) => (
-        <div key={group} className="flex shrink-0 items-center justify-around w-max gap-12 px-6 sm:gap-16 sm:px-8">
-          {shiftedLogos.map((logo, i) => (
-            <div 
-              key={`${group}-${i}`} 
-              className="text-black/20 hover:text-black/80 transition-colors duration-300"
-              title={logo.name}
-            >
-              <svg viewBox="0 0 24 24" fill="currentColor" className="w-10 h-10 sm:w-14 sm:h-14">
-                <path d={logo.path} />
-              </svg>
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-type FeaturedCardProps = {
-  href: string;
-  title: string;
-  date?: string;
-  image?: string;
-  aspectClass?: string;
-};
-
-function FeaturedCard({ href, title, date, image, aspectClass = "aspect-[16/9]" }: FeaturedCardProps) {
-  return (
-    <Link href={href} className="group flex flex-col gap-4">
-      <div className={`w-full ${aspectClass} rounded-3xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-md`}>
-        <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-        {/* <Image src={image} alt={title} fill className="object-cover" /> */}
-      </div>
-      
-      <div className="px-1 flex flex-col gap-1">
-        <h3 className="font-medium text-[15px] sm:text-base tracking-tight group-hover:text-black/70 transition-colors">
-          {title}
-        </h3>
-        {date && (
-          <p className="text-sm text-black/40">
-            {date}
-          </p>
-        )}
-      </div>
-    </Link>
-  );
-}
+import FeaturedCard from "../components/featured-card";
+import LogosTicker from "../components/logos-ticker";
+import Carousel from "../components/carousel";
 
 const projects = [
   {
@@ -100,6 +32,12 @@ const blogs = [
     title: "How Agentic UI is different?",
     date: "Feb 02, 2024",
     image: "/assets/blog-2-placeholder.jpg"
+  },
+  {
+    id: 3,
+    title: "Thoughts on AI toolings",
+    date: "Jan 12, 2024",
+    image: "/assets/blog-3-placeholder.jpg"
   }
 ];
 
@@ -134,57 +72,36 @@ export default function Home() {
         </section>
 
         {/* Right Side: Logos Ticker */}
-        <section 
-          className="relative w-full overflow-hidden flex flex-col gap-10 sm:gap-12 py-6"
-          style={{ 
-            maskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)',
-            WebkitMaskImage: 'linear-gradient(to right, transparent, black 15%, black 85%, transparent)'
-          }}
-        >
-          <TickerRow reverse={false} offset={0} />
-          <TickerRow reverse={true} offset={3} />
-          <TickerRow reverse={false} offset={6} />
-          <TickerRow reverse={true} offset={2} />
-        </section>
+        <LogosTicker />
 
       </div>
 
-      {/* Featured Projects */}
-      <section className="mt-32">
-        <h2 className="text-xl sm:text-2xl font-medium mb-8 text-left tracking-tight">
-          Featured projects
-        </h2>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {projects.map((project) => (
-            <FeaturedCard 
-              key={project.id}
-              href={`/projects/${project.id}`}
-              title={project.title}
-              image={project.image}
-              aspectClass="aspect-[4/3]"
-            />
-          ))}
-        </div>
-      </section>
+      {/* Featured Projects Carousel */}
+      <Carousel title="Featured projects">
+        {projects.slice(0, 3).map((project) => (
+          <FeaturedCard 
+            key={project.id}
+            href={`/projects/${project.id}`}
+            title={project.title}
+            image={project.image}
+            className="w-[85vw] sm:w-[400px] lg:w-[480px]"
+          />
+        ))}
+      </Carousel>
 
-      {/* Featured Blogs */}
-      <section className="mt-32">
-        <h2 className="text-xl sm:text-2xl font-medium mb-8 text-left tracking-tight">
-          Featured blogs
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {blogs.map((blog) => (
-            <FeaturedCard 
-              key={blog.id}
-              href={`/blog/${blog.id}`}
-              title={blog.title}
-              date={blog.date}
-              image={blog.image}
-              aspectClass="aspect-[16/9]"
-            />
-          ))}
-        </div>
-      </section>
+      {/* Featured Blogs Carousel */}
+      <Carousel title="Featured blogs">
+        {blogs.slice(0, 3).map((blog) => (
+          <FeaturedCard 
+            key={blog.id}
+            href={`/blog/${blog.id}`}
+            title={blog.title}
+            date={blog.date}
+            image={blog.image}
+            className="w-[85vw] sm:w-[400px] lg:w-[480px]"
+          />
+        ))}
+      </Carousel>
       
     </main>
   );

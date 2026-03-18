@@ -35,6 +35,7 @@ body {
     linear-gradient(180deg, #fcfbf8 0%, var(--background) 100%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
+  overflow-x: hidden;
 }
 
 a {
@@ -78,4 +79,16 @@ svg {
 
 .animate-scroll-right {
   animation: scroll-right 30s linear infinite;
+}
+
+.pause-on-hover:hover {
+  animation-play-state: paused !important;
+}
+
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
 }
