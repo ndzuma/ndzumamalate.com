@@ -152,6 +152,7 @@ type Profile struct {
 	CurrentlyReadingURL   string    `json:"currently_reading_url,omitempty"`
 	GitHubURL             string    `json:"github_url,omitempty"`
 	TwitterURL            string    `json:"twitter_url,omitempty"`
+	ThreadsURL            string    `json:"threads_url,omitempty"`
 	LinkedInURL           string    `json:"linkedin_url,omitempty"`
 	WebsiteURL            string    `json:"website_url,omitempty"`
 	UpdatedAt             time.Time `json:"updated_at"`
@@ -165,6 +166,7 @@ type ProfileInput struct {
 	CurrentlyReadingURL   string `json:"currently_reading_url"`
 	GitHubURL             string `json:"github_url"`
 	TwitterURL            string `json:"twitter_url"`
+	ThreadsURL            string `json:"threads_url"`
 	LinkedInURL           string `json:"linkedin_url"`
 	WebsiteURL            string `json:"website_url"`
 }

@@ -13,6 +13,7 @@
   let currentlyReadingUrl = $state('');
   let githubUrl = $state('');
   let twitterUrl = $state('');
+  let threadsUrl = $state('');
   let linkedinUrl = $state('');
   let websiteUrl = $state('');
   let saving = $state(false);
@@ -30,6 +31,7 @@
         currentlyReadingUrl = data.currently_reading_url || '';
         githubUrl = data.github_url || '';
         twitterUrl = data.twitter_url || '';
+        threadsUrl = data.threads_url || '';
         linkedinUrl = data.linkedin_url || '';
         websiteUrl = data.website_url || '';
       }
@@ -50,6 +52,7 @@
         currently_reading_url: currentlyReadingUrl,
         github_url: githubUrl,
         twitter_url: twitterUrl,
+        threads_url: threadsUrl,
         linkedin_url: linkedinUrl,
         website_url: websiteUrl,
       });
@@ -93,6 +96,11 @@
         <div class="field">
           <label class="mono">TWITTER URL</label>
           <input bind:value={twitterUrl} placeholder="https://twitter.com/..." />
+        </div>
+
+        <div class="field">
+          <label class="mono">THREADS URL</label>
+          <input bind:value={threadsUrl} placeholder="https://threads.net/..." />
         </div>
 
         <div class="field">

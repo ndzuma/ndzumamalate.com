@@ -1,4 +1,8 @@
+"use client";
+
+import { useState } from "react";
 import FeaturedCard from "../../components/featured-card";
+import FilterDropdown from "../../components/filter-dropdown";
 
 const allProjects = [
   {
@@ -6,30 +10,46 @@ const allProjects = [
     title: "Agentic UI Framework",
     image: "/assets/project-1-placeholder.jpg",
     repoUrl: "https://github.com",
-    liveUrl: "https://vercel.com"
+    liveUrl: "https://vercel.com",
+    published: true,
+    tags: ['Next.js', 'AI/ML']
   },
   {
     id: 2,
     title: "Video Gen Workflows",
     image: "/assets/project-2-placeholder.jpg",
     repoUrl: "https://github.com",
-    liveUrl: "https://vercel.com"
+    liveUrl: "https://vercel.com",
+    published: true,
+    tags: ['Design']
   },
   {
     id: 3,
     title: "Brand Workshops powered by AI",
     image: "/assets/project-3-placeholder.jpg",
-    repoUrl: "https://github.com"
+    repoUrl: "https://github.com",
+    published: false,
+    tags: ['AI/ML']
   },
   {
     id: 4,
     title: "Trading Extensions",
     image: "/assets/project-4-placeholder.jpg",
-    liveUrl: "https://vercel.com"
+    liveUrl: "https://vercel.com",
+    published: true,
+    tags: ['Fintech']
   }
 ];
 
 export default function ProjectsPage() {
+  const [selectedTag, setSelectedTag] = useState('All');
+  const filterOptions = ['All', 'Next.js', 'AI/ML', 'Design', 'Fintech'];
+
+  const publishedProjects = allProjects.filter(p => p.published);
+  const filteredProjects = selectedTag === 'All' 
+    ? publishedProjects 
+    : publishedProjects.filter(p => p.tags.includes(selectedTag));
+
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
@@ -41,20 +61,14 @@ export default function ProjectsPage() {
         </p>
       </section>
 
-      {/* Filter Row */}
-      <div className="flex justify-end mb-8 border-b border-black/5 pb-4">
-        <div className="flex gap-2 items-center text-sm overflow-x-auto hide-scrollbar">
-          <span className="text-black/40 mr-2 shrink-0">Filter by:</span>
-          {['All', 'Next.js', 'AI/ML', 'Design', 'Fintech'].map(tag => (
-            <button key={tag} className="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-black/70 transition-colors whitespace-nowrap">
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FilterDropdown 
+        options={filterOptions} 
+        selected={selectedTag} 
+        onChange={setSelectedTag} 
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {allProjects.map((project) => (
+        {filteredProjects.map((project) => (
           <FeaturedCard 
             key={project.id}
             href={`/projects/${project.id}`}

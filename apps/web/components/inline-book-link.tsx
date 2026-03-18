@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { SpotifyLogo, AppleLogo } from "@phosphor-icons/react";
+import { BookOpen } from "@phosphor-icons/react";
 
-export default function InlineMusicLink() {
+export default function InlineBookLink() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -14,9 +14,9 @@ export default function InlineMusicLink() {
       onMouseLeave={() => setIsOpen(false)}
     >
       <span 
-        className="font-medium text-black bg-purple-100 px-1 rounded hover:bg-purple-200 transition-colors cursor-pointer"
+        className="font-medium text-black bg-orange-100 px-1 rounded hover:bg-orange-200 transition-colors cursor-pointer"
       >
-        aesthetic vibes
+        The Creative Act
       </span>
 
       <AnimatePresence>
@@ -29,22 +29,13 @@ export default function InlineMusicLink() {
             className="absolute left-0 top-full mt-2 bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5 z-10 w-max"
           >
             <a 
-              href="https://spotify.com" 
+              href="https://www.goodreads.com/book/show/60018567-the-creative-act" 
               target="_blank" 
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-[#1DB954]/10 hover:bg-[#1DB954]/20 text-[#1DB954] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+              className="flex items-center gap-1.5 bg-[#e9e5cd]/60 hover:bg-[#e9e5cd] text-[#382110] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
-              <SpotifyLogo weight="fill" className="w-4 h-4" />
-              Spotify
-            </a>
-            <a 
-              href="https://music.apple.com" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="flex items-center gap-1.5 bg-[#FA243C]/10 hover:bg-[#FA243C]/20 text-[#FA243C] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
-            >
-              <AppleLogo weight="fill" className="w-4 h-4" />
-              Apple Music
+              <BookOpen weight="fill" className="w-4 h-4" />
+              Goodreads
             </a>
           </motion.div>
         )}

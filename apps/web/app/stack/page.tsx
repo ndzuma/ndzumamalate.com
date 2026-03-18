@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
 import InlineMusicLink from "../../components/inline-music-link";
+import InlineBookLink from "../../components/inline-book-link";
 
 export const metadata: Metadata = {
-  title: "About | ndzumamalate.com",
+  title: "Stack | ndzumamalate.com",
   description: "More about my hobbies, tooling, and favourite stacks.",
 };
 
-export default function AboutPage() {
+export default function StackPage() {
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
-          about
+          stack
         </h1>
         <p className="text-base sm:text-lg text-black/60 leading-relaxed">
           A little bit more about my personal interests, the tools I use every day, and what I love building with.
@@ -37,7 +38,7 @@ export default function AboutPage() {
             <li className="flex gap-3 text-black/80">
               <span className="text-black/30 mt-1">↳</span>
               <span>
-                Currently reading <a href="https://www.goodreads.com/book/show/60018567-the-creative-act" target="_blank" rel="noopener noreferrer" className="font-medium text-black underline decoration-black/20 hover:decoration-black/60 transition-colors cursor-pointer">The Creative Act</a>
+                Currently reading <InlineBookLink />
               </span>
             </li>
             <li className="flex gap-3 text-black/80">

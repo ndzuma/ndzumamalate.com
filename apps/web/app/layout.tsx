@@ -4,6 +4,7 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 import SiteShell from "../components/site-shell";
+import { LiveUpdateProvider } from "../components/live-update-provider";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -32,7 +33,9 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={geist.variable}>
-        <SiteShell>{children}</SiteShell>
+        <LiveUpdateProvider>
+          <SiteShell>{children}</SiteShell>
+        </LiveUpdateProvider>
       </body>
     </html>
   );

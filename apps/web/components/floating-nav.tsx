@@ -13,8 +13,8 @@ type FloatingNavProps = {
 const navItems = [
   { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
-  { href: "/about", label: "About" },
-  { href: "/this", label: "This" },
+  { href: "/experience", label: "Experience" },
+  { href: "/stack", label: "Stack" },
 ] as const;
 
 function isActive(pathname: string, href: string) {
@@ -99,10 +99,10 @@ export default function FloatingNav({ pathname }: FloatingNavProps) {
             <div className="hidden sm:flex flex-1 items-center justify-end gap-2">
               <Link
                 href="/contact"
-                className="flex h-11 w-11 items-center justify-center rounded-full bg-white/60 backdrop-blur-xl border border-black/5 text-black transition-transform hover:scale-105 shadow-sm"
+                className="flex h-11 px-5 items-center justify-center rounded-full bg-white/60 backdrop-blur-xl border border-black/5 text-black text-sm font-medium tracking-tight transition-transform hover:scale-105 shadow-sm"
                 aria-label="Contact"
               >
-                <EnvelopeSimple weight="bold" className="h-5 w-5" />
+                Contact me
               </Link>
             </div>
 
@@ -149,8 +149,7 @@ export default function FloatingNav({ pathname }: FloatingNavProps) {
                   href="/contact"
                   className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium tracking-tight text-black hover:bg-black/5 transition-colors"
                 >
-                  Contact
-                  <EnvelopeSimple weight="bold" className="h-4 w-4 opacity-50" />
+                  Contact me
                 </Link>
               </motion.div>
             )}

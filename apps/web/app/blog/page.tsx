@@ -1,33 +1,53 @@
+"use client";
+
+import { useState } from "react";
 import FeaturedCard from "../../components/featured-card";
+import FilterDropdown from "../../components/filter-dropdown";
 
 const allBlogs = [
   {
     id: 1,
     title: "Crafting Interfaces for Video Gen Workflows",
     date: "Mar 15, 2024",
-    image: "/assets/blog-1-placeholder.jpg"
+    image: "/assets/blog-1-placeholder.jpg",
+    published: true,
+    tags: ['Design']
   },
   {
     id: 2,
     title: "How Agentic UI is different?",
     date: "Feb 02, 2024",
-    image: "/assets/blog-2-placeholder.jpg"
+    image: "/assets/blog-2-placeholder.jpg",
+    published: true,
+    tags: ['Agents', 'Thoughts']
   },
   {
     id: 3,
     title: "Thoughts on AI toolings",
     date: "Jan 12, 2024",
-    image: "/assets/blog-3-placeholder.jpg"
+    image: "/assets/blog-3-placeholder.jpg",
+    published: false,
+    tags: ['Thoughts']
   },
   {
     id: 4,
     title: "Designing for dense data",
     date: "Dec 05, 2023",
-    image: "/assets/blog-4-placeholder.jpg"
+    image: "/assets/blog-4-placeholder.jpg",
+    published: true,
+    tags: ['Engineering', 'Design']
   }
 ];
 
 export default function BlogPage() {
+  const [selectedTag, setSelectedTag] = useState('All');
+  const filterOptions = ['All', 'Design', 'Engineering', 'Agents', 'Thoughts'];
+
+  const publishedBlogs = allBlogs.filter(b => b.published);
+  const filteredBlogs = selectedTag === 'All' 
+    ? publishedBlogs 
+    : publishedBlogs.filter(b => b.tags.includes(selectedTag));
+
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
@@ -39,20 +59,14 @@ export default function BlogPage() {
         </p>
       </section>
 
-      {/* Filter Row */}
-      <div className="flex justify-end mb-8 border-b border-black/5 pb-4">
-        <div className="flex gap-2 items-center text-sm overflow-x-auto hide-scrollbar">
-          <span className="text-black/40 mr-2 shrink-0">Filter by:</span>
-          {['All', 'Design', 'Engineering', 'Agents', 'Thoughts'].map(tag => (
-            <button key={tag} className="px-3 py-1.5 rounded-full bg-black/5 hover:bg-black/10 text-black/70 transition-colors whitespace-nowrap">
-              {tag}
-            </button>
-          ))}
-        </div>
-      </div>
+      <FilterDropdown 
+        options={filterOptions} 
+        selected={selectedTag} 
+        onChange={setSelectedTag} 
+      />
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {allBlogs.map((blog) => (
+        {filteredBlogs.map((blog) => (
           <FeaturedCard 
             key={blog.id}
             href={`/blog/${blog.id}`}

@@ -66,7 +66,7 @@ export default function Carousel({ title, children }: CarouselProps) {
       <div 
         ref={scrollRef}
         onScroll={handleScroll}
-        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pb-8 -mb-8 pr-[calc(50vw-50%)] -mr-[calc(50vw-50%)] pl-4 -ml-4 sm:pl-0 sm:-ml-0"
+        className="flex gap-6 overflow-x-auto snap-x snap-mandatory hide-scrollbar pt-8 -mt-8 pb-12 -mb-12 pr-[calc(50vw-50%)] -mr-[calc(50vw-50%)] pl-4 -ml-4 sm:pl-0 sm:-ml-0"
         style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
       >
         {children}

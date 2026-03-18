@@ -799,10 +799,10 @@ func (s *Store) DeleteCV(ctx context.Context, id string) error {
 func (s *Store) GetProfile(ctx context.Context) (*models.Profile, error) {
 	profile := &models.Profile{}
 	err := s.pool.QueryRow(ctx, `
-		SELECT id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
+		SELECT id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(threads_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
 		FROM profile
 		WHERE id = 1
-	`).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
+	`).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.ThreadsURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -815,8 +815,8 @@ func (s *Store) GetProfile(ctx context.Context) (*models.Profile, error) {
 func (s *Store) UpsertProfile(ctx context.Context, input models.ProfileInput) (*models.Profile, error) {
 	profile := &models.Profile{}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO profile (id, open_to_work, spotify_url, apple_music_url, currently_reading_title, currently_reading_url, github_url, twitter_url, linkedin_url, website_url)
-		VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9)
+		INSERT INTO profile (id, open_to_work, spotify_url, apple_music_url, currently_reading_title, currently_reading_url, github_url, twitter_url, threads_url, linkedin_url, website_url)
+		VALUES (1, $1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 		ON CONFLICT (id) DO UPDATE
 		SET open_to_work = EXCLUDED.open_to_work,
 			spotify_url = EXCLUDED.spotify_url,
@@ -825,11 +825,12 @@ func (s *Store) UpsertProfile(ctx context.Context, input models.ProfileInput) (*
 			currently_reading_url = EXCLUDED.currently_reading_url,
 			github_url = EXCLUDED.github_url,
 			twitter_url = EXCLUDED.twitter_url,
+			threads_url = EXCLUDED.threads_url,
 			linkedin_url = EXCLUDED.linkedin_url,
 			website_url = EXCLUDED.website_url,
 			updated_at = NOW()
-		RETURNING id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
-	`, input.OpenToWork, input.SpotifyURL, input.AppleMusicURL, input.CurrentlyReadingTitle, input.CurrentlyReadingURL, input.GitHubURL, input.TwitterURL, input.LinkedInURL, input.WebsiteURL).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
+		RETURNING id, open_to_work, COALESCE(spotify_url, ''), COALESCE(apple_music_url, ''), COALESCE(currently_reading_title, ''), COALESCE(currently_reading_url, ''), COALESCE(github_url, ''), COALESCE(twitter_url, ''), COALESCE(threads_url, ''), COALESCE(linkedin_url, ''), COALESCE(website_url, ''), updated_at
+	`, input.OpenToWork, input.SpotifyURL, input.AppleMusicURL, input.CurrentlyReadingTitle, input.CurrentlyReadingURL, input.GitHubURL, input.TwitterURL, input.ThreadsURL, input.LinkedInURL, input.WebsiteURL).Scan(&profile.ID, &profile.OpenToWork, &profile.SpotifyURL, &profile.AppleMusicURL, &profile.CurrentlyReadingTitle, &profile.CurrentlyReadingURL, &profile.GitHubURL, &profile.TwitterURL, &profile.ThreadsURL, &profile.LinkedInURL, &profile.WebsiteURL, &profile.UpdatedAt)
 	if err != nil {
 		return nil, err
 	}

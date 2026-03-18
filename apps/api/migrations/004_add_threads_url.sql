@@ -1,0 +1,1 @@
+ALTER TABLE profile ADD COLUMN threads_url TEXT DEFAULT '';
