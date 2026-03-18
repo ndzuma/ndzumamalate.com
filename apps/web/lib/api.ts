@@ -5,10 +5,13 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 // Error handling helper
 async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const url = `${API_URL}/api/v1/public${endpoint}`;
+  
+  // Use ISR or standard dynamic caching. Revalidate every 60 seconds is a good default 
+  // for a personal site so you don't hit your Go DB on every single visitor load, 
+  // while still staying relatively fresh.
   const response = await fetch(url, {
     ...options,
-    // Use no-store to ensure SSE live updates always reflect fresh DB state
-    cache: 'no-store',
+    next: { revalidate: 60 }
   });
 
   if (!response.ok) {

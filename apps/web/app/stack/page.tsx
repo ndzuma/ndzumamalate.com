@@ -3,7 +3,7 @@ import InlineMusicLink from "../../components/inline-music-link";
 import InlineBookLink from "../../components/inline-book-link";
 
 export const metadata: Metadata = {
-  title: "Stack | ndzumamalate.com",
+  title: "Stack",
   description: "More about my hobbies, tooling, and favourite stacks.",
 };
 

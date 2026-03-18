@@ -2,7 +2,7 @@ import BlogClient from "../../components/blog-client";
 import { api } from "../../lib/api";
 
 export const metadata = {
-  title: "Blog | Ndzuma Malate",
+  title: "Blog",
   description: "Writing about design engineering, building interfaces, and the intersection of human and agent experiences.",
 };
 

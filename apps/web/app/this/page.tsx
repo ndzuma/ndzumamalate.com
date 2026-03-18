@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "This | ndzumamalate.com",
+  title: "This",
   description: "About this website.",
 };
 

@@ -15,6 +15,7 @@ const navItems = [
   { href: "/blog", label: "Blog" },
   { href: "/experience", label: "Experience" },
   { href: "/stack", label: "Stack" },
+  { href: "/this", label: "This" },
 ] as const;
 
 function isActive(pathname: string, href: string) {

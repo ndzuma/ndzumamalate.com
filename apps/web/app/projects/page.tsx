@@ -2,7 +2,7 @@ import ProjectsClient from "../../components/projects-client";
 import { api } from "../../lib/api";
 
 export const metadata = {
-  title: "Projects | Ndzuma Malate",
+  title: "Projects",
   description: "A selection of my recent work, side projects, and ongoing experiments in pushing the boundaries of interface design.",
 };
 

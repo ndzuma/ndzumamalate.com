@@ -4,7 +4,6 @@ import type { ReactNode } from "react";
 
 import "./globals.css";
 import SiteShell from "../components/site-shell";
-import { LiveUpdateProvider } from "../components/live-update-provider";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -12,7 +11,10 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
-  title: "ndzumamalate.com",
+  title: {
+    template: "%s | Ndzuma",
+    default: "Ndzuma Malate",
+  },
   description: "Personal website project scaffold",
   icons: {
     icon: [
@@ -33,9 +35,7 @@ export default function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en">
       <body className={geist.variable}>
-        <LiveUpdateProvider>
-          <SiteShell>{children}</SiteShell>
-        </LiveUpdateProvider>
+        <SiteShell>{children}</SiteShell>
       </body>
     </html>
   );
