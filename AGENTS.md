@@ -12,20 +12,11 @@ Turborepo monorepo for a personal website with three apps:
 
 Package manager: **Bun** (`bun@1.3.10`). No npm/yarn/pnpm.
 
-### Monorepo (from repo root)
-
-```sh
-bun install              # install all workspace dependencies
-bun run dev              # start all apps in parallel (web, cms, api)
-bun run build            # build web + cms via Turborepo
-```
-
 ## Tasks per change
 
 - chech if the changes affect how github workflows work, if so update the
-- Make sure that if we can test the whatever we are making. we do so
+- Implement sensible tests
 - Make sure after every change if we need to change the repository structure, we update the AGENTS.md file to reflect the changes
-- Make the tests first, make sure they fail, then write the code, and then make sure they pass
 
 ## Repository Structure
 
@@ -52,9 +43,9 @@ apps/
       lib/                      # api.js, router.svelte.js, auth.svelte.js, toast.svelte.js
       styles/global.css
   web/
-    app/                        # Next.js App Router (layout.js, page.js)
+    app/                        # Next.js App Router (layout.tsx, page.tsx, route folders)
     components/                 # React components
-    public/                     # static assets
+    public/                     # static assets (including copied CMS logos/favicons)
 ```
 
 ## Code Style -- CMS / Svelte (apps/cms)
@@ -71,7 +62,7 @@ apps/
 
 - Next.js 16 with App Router, React 19
 - TypeScript
-- Font: Geist Sans. Icons: Phosphor Icons. Animations: Motion (React Motion)
+- Font: Geist Sans from vercel. Icons: Phosphor Icons. Animations: Motion (React Motion)
 
 ## Key Architecture Decisions
 
