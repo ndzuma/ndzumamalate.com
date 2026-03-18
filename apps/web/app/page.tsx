@@ -59,14 +59,14 @@ export default function Home() {
 
           <div className="space-y-6 text-base sm:text-lg leading-relaxed tracking-tight text-black/80">
             <p>
-              I design interfaces with care and document them on my <a href="#" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors">Twitter</a>.
+              I design interfaces with care and document them on my <a href="#" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors cursor-pointer">Twitter</a>.
             </p>
             <p>
               I craft interfaces for advanced workflows, trading extensions, and almost everything in between. 
               Design is just where I start. I do whatever it takes to ship something truly polished, and I keep pushing this craft every day.
             </p>
             <p>
-              I'm probably tinkering with my agent right now. If you want to get in touch, DM me on <a href="#" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors">Telegram</a>, or if you're an SSO connoisseur, <a href="mailto:hello@example.com" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors">hello@ndzuma.com</a>.
+              I'm probably tinkering with my agent right now. If you want to get in touch, DM me on <a href="#" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors cursor-pointer">Telegram</a>, or if you're an SSO connoisseur, <a href="mailto:hello@example.com" className="font-medium text-black bg-yellow-100 px-1 rounded hover:bg-yellow-200 transition-colors cursor-pointer">hello@ndzuma.com</a>.
             </p>
           </div>
         </section>

@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import type { PropsWithChildren } from "react";
 
 import FloatingNav from "./floating-nav";
+import Footer from "./footer";
 
 export default function SiteShell({ children }: PropsWithChildren) {
   const pathname = usePathname() ?? "/";
@@ -19,9 +20,10 @@ export default function SiteShell({ children }: PropsWithChildren) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: -6 }}
           transition={{ duration: 0.28, ease: [0.25, 0.1, 0.25, 1] }}
-          className="mx-auto w-full max-w-[min(96vw,112rem)] px-5 pt-24 pb-16 sm:px-8 sm:pt-28"
+          className="mx-auto w-full max-w-[min(96vw,112rem)] px-5 pt-24 pb-8 sm:px-8 sm:pt-28 min-h-screen flex flex-col"
         >
-          {children}
+          <div className="flex-grow">{children}</div>
+          <Footer />
         </motion.div>
       </AnimatePresence>
     </>

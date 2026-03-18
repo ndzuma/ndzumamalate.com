@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import InlineMusicLink from "../../components/inline-music-link";
 
 export const metadata: Metadata = {
   title: "About | ndzumamalate.com",
@@ -33,13 +34,17 @@ export default function AboutPage() {
               <span className="text-black/30 mt-1">↳</span>
               <span>Tinkering with AI agent architectures</span>
             </li>
-            <li className="flex gap-3">
+            <li className="flex gap-3 text-black/80">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Writing and curating design moodboards</span>
+              <span>
+                Currently reading <a href="https://www.goodreads.com/book/show/60018567-the-creative-act" target="_blank" rel="noopener noreferrer" className="font-medium text-black underline decoration-black/20 hover:decoration-black/60 transition-colors cursor-pointer">The Creative Act</a>
+              </span>
             </li>
-            <li className="flex gap-3">
+            <li className="flex gap-3 text-black/80">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Late-night coding sessions</span>
+              <span className="flex items-center gap-1.5 flex-wrap">
+                Listening to <InlineMusicLink />
+              </span>
             </li>
           </ul>
         </section>
