@@ -160,7 +160,7 @@
           title, slug, summary, content,
           cover_image_url: coverImageUrl,
           published,
-          published_at: publishedAt || '',
+          published_at: publishedAt ? `${publishedAt}T00:00:00Z` : '',
           tag_ids: resolvedTagIds,
         };
         if (id) {
