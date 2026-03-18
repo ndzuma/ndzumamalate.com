@@ -8,7 +8,6 @@ type FloatingNavProps = {
 const navItems = [
   { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
-  { href: "/contact", label: "Contact" },
   { href: "/this", label: "This" },
 ] as const;
 
@@ -23,9 +22,9 @@ export default function FloatingNav({ pathname }: FloatingNavProps) {
         aria-label="Primary"
         className="pointer-events-auto w-full max-w-[min(94vw,54rem)]"
       >
-        <div className="flex items-center gap-3 rounded-[1.75rem] border border-black/[0.07] bg-white/92 px-2 py-2 shadow-[0_8px_32px_rgba(17,17,17,0.09)] backdrop-blur-xl">
+        <div className="flex items-center justify-between rounded-[1.75rem] border border-black/[0.07] bg-white/92 px-4 py-2 shadow-[0_8px_32px_rgba(17,17,17,0.09)] backdrop-blur-xl">
 
-          {/* Logo — plain Link, no pill/button wrapper, hover handled by CSS spring in globals.css */}
+          {/* Logo */}
           <Link
             href="/"
             aria-label="Home"
@@ -41,11 +40,8 @@ export default function FloatingNav({ pathname }: FloatingNavProps) {
             />
           </Link>
 
-          {/* Vertical divider */}
-          <div className="h-4 w-px shrink-0 bg-black/10" />
-
-          {/* Nav links */}
-          <div className="flex items-center gap-0.5">
+          {/* Centered nav links */}
+          <div className="flex items-center gap-1">
             {navItems.map((item) => {
               const active = isActive(pathname, item.href);
 
@@ -54,18 +50,41 @@ export default function FloatingNav({ pathname }: FloatingNavProps) {
                   key={item.href}
                   href={item.href}
                   aria-current={active ? "page" : undefined}
-                  className={[
-                    "rounded-2xl px-3.5 py-2 text-sm font-medium tracking-[-0.01em] transition-colors duration-200",
-                    active
-                      ? "bg-black text-white"
-                      : "text-black/50 hover:bg-black/[0.05] hover:text-black/80",
-                  ].join(" ")}
+                  style={{
+                    backgroundColor: active ? "#000000" : "transparent",
+                    color: active ? "#ffffff" : "rgba(0, 0, 0, 0.5)",
+                  }}
+                  className="rounded-2xl px-3.5 py-2 text-sm font-medium tracking-[-0.01em] transition-colors duration-200 hover:bg-black/[0.05] hover:text-black/80"
+                  onMouseEnter={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.backgroundColor = "rgba(0, 0, 0, 0.05)";
+                      e.currentTarget.style.color = "rgba(0, 0, 0, 0.8)";
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!active) {
+                      e.currentTarget.style.backgroundColor = "transparent";
+                      e.currentTarget.style.color = "rgba(0, 0, 0, 0.5)";
+                    }
+                  }}
                 >
                   {item.label}
                 </Link>
               );
             })}
           </div>
+
+          {/* Get in touch button */}
+          <Link
+            href="/contact"
+            style={{
+              backgroundColor: "#000000",
+              color: "#ffffff",
+            }}
+            className="rounded-2xl px-4 py-2 text-sm font-medium tracking-[-0.01em] transition-opacity duration-200 hover:opacity-80 shrink-0"
+          >
+            Get in touch
+          </Link>
 
         </div>
       </nav>
