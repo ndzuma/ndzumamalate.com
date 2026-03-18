@@ -1,1 +1,1 @@
-ALTER TABLE profile ADD COLUMN threads_url TEXT DEFAULT '';
+ALTER TABLE profile ADD COLUMN IF NOT EXISTS threads_url TEXT DEFAULT '';

@@ -7,8 +7,8 @@ async function fetchAPI<T>(endpoint: string, options: RequestInit = {}): Promise
   const url = `${API_URL}/api/v1/public${endpoint}`;
   const response = await fetch(url, {
     ...options,
-    // Add default revalidate, but allow override
-    next: { revalidate: 3600, ...options.next },
+    // Use no-store to ensure SSE live updates always reflect fresh DB state
+    cache: 'no-store',
   });
 
   if (!response.ok) {

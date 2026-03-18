@@ -3,9 +3,17 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GithubLogo, LinkedinLogo, XLogo, ThreadsLogo, ArrowUp } from "@phosphor-icons/react";
+import { useEffect, useState } from "react";
+import { api } from "../lib/api";
+import { Profile } from "../types/api";
 
 export default function Footer() {
   const year = new Date().getFullYear();
+  const [profile, setProfile] = useState<Profile | null>(null);
+
+  useEffect(() => {
+    api.getProfile().then(p => setProfile(p)).catch(() => {});
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
@@ -49,7 +57,7 @@ export default function Footer() {
         {/* Right: Socials */}
         <div className="flex items-center gap-4">
           <a 
-            href="https://github.com" 
+            href={profile?.github_url || "https://github.com/ndzuma"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-black hover:scale-110 transition-all"
@@ -58,7 +66,7 @@ export default function Footer() {
             <GithubLogo weight="fill" className="w-5 h-5" />
           </a>
           <a 
-            href="https://linkedin.com" 
+            href={profile?.linkedin_url || "https://linkedin.com/in/ndzuma"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-[#0A66C2] hover:scale-110 transition-all"
@@ -67,7 +75,7 @@ export default function Footer() {
             <LinkedinLogo weight="fill" className="w-5 h-5" />
           </a>
           <a 
-            href="https://threads.net" 
+            href={profile?.threads_url || "https://threads.net"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-black hover:scale-110 transition-all"
@@ -76,7 +84,7 @@ export default function Footer() {
             <ThreadsLogo weight="fill" className="w-5 h-5" />
           </a>
           <a 
-            href="https://twitter.com" 
+            href={profile?.twitter_url || "https://twitter.com/ndzumaxx"} 
             target="_blank" 
             rel="noopener noreferrer"
             className="hover:text-[#1DA1F2] hover:scale-110 transition-all"

@@ -1,52 +1,13 @@
-"use client";
+import BlogClient from "../../components/blog-client";
+import { api } from "../../lib/api";
 
-import { useState } from "react";
-import FeaturedCard from "../../components/featured-card";
-import FilterDropdown from "../../components/filter-dropdown";
+export const metadata = {
+  title: "Blog | Ndzuma Malate",
+  description: "Writing about design engineering, building interfaces, and the intersection of human and agent experiences.",
+};
 
-const allBlogs = [
-  {
-    id: 1,
-    title: "Crafting Interfaces for Video Gen Workflows",
-    date: "Mar 15, 2024",
-    image: "/assets/blog-1-placeholder.jpg",
-    published: true,
-    tags: ['Design']
-  },
-  {
-    id: 2,
-    title: "How Agentic UI is different?",
-    date: "Feb 02, 2024",
-    image: "/assets/blog-2-placeholder.jpg",
-    published: true,
-    tags: ['Agents', 'Thoughts']
-  },
-  {
-    id: 3,
-    title: "Thoughts on AI toolings",
-    date: "Jan 12, 2024",
-    image: "/assets/blog-3-placeholder.jpg",
-    published: false,
-    tags: ['Thoughts']
-  },
-  {
-    id: 4,
-    title: "Designing for dense data",
-    date: "Dec 05, 2023",
-    image: "/assets/blog-4-placeholder.jpg",
-    published: true,
-    tags: ['Engineering', 'Design']
-  }
-];
-
-export default function BlogPage() {
-  const [selectedTag, setSelectedTag] = useState('All');
-  const filterOptions = ['All', 'Design', 'Engineering', 'Agents', 'Thoughts'];
-
-  const publishedBlogs = allBlogs.filter(b => b.published);
-  const filteredBlogs = selectedTag === 'All' 
-    ? publishedBlogs 
-    : publishedBlogs.filter(b => b.tags.includes(selectedTag));
+export default async function BlogPage() {
+  const allBlogs = await api.getBlogs() || [];
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
@@ -59,23 +20,7 @@ export default function BlogPage() {
         </p>
       </section>
 
-      <FilterDropdown 
-        options={filterOptions} 
-        selected={selectedTag} 
-        onChange={setSelectedTag} 
-      />
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        {filteredBlogs.map((blog) => (
-          <FeaturedCard 
-            key={blog.id}
-            href={`/blog/${blog.id}`}
-            title={blog.title}
-            date={blog.date}
-            image={blog.image}
-          />
-        ))}
-      </div>
+      <BlogClient initialBlogs={allBlogs} />
     </main>
   );
 }

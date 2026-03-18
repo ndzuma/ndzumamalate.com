@@ -19,11 +19,17 @@ export default function FeaturedCard({ href, title, date, image, repoUrl, liveUr
     <div className={`group flex flex-col gap-4 snap-start shrink-0 ${className}`}>
       <div className="w-full aspect-[16/9] rounded-3xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-md block">
         <Link href={href} className="absolute inset-0 z-0">
-          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
-          {/* 
-            When you have real images, replace the above pattern with:
-            {image && <Image src={image} alt={title} fill className="object-cover" />}
-          */}
+          {image ? (
+            <Image 
+              src={image} 
+              alt={title} 
+              fill 
+              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+              className="object-cover transition-transform duration-700 group-hover:scale-105" 
+            />
+          ) : (
+            <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
+          )}
         </Link>
 
         {/* Action Buttons (bottom-left) */}
@@ -60,17 +66,19 @@ export default function FeaturedCard({ href, title, date, image, repoUrl, liveUr
           </div>
         )}
       </div>
-      
-      <Link href={href} className="px-1 flex flex-col gap-1">
-        <h3 className="font-medium text-[15px] sm:text-base tracking-tight group-hover:text-black/70 transition-colors">
-          {title}
-        </h3>
-        {date && (
-          <p className="text-sm text-black/40">
-            {date}
-          </p>
-        )}
-      </Link>
+
+      <div className="flex flex-col gap-1 px-1">
+        <Link href={href} className="flex justify-between items-baseline group/title">
+          <h3 className="text-base font-medium tracking-tight text-black/90 group-hover/title:text-black">
+            {title}
+          </h3>
+          {date && (
+            <span className="text-sm text-black/40 tabular-nums">
+              {date}
+            </span>
+          )}
+        </Link>
+      </div>
     </div>
   );
 }
