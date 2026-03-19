@@ -13,9 +13,12 @@ import (
 )
 
 func (a *API) uploadFile(c echo.Context) error {
-	secret := os.Getenv("UPLOADTHING_SECRET")
+	secret := os.Getenv("UPLOADTHING_API_KEY")
 	if secret == "" {
-		return echo.NewHTTPError(http.StatusInternalServerError, "UPLOADTHING_SECRET is not set")
+		secret = os.Getenv("UPLOADTHING_SECRET")
+	}
+	if secret == "" {
+		return echo.NewHTTPError(http.StatusInternalServerError, "UPLOADTHING_API_KEY is not set")
 	}
 
 	file, err := c.FormFile("files")
