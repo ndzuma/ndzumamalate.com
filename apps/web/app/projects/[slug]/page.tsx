@@ -65,12 +65,12 @@ export default async function ProjectPage({ params }: Props) {
           <div className="flex gap-2">
             {project.live_url && (
               <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-full text-sm font-medium transition-all">
-                Live Site
+                try it
               </a>
             )}
             {project.repo_url && (
-              <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-black text-white hover:bg-black/80 rounded-full text-sm font-medium transition-all">
-                Source Code
+              <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-full text-sm font-medium transition-all">
+                repo
               </a>
             )}
           </div>
@@ -118,8 +118,8 @@ export default async function ProjectPage({ params }: Props) {
       {/* Summary */}
       {project.summary && (
         <div className="mb-6">
-          <span className="block text-xs font-semibold text-black/40 uppercase tracking-wider mb-2">
-            Short description
+          <span className="block text-xs font-semibold text-black/40 tracking-wider mb-2">
+            short description
           </span>
           <p className="text-lg md:text-xl font-medium text-black/80 leading-relaxed">
             {project.summary}
