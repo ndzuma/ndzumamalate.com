@@ -1,7 +1,7 @@
 <script>
   import { UploadSimple, CircleNotch } from 'phosphor-svelte';
   import { files } from '../lib/api.js';
-  import { addToast } from '../lib/toast.svelte.js';
+  import { toast } from '../lib/toast.svelte.js';
   
   let { onUpload = () => {} } = $props();
 
@@ -37,7 +37,7 @@
       }
     } catch (err) {
       console.error("Upload error:", err);
-      addToast("Upload failed", "error");
+      toast("Upload failed", "error");
     } finally {
       uploading = false;
       if (fileInput) fileInput.value = '';

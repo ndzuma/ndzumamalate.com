@@ -46,7 +46,7 @@ export default async function BlogPage({ params }: Props) {
   } catch (e) {}
 
   return (
-    <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-8 sm:mt-16">
+    <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-6 sm:mt-10">
       
       {/* Top Controls (Above Image) */}
       <div className="flex justify-between items-center mb-6">

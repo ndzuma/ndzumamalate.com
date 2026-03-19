@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, GithubLogo, Globe } from "@phosphor-icons/react/dist/ssr";
 import { api } from "../../../lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -49,7 +49,7 @@ export default async function ProjectPage({ params }: Props) {
   } catch (e) {}
 
   return (
-    <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-8 sm:mt-16">
+    <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-6 sm:mt-10">
       
       {/* Top Controls (Above Image) */}
       <div className="flex justify-between items-center mb-6">
@@ -63,14 +63,32 @@ export default async function ProjectPage({ params }: Props) {
         
         {(project.live_url || project.repo_url) && (
           <div className="flex gap-2">
-            {project.live_url && (
-              <a href={project.live_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-full text-sm font-medium transition-all">
-                try it
+            {project.repo_url && (
+              <a 
+                href={project.repo_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 hover:bg-black/10 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300"
+                title="Go to repo"
+              >
+                <GithubLogo weight="bold" className="w-5 h-5 shrink-0" />
+                <span className="max-w-0 overflow-hidden text-sm font-medium whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-2 transition-all duration-300 ease-out">
+                  repo
+                </span>
               </a>
             )}
-            {project.repo_url && (
-              <a href={project.repo_url} target="_blank" rel="noopener noreferrer" className="px-4 py-2 bg-black/5 hover:bg-black/10 text-black rounded-full text-sm font-medium transition-all">
-                repo
+            {project.live_url && (
+              <a 
+                href={project.live_url} 
+                target="_blank" 
+                rel="noopener noreferrer"
+                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 hover:bg-black/10 hover:scale-[1.05] hover:rotate-2 transition-all duration-300"
+                title="Try it out"
+              >
+                <Globe weight="bold" className="w-5 h-5 shrink-0" />
+                <span className="max-w-0 overflow-hidden text-sm font-medium whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-2 transition-all duration-300 ease-out">
+                  try it
+                </span>
               </a>
             )}
           </div>

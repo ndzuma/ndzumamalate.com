@@ -14,8 +14,9 @@
 {#if toasts.length > 0}
   <div class="toast-container">
     {#each toasts as t (t.id)}
+      {@const Icon = icons[t.type] || Info}
       <div class="toast" class:error={t.type === 'error'} class:info={t.type === 'info'}>
-        <svelte:component this={icons[t.type] || Info} size={15} weight="fill" />
+        <Icon size={15} weight="fill" />
         <span class="toast-msg">{t.message}</span>
         <button class="toast-close" onclick={() => dismiss(t.id)}>
           <X size={12} />
