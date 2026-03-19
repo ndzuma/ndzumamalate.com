@@ -1,0 +1,17 @@
+{
+  "$schema": "https://schema.railpack.com",
+  "packages": {
+    "go": "1.23.0"
+  },
+  "buildAptPackages": ["make"],
+  "steps": {
+    "build": {
+      "commands": [
+        "cd apps/api && make build"
+      ]
+    }
+  },
+  "deploy": {
+    "startCommand": "cd apps/api && ./bin/server"
+  }
+}
