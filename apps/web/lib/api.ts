@@ -64,4 +64,21 @@ export const api = {
   async getTags(): Promise<Tag[]> {
     return fetchAPI<Tag[]>('/tags');
   },
+
+  // Contact
+  async submitContact(data: { name: string; email: string; subject: string; message: string }) {
+    const url = `${API_URL}/api/v1/public/contact`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    });
+
+    if (!response.ok) {
+      const errData = await response.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to submit contact form');
+    }
+
+    return response.json();
+  },
 };

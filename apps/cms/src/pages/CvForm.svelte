@@ -5,6 +5,7 @@
   import { cv } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
   import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
+  import Uploader from '../components/Uploader.svelte';
 
   let { id = null } = $props();
 
@@ -65,7 +66,10 @@
 
       <form onsubmit={(e) => { e.preventDefault(); save(); }}>
         <div class="field">
-          <label class="mono">FILE URL</label>
+          <div style="display: flex; justify-content: space-between; align-items: center;">
+            <label class="mono">FILE URL</label>
+            <Uploader onUpload={(url) => fileUrl = url} />
+          </div>
           <input bind:value={fileUrl} placeholder="https://..." required />
         </div>
 

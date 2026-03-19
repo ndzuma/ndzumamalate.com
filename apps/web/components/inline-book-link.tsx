@@ -4,7 +4,7 @@ import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { BookOpen } from "@phosphor-icons/react";
 
-export default function InlineBookLink() {
+export default function InlineBookLink({ title, url }: { title: string; url: string }) {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -16,7 +16,7 @@ export default function InlineBookLink() {
       <span 
         className="font-medium text-black bg-orange-100 px-1 rounded hover:bg-orange-200 transition-colors cursor-pointer"
       >
-        The Creative Act
+        {title}
       </span>
 
       <AnimatePresence>
@@ -29,13 +29,13 @@ export default function InlineBookLink() {
             className="absolute left-0 top-full mt-2 bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5 z-10 w-max"
           >
             <a 
-              href="https://www.goodreads.com/book/show/60018567-the-creative-act" 
+              href={url} 
               target="_blank" 
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 bg-[#e9e5cd]/60 hover:bg-[#e9e5cd] text-[#382110] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
               <BookOpen weight="fill" className="w-4 h-4" />
-              Goodreads
+              Book Link
             </a>
           </motion.div>
         )}

@@ -159,10 +159,13 @@ func (a *API) Register(e *echo.Echo) {
 	admin.GET("/profile", a.getProfile)
 	admin.PUT("/profile", a.upsertProfile)
 
+	admin.POST("/upload", a.uploadFile)
+
 	admin.GET("/webhooks", a.listWebhookEndpoints)
 	admin.POST("/webhooks", a.createWebhookEndpoint)
 	admin.PUT("/webhooks/:id", a.updateWebhookEndpoint)
 	admin.DELETE("/webhooks/:id", a.deleteWebhookEndpoint)
+
 }
 
 func (a *API) health(c echo.Context) error {

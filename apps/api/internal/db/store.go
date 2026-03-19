@@ -207,6 +207,8 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 			p.published,
 			COALESCE(p.sort_order, 0),
 			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			p.start_date,
+			p.end_date,
 			p.created_at,
 			p.updated_at
 		FROM projects p
@@ -240,6 +242,8 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 			&project.Published,
 			&project.SortOrder,
 			&project.Tags,
+			&project.StartDate,
+			&project.EndDate,
 			&project.CreatedAt,
 			&project.UpdatedAt,
 		); err != nil {
@@ -266,6 +270,8 @@ func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly
 			p.published,
 			COALESCE(p.sort_order, 0),
 			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			p.start_date,
+			p.end_date,
 			p.created_at,
 			p.updated_at
 		FROM projects p
@@ -292,6 +298,8 @@ func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly
 		&project.Published,
 		&project.SortOrder,
 		&project.Tags,
+		&project.StartDate,
+		&project.EndDate,
 		&project.CreatedAt,
 		&project.UpdatedAt,
 	)
@@ -313,6 +321,15 @@ func (s *Store) UpdateProject(ctx context.Context, id string, input models.Proje
 }
 
 func (s *Store) upsertProject(ctx context.Context, id string, input models.ProjectInput, create bool) (*models.Project, error) {
+	startDate, err := nullableDate(input.StartDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid start_date: %w", err)
+	}
+	endDate, err := nullableDate(input.EndDate)
+	if err != nil {
+		return nil, fmt.Errorf("invalid end_date: %w", err)
+	}
+
 	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
 	if err != nil {
 		return nil, err
@@ -331,20 +348,20 @@ func (s *Store) upsertProject(ctx context.Context, id string, input models.Proje
 			sortOrder = count // 0-based: if 3 projects exist (0,1,2), new one gets 3
 		}
 		err = tx.QueryRow(ctx, `
-			INSERT INTO projects (title, slug, summary, content, image_url, live_url, repo_url, featured, published, sort_order)
-			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), created_at, updated_at
-		`, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, sortOrder).Scan(
-			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.CreatedAt, &project.UpdatedAt,
+			INSERT INTO projects (title, slug, summary, content, image_url, live_url, repo_url, featured, published, sort_order, start_date, end_date)
+			VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), start_date, end_date, created_at, updated_at
+		`, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, sortOrder, startDate, endDate).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.StartDate, &project.EndDate, &project.CreatedAt, &project.UpdatedAt,
 		)
 	} else {
 		err = tx.QueryRow(ctx, `
 			UPDATE projects
-			SET title = $2, slug = $3, summary = $4, content = $5, image_url = $6, live_url = $7, repo_url = $8, featured = $9, published = $10, sort_order = $11
+			SET title = $2, slug = $3, summary = $4, content = $5, image_url = $6, live_url = $7, repo_url = $8, featured = $9, published = $10, sort_order = $11, start_date = $12, end_date = $13
 			WHERE id = $1
-			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), created_at, updated_at
-		`, id, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, input.SortOrder).Scan(
-			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.CreatedAt, &project.UpdatedAt,
+			RETURNING id, title, slug, COALESCE(summary, ''), COALESCE(content, ''), COALESCE(image_url, ''), COALESCE(live_url, ''), COALESCE(repo_url, ''), featured, published, COALESCE(sort_order, 0), start_date, end_date, created_at, updated_at
+		`, id, input.Title, input.Slug, input.Summary, input.Content, input.ImageURL, input.LiveURL, input.RepoURL, input.Featured, input.Published, input.SortOrder, startDate, endDate).Scan(
+			&project.ID, &project.Title, &project.Slug, &project.Summary, &project.Content, &project.ImageURL, &project.LiveURL, &project.RepoURL, &project.Featured, &project.Published, &project.SortOrder, &project.StartDate, &project.EndDate, &project.CreatedAt, &project.UpdatedAt,
 		)
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -646,7 +663,7 @@ func (s *Store) DeleteSkill(ctx context.Context, id string) error {
 }
 
 func (s *Store) ListExperience(ctx context.Context) ([]models.Experience, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at FROM experience ORDER BY start_date DESC`)
+	rows, err := s.pool.Query(ctx, `SELECT id, type, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at FROM experience ORDER BY start_date DESC`)
 	if err != nil {
 		return nil, err
 	}
@@ -655,7 +672,7 @@ func (s *Store) ListExperience(ctx context.Context) ([]models.Experience, error)
 	items := make([]models.Experience, 0)
 	for rows.Next() {
 		var item models.Experience
-		if err := rows.Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt); err != nil {
+		if err := rows.Scan(&item.ID, &item.Type, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt); err != nil {
 			return nil, err
 		}
 		items = append(items, item)
@@ -685,17 +702,17 @@ func (s *Store) upsertExperience(ctx context.Context, id string, input models.Ex
 	item := &models.Experience{}
 	if create {
 		err = s.pool.QueryRow(ctx, `
-			INSERT INTO experience (company, role, location, description, start_date, end_date)
-			VALUES ($1, $2, $3, $4, $5, $6)
-			RETURNING id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
-		`, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
+			INSERT INTO experience (type, company, role, location, description, start_date, end_date)
+			VALUES ($1, $2, $3, $4, $5, $6, $7)
+			RETURNING id, type, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
+		`, input.Type, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Type, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
 	} else {
 		err = s.pool.QueryRow(ctx, `
 			UPDATE experience
-			SET company = $2, role = $3, location = $4, description = $5, start_date = $6, end_date = $7
+			SET type = $2, company = $3, role = $4, location = $5, description = $6, start_date = $7, end_date = $8
 			WHERE id = $1
-			RETURNING id, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
-		`, id, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
+			RETURNING id, type, company, role, COALESCE(location, ''), COALESCE(description, ''), start_date, end_date, created_at, updated_at
+		`, id, input.Type, input.Company, input.Role, input.Location, input.Description, startDate, endDate).Scan(&item.ID, &item.Type, &item.Company, &item.Role, &item.Location, &item.Description, &item.StartDate, &item.EndDate, &item.CreatedAt, &item.UpdatedAt)
 	}
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil

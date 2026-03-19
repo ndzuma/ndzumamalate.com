@@ -10,16 +10,21 @@
 
   let company = $state('');
   let role = $state('');
+  let type = $state('Work');
   let location = $state('');
   let description = $state('');
   let startDate = $state('');
   let endDate = $state('');
+  let isPresent = $state(false);
   let saving = $state(false);
   let loading = $state(false);
   let error = $state('');
 
   async function loadItem() {
-    if (!id) return;
+    if (!id) {
+      isPresent = true;
+      return;
+    }
     loading = true;
     try {
       const items = await experience.list();
@@ -27,10 +32,12 @@
       if (item) {
         company = item.company || '';
         role = item.role || '';
+        type = item.type || 'Work';
         location = item.location || '';
         description = item.description || '';
         startDate = item.start_date ? item.start_date.split('T')[0] : '';
         endDate = item.end_date ? item.end_date.split('T')[0] : '';
+        isPresent = !item.end_date;
       }
     } catch (_) {}
     loading = false;
@@ -41,7 +48,8 @@
     saving = true;
     error = '';
     try {
-      const data = { company, role, location, description, start_date: startDate, end_date: endDate };
+      const finalEndDate = isPresent ? '' : endDate;
+      const data = { company, role, type, location, description, start_date: startDate, end_date: finalEndDate };
       if (id) {
         await experience.update(id, data);
       } else {
@@ -81,6 +89,16 @@
         </div>
 
         <div class="field">
+          <label class="mono">TYPE</label>
+          <select bind:value={type} required>
+            <option value="Work">Work</option>
+            <option value="Hackathon">Hackathon</option>
+            <option value="Open-Source">Open-Source</option>
+            <option value="Volunteering">Volunteering</option>
+          </select>
+        </div>
+
+        <div class="field">
           <label class="mono">LOCATION</label>
           <input bind:value={location} placeholder="City, Country" />
         </div>
@@ -96,8 +114,14 @@
             <input type="date" bind:value={startDate} required />
           </div>
           <div class="field">
-            <label class="mono">END DATE</label>
-            <input type="date" bind:value={endDate} />
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+              <label class="mono">END DATE</label>
+              <label class="checkbox-label" style="margin: 0;">
+                <input type="checkbox" bind:checked={isPresent} />
+                <span>Currently active</span>
+              </label>
+            </div>
+            <input type="date" bind:value={endDate} disabled={isPresent} />
           </div>
         </div>
 
@@ -176,15 +200,18 @@
   }
 
   .field input,
+  .field select,
   .field textarea {
     padding: 10px 12px;
     border: 1px solid #e5e5e5;
     border-radius: 6px;
     font-size: 14px;
     resize: vertical;
+    background: #fff;
   }
 
   .field input:focus,
+  .field select:focus,
   .field textarea:focus {
     border-color: #111;
     outline: none;
@@ -193,6 +220,24 @@
   .field-row {
     display: flex;
     gap: 16px;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 11px;
+    color: #555;
+    cursor: pointer;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 12px;
+    height: 12px;
+    margin: 0;
+    padding: 0;
+    accent-color: #111;
+    cursor: pointer;
   }
 
   .error {

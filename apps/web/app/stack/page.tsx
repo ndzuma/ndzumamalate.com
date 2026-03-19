@@ -1,13 +1,16 @@
 import type { Metadata } from "next";
 import InlineMusicLink from "../../components/inline-music-link";
 import InlineBookLink from "../../components/inline-book-link";
+import { api } from "../../lib/api";
 
 export const metadata: Metadata = {
   title: "Stack",
   description: "More about my hobbies, tooling, and favourite stacks.",
 };
 
-export default function StackPage() {
+export default async function StackPage() {
+  const profile = await api.getProfile().catch(() => null);
+
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
@@ -35,18 +38,22 @@ export default function StackPage() {
               <span className="text-black/30 mt-1">↳</span>
               <span>Tinkering with AI agent architectures</span>
             </li>
-            <li className="flex gap-3 text-black/80">
-              <span className="text-black/30 mt-1">↳</span>
-              <span>
-                Currently reading <InlineBookLink />
-              </span>
-            </li>
-            <li className="flex gap-3 text-black/80">
-              <span className="text-black/30 mt-1">↳</span>
-              <span className="flex items-center gap-1.5 flex-wrap">
-                Listening to <InlineMusicLink />
-              </span>
-            </li>
+            {profile?.currently_reading_title && profile?.currently_reading_url && (
+              <li className="flex gap-3 text-black/80">
+                <span className="text-black/30 mt-1">↳</span>
+                <span>
+                  Currently reading <InlineBookLink title={profile.currently_reading_title} url={profile.currently_reading_url} />
+                </span>
+              </li>
+            )}
+            {(profile?.spotify_url || profile?.apple_music_url) && (
+              <li className="flex gap-3 text-black/80">
+                <span className="text-black/30 mt-1">↳</span>
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  Listening to <InlineMusicLink spotifyUrl={profile.spotify_url} appleMusicUrl={profile.apple_music_url} />
+                </span>
+              </li>
+            )}
           </ul>
         </section>
 

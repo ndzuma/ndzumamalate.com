@@ -17,6 +17,8 @@ export interface Project {
   featured: boolean;
   published: boolean;
   sort_order: number;
+  start_date?: string;
+  end_date?: string;
   tags: string[];
   created_at: string;
   updated_at: string;
@@ -58,6 +60,7 @@ export interface Experience {
   id: string;
   company: string;
   role: string;
+  type: string;
   location?: string;
   description?: string;
   start_date: string;

@@ -24,20 +24,22 @@ type TagInput struct {
 }
 
 type Project struct {
-	ID        string    `json:"id"`
-	Title     string    `json:"title"`
-	Slug      string    `json:"slug"`
-	Summary   string    `json:"summary,omitempty"`
-	Content   string    `json:"content,omitempty"`
-	ImageURL  string    `json:"image_url,omitempty"`
-	LiveURL   string    `json:"live_url,omitempty"`
-	RepoURL   string    `json:"repo_url,omitempty"`
-	Featured  bool      `json:"featured"`
-	Published bool      `json:"published"`
-	SortOrder int       `json:"sort_order"`
-	Tags      []string  `json:"tags"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID        string     `json:"id"`
+	Title     string     `json:"title"`
+	Slug      string     `json:"slug"`
+	Summary   string     `json:"summary,omitempty"`
+	Content   string     `json:"content,omitempty"`
+	ImageURL  string     `json:"image_url,omitempty"`
+	LiveURL   string     `json:"live_url,omitempty"`
+	RepoURL   string     `json:"repo_url,omitempty"`
+	Featured  bool       `json:"featured"`
+	Published bool       `json:"published"`
+	SortOrder int        `json:"sort_order"`
+	Tags      []string   `json:"tags"`
+	StartDate *time.Time `json:"start_date,omitempty"`
+	EndDate   *time.Time `json:"end_date,omitempty"`
+	CreatedAt time.Time  `json:"created_at"`
+	UpdatedAt time.Time  `json:"updated_at"`
 }
 
 type ProjectInput struct {
@@ -51,6 +53,8 @@ type ProjectInput struct {
 	Featured  bool     `json:"featured"`
 	Published bool     `json:"published"`
 	SortOrder int      `json:"sort_order"`
+	StartDate string   `json:"start_date"`
+	EndDate   string   `json:"end_date"`
 	TagIDs    []string `json:"tag_ids"`
 }
 
@@ -110,6 +114,7 @@ type SkillInput struct {
 
 type Experience struct {
 	ID          string     `json:"id"`
+	Type        string     `json:"type"`
 	Company     string     `json:"company"`
 	Role        string     `json:"role"`
 	Location    string     `json:"location,omitempty"`
@@ -121,6 +126,7 @@ type Experience struct {
 }
 
 type ExperienceInput struct {
+	Type        string `json:"type"`
 	Company     string `json:"company"`
 	Role        string `json:"role"`
 	Location    string `json:"location"`

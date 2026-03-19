@@ -5,7 +5,8 @@
   import { projects, blogs, tags as tagsApi } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
   import markdownit from 'markdown-it';
-  import { ArrowLeft, FloppyDisk, Eye, CaretDown, Plus } from 'phosphor-svelte';
+  import { ArrowLeft, FloppyDisk, Eye, CaretDown, Plus, UploadSimple } from 'phosphor-svelte';
+  import Uploader from '../components/Uploader.svelte';
 
   /** @type {{ type: string, id: string | null }} */
   let { type = 'project', id = null } = $props();
@@ -46,6 +47,9 @@
   let tagIds = $state([]);
   let publishedAt = $state('');
   let sortOrder = $state(0);
+  let startDate = $state('');
+  let endDate = $state('');
+  let isPresent = $state(false);
 
   let allTags = $state([]);
   let saving = $state(false);
@@ -93,6 +97,9 @@
           featured = item.featured || false;
           published = item.published || false;
           sortOrder = item.sort_order ?? 0;
+          startDate = item.start_date ? item.start_date.split('T')[0] : '';
+          endDate = item.end_date ? item.end_date.split('T')[0] : '';
+          isPresent = !item.end_date && !!item.start_date; // if no end date but has start date, it's active
           tagIds = item.tags || [];
         }
       } else {
@@ -133,6 +140,7 @@
       if (isProject) {
         // Resolve tag slugs to IDs
         const resolvedTagIds = resolveTagIds();
+        const finalEndDate = isPresent ? '' : endDate;
         const data = {
           title, slug, summary, content,
           image_url: imageUrl,
@@ -140,6 +148,8 @@
           repo_url: repoUrl,
           featured, published,
           sort_order: sortOrder,
+          start_date: startDate,
+          end_date: finalEndDate,
           tag_ids: resolvedTagIds,
         };
         if (id) {
@@ -202,11 +212,28 @@
     }
   }
 
-  function toggleTag(tagId) {
-    if (tagIds.includes(tagId)) {
-      tagIds = tagIds.filter(t => t !== tagId);
+  function toggleTag(tagIdOrSlug) {
+    const isSelected = tagIds.includes(tagIdOrSlug);
+    // Find the tag to get both ID and slug
+    const tag = allTags.find(t => t.id === tagIdOrSlug || t.slug === tagIdOrSlug);
+    
+    if (isSelected || (tag && (tagIds.includes(tag.id) || tagIds.includes(tag.slug)))) {
+      // Remove both ID and slug
+      tagIds = tagIds.filter(t => t !== tagIdOrSlug && (!tag || (t !== tag.id && t !== tag.slug)));
     } else {
-      tagIds = [...tagIds, tagId];
+      tagIds = [...tagIds, tagIdOrSlug];
+    }
+  }
+
+  async function deleteTag(tagId) {
+    if (!confirm('Are you sure you want to permanently delete this tag from all projects and blogs?')) return;
+    try {
+      await tagsApi.delete(tagId);
+      allTags = allTags.filter(t => t.id !== tagId);
+      tagIds = tagIds.filter(t => t !== tagId);
+      toast('Tag deleted');
+    } catch (_) {
+      toast('Failed to delete tag', 'error');
     }
   }
 
@@ -235,6 +262,72 @@
       newTagName = '';
     } catch (_) {}
     creatingTag = false;
+  }
+
+  // ── Drag and drop image upload ──
+  let isDragging = $state(false);
+  async function handleDrop(e) {
+    e.preventDefault();
+    isDragging = false;
+    
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (!files.length) return;
+
+    toast('Uploading image...');
+    try {
+      const formData = new FormData();
+      for (const file of files) {
+        formData.append("files", file);
+      }
+
+      const token = import.meta.env.VITE_UPLOADTHING_TOKEN;
+      const decoded = JSON.parse(atob(token));
+      const apiKey = decoded.apiKey;
+
+      const res = await fetch("https://api.uploadthing.com/v6/uploadFiles", {
+        method: "POST",
+        headers: {
+          "x-uploadthing-api-key": apiKey,
+        },
+        body: formData,
+      });
+
+      if (!res.ok) {
+        throw new Error(`Upload failed: ${res.statusText}`);
+      }
+
+      const response = await res.json();
+      for (const result of response) {
+        if (result.data?.url) {
+          const imgMarkdown = `\n![${result.data.name || 'image'}](${result.data.url})\n`;
+          const target = e.target;
+          if (target && target.tagName === 'TEXTAREA') {
+            const start = target.selectionStart;
+            const end = target.selectionEnd;
+            content = content.substring(0, start) + imgMarkdown + content.substring(end);
+            requestAnimationFrame(() => {
+              target.selectionStart = target.selectionEnd = start + imgMarkdown.length;
+            });
+          } else {
+            content += imgMarkdown;
+          }
+        } else if (result.error) {
+          toast('Failed to upload image: ' + result.error.message, 'error');
+        }
+      }
+    } catch (err) {
+      toast('Failed to upload image', 'error');
+    }
+  }
+
+  function handleDragOver(e) {
+    e.preventDefault();
+    isDragging = true;
+  }
+
+  function handleDragLeave(e) {
+    e.preventDefault();
+    isDragging = false;
   }
 </script>
 
@@ -298,7 +391,10 @@
 
               {#if isProject}
                 <div class="opt-group">
-                  <label class="mono">IMAGE URL</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="mono">IMAGE URL</label>
+                    <Uploader onUpload={(url) => imageUrl = url} />
+                  </div>
                   <input bind:value={imageUrl} placeholder="https://..." />
                 </div>
                 <div class="opt-group">
@@ -308,6 +404,22 @@
                 <div class="opt-group">
                   <label class="mono">REPO URL</label>
                   <input bind:value={repoUrl} placeholder="https://github.com/..." />
+                </div>
+                <div class="opt-row">
+                  <div class="opt-group" style="flex: 1;">
+                    <label class="mono">START DATE</label>
+                    <input type="date" bind:value={startDate} />
+                  </div>
+                  <div class="opt-group" style="flex: 1;">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                      <label class="mono">END DATE</label>
+                      <label class="checkbox-label" style="margin: 0; font-size: 10px;">
+                        <input type="checkbox" bind:checked={isPresent} style="width: 10px; height: 10px; margin: 0;" />
+                        <span>Active</span>
+                      </label>
+                    </div>
+                    <input type="date" bind:value={endDate} disabled={isPresent} />
+                  </div>
                 </div>
                 <div class="opt-row">
                   <label class="checkbox-label">
@@ -321,7 +433,10 @@
                 </div>
               {:else}
                 <div class="opt-group">
-                  <label class="mono">COVER IMAGE URL</label>
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <label class="mono">COVER IMAGE URL</label>
+                    <Uploader onUpload={(url) => coverImageUrl = url} />
+                  </div>
                   <input bind:value={coverImageUrl} placeholder="https://..." />
                 </div>
                 <div class="opt-group">
@@ -342,13 +457,18 @@
                 {#if allTags.length > 0}
                   <div class="tags-grid">
                     {#each allTags as tag}
-                      <button
-                        class="tag-chip"
-                        class:active={tagIds.includes(tag.id) || tagIds.includes(tag.slug)}
-                        onclick={() => toggleTag(tag.id)}
-                      >
-                        {tag.name}
-                      </button>
+                      <div class="tag-wrapper">
+                        <button
+                          class="tag-chip"
+                          class:active={tagIds.includes(tag.id) || tagIds.includes(tag.slug)}
+                          onclick={() => toggleTag(tag.id)}
+                        >
+                          {tag.name}
+                        </button>
+                        <button class="tag-delete" onclick={(e) => { e.stopPropagation(); deleteTag(tag.id); }} title="Delete tag">
+                          &times;
+                        </button>
+                      </div>
                     {/each}
                   </div>
                 {:else}
@@ -405,9 +525,13 @@
         <!-- Actual editor textarea -->
         <textarea
           class="editor-textarea"
+          class:dragging={isDragging}
           bind:value={content}
           onkeydown={handleEditorKeydown}
-          placeholder="Start writing markdown..."
+          ondrop={handleDrop}
+          ondragover={handleDragOver}
+          ondragleave={handleDragLeave}
+          placeholder="Start writing markdown... (Drag & drop images here)"
           spellcheck="true"
         ></textarea>
       </div>
@@ -488,6 +612,11 @@
     background: #fff;
     overflow-y: auto;
     border-radius: 0;
+  }
+
+  .editor-textarea.dragging {
+    background: #fdfdfd;
+    box-shadow: inset 0 0 0 2px #111;
   }
 
   .editor-textarea::placeholder {
@@ -600,8 +729,14 @@
     gap: 4px;
   }
 
+  .tag-wrapper {
+    display: flex;
+    align-items: center;
+    position: relative;
+  }
+
   .tag-chip {
-    padding: 3px 10px;
+    padding: 3px 22px 3px 10px; /* extra right padding for the delete button */
     font-size: 11px;
     border: 1px solid #e5e5e5;
     border-radius: 20px;
@@ -616,6 +751,33 @@
     background: #111;
     color: #fff;
     border-color: #111;
+  }
+
+  .tag-delete {
+    position: absolute;
+    right: 4px;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    background: none;
+    border-radius: 50%;
+    color: #999;
+    font-size: 12px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .tag-delete:hover {
+    background: #ff4d4f;
+    color: #fff;
+  }
+  .tag-chip.active + .tag-delete {
+    color: #ccc;
+  }
+  .tag-chip.active + .tag-delete:hover {
+    color: #fff;
   }
 
   .tags-empty {
