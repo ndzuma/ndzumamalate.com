@@ -7,10 +7,11 @@ import InlineEmailLink from "../components/inline-email-link";
 import { api } from "../lib/api";
 
 export default async function Home() {
-  const [profile, projects, blogs] = await Promise.all([
+  const [profile, projects, blogs, skills] = await Promise.all([
     api.getProfile().catch(() => null),
     api.getProjects().catch(() => []),
-    api.getBlogs().catch(() => [])
+    api.getBlogs().catch(() => []),
+    api.getSkills().catch(() => [])
   ]);
 
   // Projects and Blogs endpoints already return published=true. 
@@ -66,7 +67,7 @@ export default async function Home() {
         </section>
 
         {/* Right Side: Logos Ticker */}
-        <LogosTicker />
+        <LogosTicker skills={skills} />
 
       </div>
 

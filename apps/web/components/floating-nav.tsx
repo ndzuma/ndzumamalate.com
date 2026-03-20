@@ -8,22 +8,29 @@ import { EnvelopeSimple, List, X } from "@phosphor-icons/react";
 
 type FloatingNavProps = {
   pathname: string;
+  hasBlogs?: boolean;
 };
 
-const navItems = [
+const defaultNavItems = [
   { href: "/projects", label: "Projects" },
   { href: "/blog", label: "Blog" },
   { href: "/experience", label: "Experience" },
   { href: "/stack", label: "Stack" },
   { href: "/this", label: "This" },
-] as const;
+];
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function FloatingNav({ pathname }: FloatingNavProps) {
+export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  // Filter out blog if there are no blogs
+  const navItems = defaultNavItems.filter((item) => {
+    if (item.label === "Blog" && !hasBlogs) return false;
+    return true;
+  });
 
   // Close mobile menu on route change
   useEffect(() => {

@@ -104,8 +104,19 @@ export default async function ExperiencePage() {
                   if (!acc[cat]) acc[cat] = [];
                   acc[cat].push(skill);
                   return acc;
-                }, {} as Record<string, any[]>)
-              ).map(([category, catSkills]) => (
+                }, {} as Record<string, typeof skills[0][]>)
+              )
+              .sort(([catA], [catB]) => {
+                const order = ["programming_language", "framework", "database", "tool", "other", "soft_skill"];
+                const aIdx = order.indexOf(catA.toLowerCase());
+                const bIdx = order.indexOf(catB.toLowerCase());
+                // if not found, put at the end
+                if (aIdx === -1 && bIdx === -1) return catA.localeCompare(catB);
+                if (aIdx === -1) return 1;
+                if (bIdx === -1) return -1;
+                return aIdx - bIdx;
+              })
+              .map(([category, catSkills]) => (
                 <div key={category} className="flex flex-col sm:flex-row gap-2 sm:gap-6 sm:items-baseline border-b border-black/5 pb-6 last:border-0 last:pb-0">
                   <div className="font-medium text-black/50 capitalize w-48 shrink-0 tracking-wide text-sm">
                     {category.replace(/_/g, ' ')}

@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
+import { api } from "../lib/api";
 
 import "./globals.css";
 import SiteShell from "../components/site-shell";
@@ -31,11 +32,20 @@ type RootLayoutProps = {
   children: ReactNode;
 };
 
-export default function RootLayout({ children }: RootLayoutProps) {
+export default async function RootLayout({ children }: RootLayoutProps) {
+  // If no blogs, we can hide the Blog navigation link
+  let hasBlogs = false;
+  try {
+    const blogs = await api.getBlogs();
+    hasBlogs = blogs && blogs.length > 0;
+  } catch (error) {
+    console.error("Failed to fetch blogs for nav:", error);
+  }
+
   return (
     <html lang="en">
       <body className={geist.variable}>
-        <SiteShell>{children}</SiteShell>
+        <SiteShell hasBlogs={hasBlogs}>{children}</SiteShell>
       </body>
     </html>
   );

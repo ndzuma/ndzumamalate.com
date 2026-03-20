@@ -7,12 +7,16 @@ import type { PropsWithChildren } from "react";
 import FloatingNav from "./floating-nav";
 import Footer from "./footer";
 
-export default function SiteShell({ children }: PropsWithChildren) {
+type SiteShellProps = PropsWithChildren<{
+  hasBlogs?: boolean;
+}>;
+
+export default function SiteShell({ children, hasBlogs = true }: SiteShellProps) {
   const pathname = usePathname() ?? "/";
 
   return (
     <>
-      <FloatingNav pathname={pathname} />
+      <FloatingNav pathname={pathname} hasBlogs={hasBlogs} />
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}
