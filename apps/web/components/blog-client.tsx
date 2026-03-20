@@ -3,10 +3,11 @@
 import { useState } from "react";
 import FeaturedCard from "./featured-card";
 import FilterDropdown from "./filter-dropdown";
-import { Blog } from "../types/api";
+import { Blog, Tag } from "../types/api";
 
 type BlogClientProps = {
   initialBlogs: Blog[];
+  tags?: Tag[];
 };
 
 // Helper to format slugs (e.g., "design-systems" -> "Design Systems")
@@ -18,10 +19,14 @@ function formatTagName(tag: string): string {
     .join(" ");
 }
 
-export default function BlogClient({ initialBlogs }: BlogClientProps) {
+export default function BlogClient({ initialBlogs, tags = [] }: BlogClientProps) {
   const [selectedTag, setSelectedTag] = useState("all");
 
-  const uniqueTagSlugs = Array.from(new Set(initialBlogs.flatMap((b) => b.tags || []))).sort();
+  const filterableTagSlugs = new Set(tags.filter(t => t.filter).map(t => t.slug));
+
+  const uniqueTagSlugs = Array.from(new Set(initialBlogs.flatMap((b) => b.tags || [])))
+    .filter(slug => filterableTagSlugs.has(slug))
+    .sort();
   const filterOptions = ["all", ...uniqueTagSlugs];
 
   const filterOptionsMapped = filterOptions.map(slug => ({

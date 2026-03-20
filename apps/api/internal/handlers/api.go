@@ -113,6 +113,7 @@ func (a *API) Register(e *echo.Echo) {
 	public.GET("/skills", a.listSkills)
 	public.GET("/experience", a.listExperience)
 	public.GET("/profile", a.getProfile)
+	public.GET("/tags", a.listTags)
 	public.GET("/cv/active", a.getActiveCV)
 	public.POST("/contact", a.sendContact)
 	public.GET("/events", a.streamEvents)

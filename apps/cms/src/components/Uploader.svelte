@@ -3,7 +3,7 @@
   import { files } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
   
-  let { onUpload = () => {} } = $props();
+  let { onUpload = () => {}, accept = "image/*", label = "Upload Image" } = $props();
 
   let uploading = $state(false);
   let fileInput = $state(null);
@@ -54,7 +54,7 @@
     type="file" 
     bind:this={fileInput} 
     onchange={handleFiles}
-    accept="image/*"
+    accept={accept}
     style="display: none;" 
   />
   <button class="upload-btn" onclick={trigger} disabled={uploading} type="button">
@@ -63,7 +63,7 @@
       Uploading...
     {:else}
       <UploadSimple size={14} />
-      Upload Image
+      {label}
     {/if}
   </button>
 </div>

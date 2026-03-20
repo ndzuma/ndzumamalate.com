@@ -5,7 +5,7 @@
   import { projects, blogs, tags as tagsApi } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
   import markdownit from 'markdown-it';
-  import { ArrowLeft, FloppyDisk, Eye, CaretDown, Plus, UploadSimple } from 'phosphor-svelte';
+  import { ArrowLeft, FloppyDisk, Eye, CaretDown, Plus, UploadSimple, SlidersHorizontal, PaperPlaneTilt, Image, X, ArrowsDownUp } from 'phosphor-svelte';
   import Uploader from '../components/Uploader.svelte';
 
   /** @type {{ type: string, id: string | null }} */
@@ -55,6 +55,46 @@
   let saving = $state(false);
   let loading = $state(false);
   let optionsPanelOpen = $state(true);
+
+  // ── Cover Image Drag & Drop ──
+  let isDraggingImg = $state(false);
+
+  async function uploadCoverImage(file) {
+    toast('Uploading cover image...');
+    try {
+      const formData = new FormData();
+      formData.append("files", file);
+      const token = import.meta.env.VITE_UPLOADTHING_TOKEN;
+      const decoded = JSON.parse(atob(token));
+      const apiKey = decoded.apiKey;
+
+      const res = await fetch("https://api.uploadthing.com/v6/uploadFiles", {
+        method: "POST",
+        headers: { "x-uploadthing-api-key": apiKey },
+        body: formData,
+      });
+
+      if (!res.ok) throw new Error(`Upload failed`);
+      const response = await res.json();
+      if (response[0]?.data?.url) {
+        if (isProject) imageUrl = response[0].data.url;
+        else coverImageUrl = response[0].data.url;
+      } else {
+        toast('Failed to upload', 'error');
+      }
+    } catch (e) {
+      toast('Upload failed', 'error');
+    }
+  }
+
+  // ── Project Tag Reordering ──
+  function moveTagOrder(index, dir) {
+    const newIdx = index + dir;
+    if (newIdx < 0 || newIdx >= tagIds.length) return;
+    const temp = tagIds[index];
+    tagIds[index] = tagIds[newIdx];
+    tagIds[newIdx] = temp;
+  }
 
   // ── Image aspect ratio toggle ──
   const ratioOptions = ['original', '16:9', '4:3'];
@@ -337,7 +377,21 @@
 
 <div class="editor-page">
   <TopBar pageName={pageName}>
-    {#snippet actions()}
+        {#snippet actions()}
+      <button class="action-btn" onclick={() => optionsPanelOpen = !optionsPanelOpen}>
+        <SlidersHorizontal size={14} />
+        <span>{optionsPanelOpen ? 'Editor' : 'Options'}</span>
+      </button>
+      <button class="action-btn" onclick={() => save()} disabled={saving}>
+        <FloppyDisk size={14} />
+        <span>{saving ? 'Saving...' : id ? 'Update' : 'Save'}</span>
+      </button>
+      {#if !published}
+        <button class="action-btn publish" onclick={() => save(true)} disabled={saving}>
+          <PaperPlaneTilt size={14} />
+          <span>Publish</span>
+        </button>
+      {/if}
       {#if !id}
         <div class="type-switcher">
           <button class="type-trigger" onclick={() => typeSwitcherOpen = !typeSwitcherOpen}>
@@ -365,175 +419,166 @@
     <div class="editor-layout">
       <!-- ── Left: Editor ── -->
       <div class="editor-pane">
-        <!-- Options panel floating top-right of editor -->
-        <div class="options-panel" class:collapsed={!optionsPanelOpen}>
-          <button class="options-toggle" onclick={() => optionsPanelOpen = !optionsPanelOpen}>
-            <Eye size={14} />
-            <span class="mono">{optionsPanelOpen ? 'HIDE OPTIONS' : 'OPTIONS'}</span>
-          </button>
-
-          {#if optionsPanelOpen}
-            <div class="options-fields">
-              <div class="opt-group">
-                <label class="mono">TITLE</label>
-                <input bind:value={title} oninput={updateSlug} placeholder="Enter title" />
-              </div>
-
-              <div class="opt-group">
-                <label class="mono">SLUG</label>
-                <input bind:value={slug} placeholder="auto-generated-slug" />
-              </div>
-
-              <div class="opt-group">
-                <label class="mono">SUMMARY</label>
-                <textarea bind:value={summary} placeholder="Brief description" rows="2"></textarea>
-              </div>
-
-              {#if isProject}
+                {#if optionsPanelOpen}
+          <div class="options-fullscreen">
+            <div class="options-fields-grid">
+              <div class="opt-col">
                 <div class="opt-group">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label class="mono">IMAGE URL</label>
-                    <Uploader onUpload={(url) => imageUrl = url} />
+                  <label class="mono">TITLE</label>
+                  <input bind:value={title} oninput={updateSlug} placeholder="Enter title" />
+                </div>
+                <div class="opt-group">
+                  <label class="mono">SLUG</label>
+                  <input bind:value={slug} placeholder="auto-generated-slug" />
+                </div>
+                <div class="opt-group">
+                  <label class="mono">SUMMARY</label>
+                  <textarea bind:value={summary} placeholder="Brief description" rows="4"></textarea>
+                </div>
+                
+                {#if isProject}
+                  <div class="opt-group">
+                    <label class="mono">LIVE URL</label>
+                    <input bind:value={liveUrl} placeholder="https://..." />
                   </div>
-                  <input bind:value={imageUrl} placeholder="https://..." />
-                </div>
-                <div class="opt-group">
-                  <label class="mono">LIVE URL</label>
-                  <input bind:value={liveUrl} placeholder="https://..." />
-                </div>
-                <div class="opt-group">
-                  <label class="mono">REPO URL</label>
-                  <input bind:value={repoUrl} placeholder="https://github.com/..." />
-                </div>
-                <div class="opt-row">
-                  <div class="opt-group" style="flex: 1;">
-                    <label class="mono">START DATE</label>
-                    <input type="date" bind:value={startDate} />
+                  <div class="opt-group">
+                    <label class="mono">REPO URL</label>
+                    <input bind:value={repoUrl} placeholder="https://github.com/..." />
                   </div>
-                  <div class="opt-group" style="flex: 1;">
-                    <div style="display: flex; justify-content: space-between; align-items: center;">
-                      <label class="mono">END DATE</label>
-                      <label class="checkbox-label" style="margin: 0; font-size: 10px;">
-                        <input type="checkbox" bind:checked={isPresent} style="width: 10px; height: 10px; margin: 0;" />
-                        <span>Active</span>
-                      </label>
+                  <div class="opt-row">
+                    <div class="opt-group" style="flex: 1;">
+                      <label class="mono">START DATE</label>
+                      <input type="date" bind:value={startDate} />
                     </div>
-                    <input type="date" bind:value={endDate} disabled={isPresent} />
-                  </div>
-                </div>
-                <div class="opt-row">
-                  <label class="checkbox-label">
-                    <input type="checkbox" bind:checked={featured} />
-                    <span>Featured</span>
-                  </label>
-                  <label class="checkbox-label">
-                    <input type="checkbox" bind:checked={published} />
-                    <span>Published</span>
-                  </label>
-                </div>
-              {:else}
-                <div class="opt-group">
-                  <div style="display: flex; justify-content: space-between; align-items: center;">
-                    <label class="mono">COVER IMAGE URL</label>
-                    <Uploader onUpload={(url) => coverImageUrl = url} />
-                  </div>
-                  <input bind:value={coverImageUrl} placeholder="https://..." />
-                </div>
-                <div class="opt-group">
-                  <label class="mono">PUBLISHED AT</label>
-                  <input type="date" bind:value={publishedAt} />
-                </div>
-                <div class="opt-row">
-                  <label class="checkbox-label">
-                    <input type="checkbox" bind:checked={published} />
-                    <span>Published</span>
-                  </label>
-                </div>
-              {/if}
-
-              <!-- Tags section (shared for both projects and blogs) -->
-              <div class="opt-group">
-                <label class="mono">TAGS</label>
-                {#if allTags.length > 0}
-                  <div class="tags-grid">
-                    {#each allTags as tag}
-                      <div class="tag-wrapper">
-                        <button
-                          class="tag-chip"
-                          class:active={tagIds.includes(tag.id) || tagIds.includes(tag.slug)}
-                          onclick={() => toggleTag(tag.id)}
-                        >
-                          {tag.name}
-                        </button>
-                        <button class="tag-delete" onclick={(e) => { e.stopPropagation(); deleteTag(tag.id); }} title="Delete tag">
-                          &times;
-                        </button>
+                    <div class="opt-group" style="flex: 1;">
+                      <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <label class="mono">END DATE</label>
+                        <label class="checkbox-label" style="margin: 0; font-size: 10px;">
+                          <input type="checkbox" bind:checked={isPresent} style="width: 10px; height: 10px; margin: 0;" />
+                          <span>Active</span>
+                        </label>
                       </div>
-                    {/each}
+                      <input type="date" bind:value={endDate} disabled={isPresent} />
+                    </div>
+                  </div>
+                  <div class="opt-row">
+                    <label class="checkbox-label">
+                      <input type="checkbox" bind:checked={featured} />
+                      <span>Featured</span>
+                    </label>
+                    <label class="checkbox-label">
+                      <input type="checkbox" bind:checked={published} />
+                      <span>Published</span>
+                    </label>
                   </div>
                 {:else}
-                  <span class="tags-empty">No tags yet</span>
+                  <div class="opt-group">
+                    <label class="mono">PUBLISHED AT</label>
+                    <input type="date" bind:value={publishedAt} />
+                  </div>
+                  <div class="opt-row">
+                    <label class="checkbox-label">
+                      <input type="checkbox" bind:checked={published} />
+                      <span>Published</span>
+                    </label>
+                  </div>
                 {/if}
-                <div class="tag-create-row">
-                  <input
-                    class="tag-create-input"
-                    bind:value={newTagName}
-                    placeholder="New tag name"
-                    onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), createTag())}
-                  />
-                  <button class="tag-create-btn" onclick={createTag} disabled={creatingTag || !newTagName.trim()}>
-                    <Plus size={12} />
-                  </button>
-                </div>
               </div>
 
-              {#if imageUrl || coverImageUrl}
+              <div class="opt-col">
                 <div class="opt-group">
-                  <div class="ratio-header">
-                    <label class="mono">COVER IMAGE</label>
-                    <div class="ratio-toggle">
-                      {#each ratioOptions as r}
-                        <button
-                          class="ratio-btn"
-                          class:active={coverRatio === r}
-                          onclick={() => coverRatio = r}
-                        >{r === 'original' ? 'Auto' : r}</button>
+                  <label class="mono">IMAGE / COVER</label>
+                  <div class="image-dropzone" ondrop={(e) => {
+                    e.preventDefault();
+                    isDraggingImg = false;
+                    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+                    if (files.length) uploadCoverImage(files[0]);
+                  }} ondragover={(e) => { e.preventDefault(); isDraggingImg = true; }} ondragleave={() => isDraggingImg = false} class:dragging={isDraggingImg}>
+                    {#if (isProject ? imageUrl : coverImageUrl)}
+                      <div class="image-preview-box">
+                        <img src={isProject ? imageUrl : coverImageUrl} alt="Preview" />
+                        <button class="remove-img-btn" onclick={() => { if(isProject) imageUrl=''; else coverImageUrl=''; }}><X size={14}/></button>
+                      </div>
+                    {:else}
+                      <div class="image-placeholder">
+                        <Image size={24} />
+                        <span>Drag & drop image here</span>
+                        <Uploader onUpload={(url) => { if(isProject) imageUrl=url; else coverImageUrl=url; }} label="Or Browse" />
+                      </div>
+                    {/if}
+                  </div>
+                </div>
+
+                <div class="opt-group">
+                  <label class="mono">TAGS</label>
+                  {#if allTags.length > 0}
+                    <div class="tags-grid">
+                      {#each allTags as tag}
+                        <div class="tag-wrapper">
+                          <button
+                            class="tag-chip"
+                            class:active={tagIds.includes(tag.id) || tagIds.includes(tag.slug)}
+                            onclick={() => toggleTag(tag.id)}
+                          >
+                            {tag.name}
+                          </button>
+                          <button class="tag-delete" onclick={(e) => { e.stopPropagation(); deleteTag(tag.id); }} title="Delete tag">
+                            &times;
+                          </button>
+                        </div>
+                      {/each}
+                    </div>
+                  {:else}
+                    <span class="tags-empty">No tags yet</span>
+                  {/if}
+                  <div class="tag-create-row">
+                    <input
+                      class="tag-create-input"
+                      bind:value={newTagName}
+                      placeholder="New tag name"
+                      onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), createTag())}
+                    />
+                    <button class="tag-create-btn" onclick={createTag} disabled={creatingTag || !newTagName.trim()}>
+                      <Plus size={12} />
+                    </button>
+                  </div>
+                </div>
+
+                {#if isProject && tagIds.length > 0}
+                  <div class="opt-group">
+                    <label class="mono">PROJECT TAGS ORDER</label>
+                    <div class="tag-order-list">
+                      {#each tagIds as tId, i}
+                        {@const t = allTags.find(x => x.id === tId || x.slug === tId)}
+                        {#if t}
+                          <div class="tag-order-item">
+                            <span>{t.name}</span>
+                            <div class="tag-order-actions">
+                              <button class="icon-btn" onclick={() => moveTagOrder(i, -1)} disabled={i === 0}>↑</button>
+                              <button class="icon-btn" onclick={() => moveTagOrder(i, 1)} disabled={i === tagIds.length - 1}>↓</button>
+                            </div>
+                          </div>
+                        {/if}
                       {/each}
                     </div>
                   </div>
-                  <div class="cover-preview" class:ratio-16-9={coverRatio === '16:9'} class:ratio-4-3={coverRatio === '4:3'}>
-                    <img src={isProject ? imageUrl : coverImageUrl} alt="Cover" />
-                  </div>
-                </div>
-              {/if}
-
-              <div class="opt-actions">
-                <button class="save-btn" onclick={() => save()} disabled={saving}>
-                  <FloppyDisk size={14} />
-                  {saving ? 'Saving...' : id ? 'Update' : 'Save'}
-                </button>
-                {#if !published}
-                  <button class="publish-btn" onclick={() => save(true)} disabled={saving}>
-                    {id ? 'Update & Publish' : 'Save & Publish'}
-                  </button>
                 {/if}
               </div>
             </div>
-          {/if}
-        </div>
-
-        <!-- Actual editor textarea -->
-        <textarea
-          class="editor-textarea"
-          class:dragging={isDragging}
-          bind:value={content}
-          onkeydown={handleEditorKeydown}
-          ondrop={handleDrop}
-          ondragover={handleDragOver}
-          ondragleave={handleDragLeave}
-          placeholder="Start writing markdown... (Drag & drop images here)"
-          spellcheck="true"
-        ></textarea>
+          </div>
+        {:else}
+          <textarea
+            class="editor-textarea"
+            class:dragging={isDragging}
+            bind:value={content}
+            onkeydown={handleEditorKeydown}
+            ondrop={handleDrop}
+            ondragover={handleDragOver}
+            ondragleave={handleDragLeave}
+            placeholder="Start writing markdown... (Drag & drop images here)"
+            spellcheck="true"
+          ></textarea>
+        {/if}
       </div>
 
       <!-- ── Right: Preview ── -->
@@ -1147,4 +1192,146 @@
       max-width: 240px;
     }
   }
+
+  /* ── Fullscreen Options ── */
+  .options-fullscreen {
+    flex: 1;
+    overflow-y: auto;
+    background: #fafafa;
+    padding: 32px 24px;
+    border-right: 1px solid #e5e5e5;
+  }
+  .options-fields-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 40px;
+    max-width: 900px;
+    margin: 0 auto;
+  }
+  @media (max-width: 768px) {
+    .options-fields-grid { grid-template-columns: 1fr; }
+  }
+  .opt-col {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+  .image-dropzone {
+    border: 2px dashed #e5e5e5;
+    border-radius: 8px;
+    padding: 20px;
+    text-align: center;
+    background: #fff;
+    transition: all 0.2s;
+    min-height: 180px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .image-dropzone.dragging {
+    border-color: #111;
+    background: #f9f9f9;
+  }
+  .image-placeholder {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: #999;
+    font-size: 13px;
+  }
+  .image-preview-box {
+    position: relative;
+    width: 100%;
+    max-height: 200px;
+    border-radius: 6px;
+    overflow: hidden;
+  }
+  .image-preview-box img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+  .remove-img-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 24px;
+    height: 24px;
+    background: rgba(0,0,0,0.6);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+  }
+  .remove-img-btn:hover { background: #dc2626; }
+  
+  .tag-order-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    padding: 12px;
+  }
+  .tag-order-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 12px;
+    background: #f9f9f9;
+    border-radius: 4px;
+    font-size: 13px;
+  }
+  .tag-order-actions {
+    display: flex;
+    gap: 4px;
+  }
+  .tag-order-actions .icon-btn {
+    width: 24px;
+    height: 24px;
+    background: #fff;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+  }
+  .tag-order-actions .icon-btn:hover:not(:disabled) { border-color: #111; }
+  .tag-order-actions .icon-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  /* Buttons */
+  .action-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    color: #333;
+    background: #f5f5f5;
+    border: 1px solid #e5e5e5;
+    border-radius: 6px;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .action-btn:hover {
+    background: #e5e5e5;
+    color: #111;
+  }
+  .action-btn.publish {
+    background: #111;
+    color: #fff;
+    border-color: #111;
+  }
+  .action-btn.publish:hover {
+    background: #333;
+  }
 </style>
+

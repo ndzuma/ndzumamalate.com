@@ -3,10 +3,11 @@
 import { useState } from "react";
 import FeaturedCard from "./featured-card";
 import FilterDropdown from "./filter-dropdown";
-import { Project } from "../types/api";
+import { Project, Tag } from "../types/api";
 
 type ProjectsClientProps = {
   initialProjects: Project[];
+  tags?: Tag[];
 };
 
 // Helper to format slugs (e.g., "design-systems" -> "Design Systems")
@@ -18,11 +19,16 @@ function formatTagName(tag: string): string {
     .join(" ");
 }
 
-export default function ProjectsClient({ initialProjects }: ProjectsClientProps) {
+export default function ProjectsClient({ initialProjects, tags = [] }: ProjectsClientProps) {
   const [selectedTag, setSelectedTag] = useState("all"); // Store slug state internally, "all" for default
 
-  // Unique sorted tag slugs
-  const uniqueTagSlugs = Array.from(new Set(initialProjects.flatMap((p) => p.tags || []))).sort();
+  // Create a Set of tag slugs that have filter = true
+  const filterableTagSlugs = new Set(tags.filter(t => t.filter).map(t => t.slug));
+
+  // Unique sorted tag slugs from projects, but only if they are in the filterable set
+  const uniqueTagSlugs = Array.from(new Set(initialProjects.flatMap((p) => p.tags || [])))
+    .filter(slug => filterableTagSlugs.has(slug))
+    .sort();
   const filterOptions = ["all", ...uniqueTagSlugs];
 
   // Map slugs to display names for the dropdown

@@ -79,19 +79,20 @@
 
       <form onsubmit={(e) => { e.preventDefault(); save(); }}>
         <div class="field">
-          <label class="mono">COMPANY</label>
-          <input bind:value={company} placeholder="Company name" required />
+          <label class="mono">{type === 'Education' ? 'UNI / SCHOOL' : 'COMPANY'}</label>
+          <input bind:value={company} placeholder={type === 'Education' ? 'e.g. University of Science' : 'Company name'} required />
         </div>
 
         <div class="field">
-          <label class="mono">ROLE</label>
-          <input bind:value={role} placeholder="Job title" required />
+          <label class="mono">{type === 'Education' ? 'COURSE / DEGREE' : 'ROLE'}</label>
+          <input bind:value={role} placeholder={type === 'Education' ? 'e.g. BSc Computer Science' : 'Job title'} required />
         </div>
 
         <div class="field">
           <label class="mono">TYPE</label>
           <select bind:value={type} required>
             <option value="Work">Work</option>
+            <option value="Education">Education</option>
             <option value="Hackathon">Hackathon</option>
             <option value="Open-Source">Open-Source</option>
             <option value="Volunteering">Volunteering</option>

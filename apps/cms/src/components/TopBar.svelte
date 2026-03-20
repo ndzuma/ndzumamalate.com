@@ -10,10 +10,12 @@
     <img src={logoIcon} alt="Malate" class="brand-logo" />
     <span class="separator">\</span>
     <span class="page-name mono">{pageName.toUpperCase()}</span>
-    {#if actions}
-      {@render actions()}
-    {/if}
   </div>
+  {#if actions}
+    <div class="topbar-actions">
+      {@render actions()}
+    </div>
+  {/if}
 </header>
 
 <style>
@@ -51,5 +53,11 @@
     font-weight: 400;
     color: #666;
     letter-spacing: 0.06em;
+  }
+
+  .topbar-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
   }
 </style>

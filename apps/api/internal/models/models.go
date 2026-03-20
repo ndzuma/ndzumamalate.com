@@ -15,12 +15,14 @@ type Tag struct {
 	ID        string    `json:"id"`
 	Name      string    `json:"name"`
 	Slug      string    `json:"slug"`
+	Filter    bool      `json:"filter"`
 	CreatedAt time.Time `json:"created_at"`
 }
 
 type TagInput struct {
-	Name string `json:"name"`
-	Slug string `json:"slug"`
+	Name   string `json:"name"`
+	Slug   string `json:"slug"`
+	Filter bool   `json:"filter"`
 }
 
 type Project struct {

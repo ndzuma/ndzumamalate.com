@@ -77,7 +77,7 @@
       case 'skills': return ['name', 'category', 'proficiency'];
       case 'experience': return ['company', 'role', 'location'];
       case 'cv': return ['label', 'file_url', 'is_active'];
-      case 'tags': return ['name', 'slug'];
+      case 'tags': return ['name', 'slug', 'filter'];
       default: return [];
     }
   }
@@ -93,12 +93,12 @@
 
   // ── Inline tag editing ──
   let editingTag = $state(null);
-  let tagForm = $state({ name: '', slug: '' });
+    let tagForm = $state({ name: '', slug: '', filter: false });
 
-  function editTag(item) {
-    editingTag = item.id;
-    tagForm = { name: item.name, slug: item.slug };
-  }
+    function editTag(item) {
+      editingTag = item.id;
+      tagForm = { name: item.name, slug: item.slug, filter: item.filter };
+    }
 
   async function saveTag() {
     if (!editingTag) return;
@@ -136,6 +136,21 @@
       toast(item.is_active ? 'CV deactivated' : 'CV set as active');
     } catch (_) {
       toast('Failed to update CV', 'error');
+    }
+  }
+
+  // ── Tag filter toggle ──
+  async function toggleTagFilter(item) {
+    try {
+      await tags.update(item.id, {
+        name: item.name,
+        slug: item.slug,
+        filter: !item.filter,
+      });
+      await loadData();
+      toast(item.filter ? 'Tag hidden from filters' : 'Tag shown in filters');
+    } catch (_) {
+      toast('Failed to update tag filter', 'error');
     }
   }
 
@@ -308,12 +323,16 @@
                 <tr>
                   {#each getTableColumns() as col}
                     <td>
-                      {#if editingTag === item.id && activeTab === 'tags' && (col === 'name' || col === 'slug')}
-                        <input
-                          class="inline-edit"
-                          bind:value={tagForm[col]}
-                          onkeydown={(e) => e.key === 'Enter' && saveTag()}
-                        />
+                      {#if editingTag === item.id && activeTab === 'tags'}
+                        {#if col === 'name' || col === 'slug'}
+                          <input
+                            class="inline-edit"
+                            bind:value={tagForm[col]}
+                            onkeydown={(e) => e.key === 'Enter' && saveTag()}
+                          />
+                        {:else if col === 'filter'}
+                          <input type="checkbox" bind:checked={tagForm.filter} />
+                        {/if}
                       {:else if col === 'is_active' && activeTab === 'cv'}
                         <button
                           class="active-badge"
@@ -323,6 +342,16 @@
                         >
                           <CheckCircle size={12} weight={item.is_active ? 'fill' : 'regular'} />
                           <span>{item.is_active ? 'Active' : 'Inactive'}</span>
+                        </button>
+                      {:else if col === 'filter' && activeTab === 'tags'}
+                        <button
+                          class="active-badge"
+                          class:is-active={item.filter}
+                          onclick={() => toggleTagFilter(item)}
+                          title={item.filter ? 'Visible in filters (click to hide)' : 'Hidden from filters (click to show)'}
+                        >
+                          <CheckCircle size={12} weight={item.filter ? 'fill' : 'regular'} />
+                          <span>{item.filter ? 'Visible' : 'Hidden'}</span>
                         </button>
                       {:else}
                         {formatCell(item[col])}

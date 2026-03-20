@@ -139,7 +139,7 @@ func (s *Store) UpdateAdminLastLogin(ctx context.Context, userID string, at time
 }
 
 func (s *Store) ListTags(ctx context.Context) ([]models.Tag, error) {
-	rows, err := s.pool.Query(ctx, `SELECT id, name, slug, created_at FROM tags ORDER BY name ASC`)
+	rows, err := s.pool.Query(ctx, `SELECT id, name, slug, filter, created_at FROM tags ORDER BY name ASC`)
 	if err != nil {
 		return nil, err
 	}
@@ -148,7 +148,7 @@ func (s *Store) ListTags(ctx context.Context) ([]models.Tag, error) {
 	tags := make([]models.Tag, 0)
 	for rows.Next() {
 		var tag models.Tag
-		if err := rows.Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt); err != nil {
+		if err := rows.Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.Filter, &tag.CreatedAt); err != nil {
 			return nil, err
 		}
 		tags = append(tags, tag)
@@ -160,10 +160,10 @@ func (s *Store) ListTags(ctx context.Context) ([]models.Tag, error) {
 func (s *Store) CreateTag(ctx context.Context, input models.TagInput) (*models.Tag, error) {
 	tag := &models.Tag{}
 	err := s.pool.QueryRow(ctx, `
-		INSERT INTO tags (name, slug)
-		VALUES ($1, $2)
-		RETURNING id, name, slug, created_at
-	`, input.Name, input.Slug).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt)
+		INSERT INTO tags (name, slug, filter)
+		VALUES ($1, $2, $3)
+		RETURNING id, name, slug, filter, created_at
+	`, input.Name, input.Slug, input.Filter).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.Filter, &tag.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -174,10 +174,10 @@ func (s *Store) UpdateTag(ctx context.Context, id string, input models.TagInput)
 	tag := &models.Tag{}
 	err := s.pool.QueryRow(ctx, `
 		UPDATE tags
-		SET name = $2, slug = $3
+		SET name = $2, slug = $3, filter = $4
 		WHERE id = $1
-		RETURNING id, name, slug, created_at
-	`, id, input.Name, input.Slug).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.CreatedAt)
+		RETURNING id, name, slug, filter, created_at
+	`, id, input.Name, input.Slug, input.Filter).Scan(&tag.ID, &tag.Name, &tag.Slug, &tag.Filter, &tag.CreatedAt)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, nil
 	}
@@ -206,7 +206,7 @@ func (s *Store) ListProjects(ctx context.Context, publishedOnly bool) ([]models.
 			p.featured,
 			p.published,
 			COALESCE(p.sort_order, 0),
-			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			COALESCE(array_remove(array_agg(t.slug ORDER BY pt.sort_order ASC), NULL), '{}') AS tags,
 			p.start_date,
 			p.end_date,
 			p.created_at,
@@ -269,7 +269,7 @@ func (s *Store) GetProjectBySlug(ctx context.Context, slug string, publishedOnly
 			p.featured,
 			p.published,
 			COALESCE(p.sort_order, 0),
-			COALESCE(array_remove(array_agg(t.slug), NULL), '{}') AS tags,
+			COALESCE(array_remove(array_agg(t.slug ORDER BY pt.sort_order ASC), NULL), '{}') AS tags,
 			p.start_date,
 			p.end_date,
 			p.created_at,
@@ -374,14 +374,14 @@ func (s *Store) upsertProject(ctx context.Context, id string, input models.Proje
 	if _, err := tx.Exec(ctx, `DELETE FROM project_tags WHERE project_id = $1`, project.ID); err != nil {
 		return nil, err
 	}
-	for _, tagID := range input.TagIDs {
-		if _, err := tx.Exec(ctx, `INSERT INTO project_tags (project_id, tag_id) VALUES ($1, $2)`, project.ID, tagID); err != nil {
+	for i, tagID := range input.TagIDs {
+		if _, err := tx.Exec(ctx, `INSERT INTO project_tags (project_id, tag_id, sort_order) VALUES ($1, $2, $3)`, project.ID, tagID, i); err != nil {
 			return nil, err
 		}
 	}
 
 	if err := tx.QueryRow(ctx, `
-		SELECT COALESCE(array_remove(array_agg(t.slug), NULL), '{}')
+		SELECT COALESCE(array_remove(array_agg(t.slug ORDER BY pt.sort_order ASC), NULL), '{}')
 		FROM project_tags pt
 		LEFT JOIN tags t ON t.id = pt.tag_id
 		WHERE pt.project_id = $1

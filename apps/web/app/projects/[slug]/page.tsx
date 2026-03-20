@@ -45,8 +45,13 @@ export default async function ProjectPage({ params }: Props) {
   let tagMap: Record<string, string> = {};
   try {
     const allTags = await api.getTags();
-    allTags.forEach(t => tagMap[t.id] = t.name);
+    allTags.forEach(t => {
+      tagMap[t.id] = t.name;
+      tagMap[t.slug] = t.name;
+    });
   } catch (e) {}
+
+  const displayTags = project.tags || [];
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-6 sm:mt-10">
@@ -68,11 +73,11 @@ export default async function ProjectPage({ params }: Props) {
                 href={project.repo_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 hover:bg-black/10 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300"
+                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 pr-4 hover:bg-black/10 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300"
                 title="Go to repo"
               >
                 <GithubLogo weight="bold" className="w-5 h-5 shrink-0" />
-                <span className="max-w-0 overflow-hidden text-sm font-medium whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-2 transition-all duration-300 ease-out">
+                <span className="text-sm font-medium whitespace-nowrap ml-2">
                   repo
                 </span>
               </a>
@@ -82,11 +87,11 @@ export default async function ProjectPage({ params }: Props) {
                 href={project.live_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 hover:bg-black/10 hover:scale-[1.05] hover:rotate-2 transition-all duration-300"
+                className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 pr-4 hover:bg-black/10 hover:scale-[1.05] hover:rotate-2 transition-all duration-300"
                 title="Try it out"
               >
                 <Globe weight="bold" className="w-5 h-5 shrink-0" />
-                <span className="max-w-0 overflow-hidden text-sm font-medium whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-2 transition-all duration-300 ease-out">
+                <span className="text-sm font-medium whitespace-nowrap ml-2">
                   try it
                 </span>
               </a>
@@ -121,7 +126,7 @@ export default async function ProjectPage({ params }: Props) {
       {/* Meta: Tags and Date (Plain text on one line) */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="text-sm font-medium text-black/60">
-          {project.tags?.map((t) => tagMap[t] || t).join(" · ") || "No tags"}
+          {displayTags.map((t) => tagMap[t] || t).join(" · ") || "No tags"}
         </div>
         
         {(project.start_date || project.end_date) && (

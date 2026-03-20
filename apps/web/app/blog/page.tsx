@@ -7,7 +7,10 @@ export const metadata = {
 };
 
 export default async function BlogPage() {
-  const allBlogs = await api.getBlogs() || [];
+  const [allBlogs, allTags] = await Promise.all([
+    api.getBlogs().catch(() => []),
+    api.getTags().catch(() => [])
+  ]);
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
@@ -20,7 +23,7 @@ export default async function BlogPage() {
         </p>
       </section>
 
-      <BlogClient initialBlogs={allBlogs} />
+      <BlogClient initialBlogs={allBlogs} tags={allTags} />
     </main>
   );
 }

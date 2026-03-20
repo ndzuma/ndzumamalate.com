@@ -42,8 +42,13 @@ export default async function BlogPage({ params }: Props) {
   let tagMap: Record<string, string> = {};
   try {
     const allTags = await api.getTags();
-    allTags.forEach(t => tagMap[t.id] = t.name);
+    allTags.forEach(t => {
+      tagMap[t.id] = t.name;
+      tagMap[t.slug] = t.name;
+    });
   } catch (e) {}
+
+  const displayTags = blog.tags || [];
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-6 sm:mt-10">
@@ -85,7 +90,7 @@ export default async function BlogPage({ params }: Props) {
       {/* Meta: Tags and Date (Plain text on one line) */}
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <div className="text-sm font-medium text-black/60">
-          {blog.tags?.map((t) => tagMap[t] || t).join(" · ") || "No tags"}
+          {displayTags.map((t) => tagMap[t] || t).join(" · ") || "No tags"}
         </div>
         
         {blog.published_at && (

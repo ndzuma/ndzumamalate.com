@@ -13,6 +13,7 @@ export default async function ExperiencePage() {
     api.getSkills().catch(() => [])
   ]);
 
+  const education = experience.filter(e => e.type === 'Education').sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());
   const work = experience.filter(e => e.type === 'Work' || !e.type);
   const hackathons = experience.filter(e => e.type === 'Hackathon');
   const openSource = experience.filter(e => e.type === 'Open-Source');
@@ -40,6 +41,31 @@ export default async function ExperiencePage() {
 
       <div className="max-w-2xl space-y-16 px-4 sm:px-0">
         
+        {education.length > 0 && (
+          <section>
+            <table className="w-full text-left text-sm text-black/80">
+              <tbody>
+                {education.map(edu => (
+                  <tr key={edu.id} className="border-b border-black/10 last:border-0 align-top">
+                    <td className="py-4 font-medium w-1/3 sm:w-1/4">{edu.company}</td>
+                    <td className="py-4 text-black/60 w-1/2 sm:w-auto">
+                      <div className={edu.description ? "mb-2 font-medium" : ""}>{edu.role}</div>
+                      {edu.description && (
+                        <div className="text-sm">
+                          <ExperienceDescription description={edu.description} />
+                        </div>
+                      )}
+                    </td>
+                    <td className="py-4 text-right font-mono text-black/50 sm:w-1/4">
+                      {new Date(edu.start_date).getFullYear()} {edu.end_date ? `— ${new Date(edu.end_date).getFullYear()}` : '— Present'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </section>
+        )}
+
         {expSections.map((section) => {
           const currentNum = String(sectionCounter++).padStart(2, '0');
           return (
@@ -71,11 +97,27 @@ export default async function ExperiencePage() {
             <h2 className="text-xl sm:text-2xl font-medium mb-6 tracking-tight flex items-center gap-3">
               <span className="text-black/30">{String(sectionCounter++).padStart(2, '0')}</span> Core Skills
             </h2>
-            <div className="flex flex-wrap gap-2 text-base">
-              {skills.map(skill => (
-                <span key={skill.id} className="px-3 py-1.5 rounded-lg bg-black/5 text-black/80 font-medium">
-                  {skill.name}
-                </span>
+            <div className="space-y-6 text-base">
+              {Object.entries(
+                skills.reduce((acc, skill) => {
+                  const cat = skill.category || 'other';
+                  if (!acc[cat]) acc[cat] = [];
+                  acc[cat].push(skill);
+                  return acc;
+                }, {} as Record<string, any[]>)
+              ).map(([category, catSkills]) => (
+                <div key={category} className="flex flex-col sm:flex-row gap-2 sm:gap-6 sm:items-baseline border-b border-black/5 pb-6 last:border-0 last:pb-0">
+                  <div className="font-medium text-black/50 capitalize w-48 shrink-0 tracking-wide text-sm">
+                    {category.replace(/_/g, ' ')}
+                  </div>
+                  <div className="flex flex-wrap gap-2">
+                    {catSkills.map(skill => (
+                      <span key={skill.id} className="px-3 py-1.5 rounded-lg bg-black/5 text-black/80 font-medium">
+                        {skill.name}
+                      </span>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
           </section>

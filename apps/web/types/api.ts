@@ -2,6 +2,7 @@ export interface Tag {
   id: string;
   name: string;
   slug: string;
+  filter: boolean;
   created_at: string;
 }
 

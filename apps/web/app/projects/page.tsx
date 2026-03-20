@@ -7,8 +7,13 @@ export const metadata = {
 };
 
 export default async function ProjectsPage() {
-  const allProjects = await api.getProjects() || [];
-
+  const [allProjects, allTags] = await Promise.all([
+    api.getProjects().catch(() => []),
+    api.getTags().catch(() => [])
+  ]);
+  console.log(allProjects)
+  console.log(allTags)
+  
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
@@ -20,7 +25,7 @@ export default async function ProjectsPage() {
         </p>
       </section>
 
-      <ProjectsClient initialProjects={allProjects} />
+      <ProjectsClient initialProjects={allProjects} tags={allTags} />
     </main>
   );
 }

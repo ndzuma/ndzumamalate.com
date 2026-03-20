@@ -68,7 +68,7 @@
         <div class="field">
           <div style="display: flex; justify-content: space-between; align-items: center;">
             <label class="mono">FILE URL</label>
-            <Uploader onUpload={(url) => fileUrl = url} />
+            <Uploader onUpload={(url) => fileUrl = url} accept=".pdf,.doc,.docx" label="Upload CV" />
           </div>
           <input bind:value={fileUrl} placeholder="https://..." required />
         </div>
