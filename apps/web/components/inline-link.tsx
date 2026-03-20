@@ -2,30 +2,44 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowUpRight, Link as LinkIcon } from "@phosphor-icons/react";
+import { ArrowUpRight, Link as LinkIcon, XLogo, YoutubeLogo } from "@phosphor-icons/react";
 
 type InlineLinkProps = {
   title: string;
   url: string;
   label?: string;
-  color?: "blue" | "orange" | "purple" | "green" | "gray" | "red";
+  color?: "blue" | "orange" | "purple" | "green" | "gray" | "red" | "black";
+  iconType?: "link" | "x" | "youtube";
 };
 
 export default function InlineLink({ 
   title, 
   url,
   label = "Visit link",
-  color = "blue"
+  color = "blue",
+  iconType = "link"
 }: InlineLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
 
   const colorStyles = {
-    blue: "bg-blue-100 hover:bg-blue-200",
-    orange: "bg-orange-100 hover:bg-orange-200",
-    purple: "bg-purple-100 hover:bg-purple-200",
-    green: "bg-green-100 hover:bg-green-200",
-    gray: "bg-gray-100 hover:bg-gray-200",
-    red: "bg-red-100 hover:bg-red-200",
+    blue: "bg-blue-100 hover:bg-blue-200 text-black",
+    orange: "bg-orange-100 hover:bg-orange-200 text-black",
+    purple: "bg-purple-100 hover:bg-purple-200 text-black",
+    green: "bg-green-100 hover:bg-green-200 text-black",
+    gray: "bg-gray-100 hover:bg-gray-200 text-black",
+    red: "bg-red-100 hover:bg-red-200 text-black",
+    black: "bg-black/10 hover:bg-black/20 text-black",
+  };
+
+  const getIcon = () => {
+    switch (iconType) {
+      case "x":
+        return <XLogo weight="fill" className="w-3.5 h-3.5" />;
+      case "youtube":
+        return <YoutubeLogo weight="fill" className="w-3.5 h-3.5" />;
+      default:
+        return <LinkIcon weight="bold" className="w-3.5 h-3.5" />;
+    }
   };
 
   return (
@@ -35,7 +49,7 @@ export default function InlineLink({
       onMouseLeave={() => setIsOpen(false)}
     >
       <span 
-        className={`font-medium text-black px-1.5 py-0.5 rounded transition-colors cursor-pointer ${colorStyles[color]}`}
+        className={`font-medium px-1.5 py-0.5 rounded transition-colors cursor-pointer ${colorStyles[color]}`}
       >
         {title}
       </span>
@@ -55,7 +69,7 @@ export default function InlineLink({
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
-              <LinkIcon weight="bold" className="w-3.5 h-3.5" />
+              {getIcon()}
               {label}
               <ArrowUpRight weight="bold" className="w-3 h-3 opacity-50 ml-0.5" />
             </a>

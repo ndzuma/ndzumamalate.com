@@ -606,46 +606,46 @@ export default function ThisPage() {
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <div className="mb-1"><InlineLink title="Alex Gilev" url="https://x.com/alexgilev" color="blue" /></div>
-                  <p className="text-black/60 leading-relaxed text-sm">
-                    I saw his posts (<InlineLink title="here" url="https://x.com/alexgilev/status/2033277392790106502?s=20" color="gray" label="View Post" /> and <InlineLink title="here" url="https://x.com/alexgilev/status/2024906982277124343?s=20" color="gray" label="View Post" />) and really loved the simplicity. I tried implementing his style mainly in the CMS, but that minimalist DNA naturally carried over to the rest of the site.
-                  </p>
+                  <div className="mb-1"><InlineLink title="Alex Gilev" url="https://x.com/alexgilev" color="blue" label="Go to profile" iconType="x" /></div>
+                  <div className="text-black/60 leading-relaxed text-sm">
+                    I saw his posts (<InlineLink title="here" url="https://x.com/alexgilev/status/2033277392790106502?s=20" color="black" label="Go to X post" iconType="x" /> and <InlineLink title="here" url="https://x.com/alexgilev/status/2024906982277124343?s=20" color="black" label="Go to X post" iconType="x" />) and really loved the simplicity. I tried implementing his style mainly in the CMS, but that minimalist DNA naturally carried over to the rest of the site.
+                  </div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <div className="mb-1"><InlineLink title="Akshit Verma" url="https://x.com/AkshitVrma" color="blue" /></div>
-                  <p className="text-black/60 leading-relaxed text-sm">
-                    His <InlineLink title="post" url="https://x.com/AkshitVrma/status/2031299775015039273?s=20" color="gray" label="View Post" /> made me realize I don't have to rely on standard static hyperlinks. It inspired me to come up with a more creative, interactive approach to inline references. I definitely borrowed his format for the main description section on the home page.
-                  </p>
+                  <div className="mb-1"><InlineLink title="Akshit Verma" url="https://x.com/AkshitVrma" color="blue" label="Go to profile" iconType="x" /></div>
+                  <div className="text-black/60 leading-relaxed text-sm">
+                    His <InlineLink title="post" url="https://x.com/AkshitVrma/status/2031299775015039273?s=20" color="black" label="Go to X post" iconType="x" /> made me realize I don't have to rely on standard static hyperlinks. It inspired me to come up with a more creative, interactive approach to inline references. I definitely borrowed his format for the main description section on the home page.
+                  </div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <div className="mb-1"><InlineLink title="Onur" url="https://x.com/onuro" color="blue" /></div>
-                  <p className="text-black/60 leading-relaxed text-sm">
-                    I really loved his <InlineLink title="real-time CMS" url="https://x.com/onuro/status/2031515169252094217?s=20" color="gray" label="View Post" /> built with Convex and Next.js. It looks stunning. I wanted to replicate that vibe but build the real-time layer completely from scratch using standard WebSockets/SSE via Go.
-                  </p>
+                  <div className="mb-1"><InlineLink title="Onur" url="https://x.com/onuro" color="blue" label="Go to profile" iconType="x" /></div>
+                  <div className="text-black/60 leading-relaxed text-sm">
+                    I really loved his <InlineLink title="real-time CMS" url="https://x.com/onuro/status/2031515169252094217?s=20" color="black" label="Go to X post" iconType="x" /> built with Convex and Next.js. It looks stunning. I wanted to replicate that vibe but build the real-time layer completely from scratch using standard WebSockets/SSE via Go.
+                  </div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <div className="mb-1"><InlineLink title="Noah" url="https://x.com/itsnoahd" color="blue" /></div>
-                  <p className="text-black/60 leading-relaxed text-sm">
-                    He posted about his <InlineLink title="simple website" url="https://x.com/itsnoahd/status/2025951246696231407?s=20" color="gray" label="View Post" /> and I loved that he just had a raw list of his languages and tools. That directly inspired the Stack page on this site, which I then iterated on to make my own.
-                  </p>
+                  <div className="mb-1"><InlineLink title="Noah" url="https://x.com/itsnoahd" color="blue" label="Go to profile" iconType="x" /></div>
+                  <div className="text-black/60 leading-relaxed text-sm">
+                    He posted about his <InlineLink title="simple website" url="https://x.com/itsnoahd/status/2025951246696231407?s=20" color="black" label="Go to X post" iconType="x" /> and I loved that he just had a raw list of his languages and tools. That directly inspired the Stack page on this site, which I then iterated on to make my own.
+                  </div>
                 </div>
               </li>
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <div className="mb-1"><InlineLink title="Ben Davis" url="https://www.youtube.com/@bmdavis419" color="red" label="Watch Video" /></div>
-                  <p className="text-black/60 leading-relaxed text-sm">
-                    His video particularly convinced me to pick Svelte for my CMS. It got the ball over the line over HTMX, which Prime (<InlineLink title="@ThePrimeagen" url="https://x.com/ThePrimeagen" color="gray" />) almost swayed me into using.
-                  </p>
+                  <div className="mb-1"><InlineLink title="Ben Davis" url="https://www.youtube.com/@bmdavis419" color="red" label="Go to profile" iconType="youtube" /></div>
+                  <div className="text-black/60 leading-relaxed text-sm">
+                    His <InlineLink title="video" url="https://youtu.be/MIVpfEKT9qg?si=VY9GbOtOlib5oDfY" color="black" label="Watch video" iconType="youtube" /> particularly convinced me to pick Svelte for my CMS. It got the ball over the line over HTMX, which Prime (<InlineLink title="@ThePrimeagen" url="https://x.com/ThePrimeagen" color="black" label="Go to profile" iconType="x" />) almost swayed me into using.
+                  </div>
                 </div>
               </li>
             </ul>
