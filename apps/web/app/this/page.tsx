@@ -418,7 +418,7 @@ export default function ThisPage() {
                 {/* Featured Card */}
                 <div>
                   <div className="text-xs font-mono text-black/40 mb-3">Featured Card Component</div>
-                  <div className="relative max-w-[320px] ml-8 mt-12">
+                  <div className="relative max-w-[320px] ml-8 mt-14">
                     {/* Width Indicator */}
                     <div className="absolute -top-6 left-0 right-0 h-[1px] bg-black/10">
                       <div className="absolute -top-1 left-0 w-[1px] h-2 bg-black/20" />
@@ -430,7 +430,7 @@ export default function ThisPage() {
                     <div className="absolute -left-6 top-0 bottom-0 w-[1px] bg-black/10">
                       <div className="absolute top-0 -left-1 w-2 h-[1px] bg-black/20" />
                       <div className="absolute bottom-0 -left-1 w-2 h-[1px] bg-black/20" />
-                      <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-[120%] -rotate-90 bg-white px-2 text-[10px] font-mono text-black/40 tracking-widest whitespace-nowrap">Aspect 16:9</div>
+                      <div className="absolute top-1/2 left-0 -translate-y-1/2 -translate-x-[120%] -rotate-90 bg-white mx-10 text-[10px] font-mono text-black/40 tracking-widest whitespace-nowrap">Aspect 16:9</div>
                     </div>
 
                     <FeaturedCard
