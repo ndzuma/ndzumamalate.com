@@ -32,11 +32,15 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Designing obscure UI interactions</span>
+              <span>Playing basketball</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Tinkering with AI agent architectures</span>
+              <span>Music — specifically amapiano, afro house, and old school R&B</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-black/30 mt-1">↳</span>
+              <span>Learning about tech and finance</span>
             </li>
             {profile?.currently_reading_title && profile?.currently_reading_url && (
               <li className="flex gap-3 text-black/80">
@@ -65,7 +69,7 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Editor:</strong> Cursor / VS Code</span>
+              <span><strong>Editor:</strong> Zed</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
@@ -77,7 +81,11 @@ export default async function StackPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Browser:</strong> Arc</span>
+              <span><strong>Browser:</strong> Zen</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-black/30 mt-1">↳</span>
+              <span><strong>AI Coding:</strong> Opencode</span>
             </li>
           </ul>
         </section>
@@ -90,15 +98,15 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Daily driver:</strong> Claude 3.5 Sonnet (Best for coding & reasoning)</span>
+              <span><strong>Day to day:</strong> Gemini 3.1 Pro (sometimes Kimi k2.5)</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Heavy lifting:</strong> GPT-4o</span>
+              <span><strong>Heavy lifting:</strong> OpenAI GPT-5.4 or Sonnet 4.6</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Local/Fast tasks:</strong> Llama 3</span>
+              <span><strong>Design/UI:</strong> Opus 4.6</span>
             </li>
           </ul>
         </section>
@@ -111,15 +119,15 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>TypeScript:</strong> The undisputed king for the web</span>
+              <span><strong>Python:</strong> For most quick tasks or servers</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Go:</strong> For fast, reliable, concurrent APIs</span>
+              <span><strong>Go:</strong> Mainly if I want to make binaries, if I want something fast out of the gate, and concurrent APIs</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Python:</strong> For anything AI or script-related</span>
+              <span><strong>TypeScript:</strong> For the web</span>
             </li>
           </ul>
         </section>
@@ -132,19 +140,31 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Frontend:</strong> Next.js, React, Tailwind CSS, Motion</span>
+              <span><strong>Frontend:</strong> Next.js, React, Tailwind CSS, Motion, shadcn</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Backend:</strong> Go (Echo), Postgres (pgx)</span>
+              <span><strong>Backend:</strong> Python (FastAPI), Go (Echo), Postgres, Convex</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Hosting:</strong> Vercel (Web), Railway (API/DB)</span>
+              <span><strong>Hosting:</strong> Railway (for everything)</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Payments & Edge:</strong> Stripe, Cloudflare</span>
+              <span><strong>Auth:</strong> Clerk and Better Auth</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-black/30 mt-1">↳</span>
+              <span><strong>Infrastructure:</strong> Cloudflare (domains & email routing), Tailscale (to use services from anywhere)</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-black/30 mt-1">↳</span>
+              <span><strong>Analytics & Icons:</strong> PostHog, Phosphor Icons</span>
+            </li>
+            <li className="flex gap-3">
+              <span className="text-black/30 mt-1">↳</span>
+              <span><strong>Object Store:</strong> UploadThing or Convex (depending on the project)</span>
             </li>
           </ul>
         </section>

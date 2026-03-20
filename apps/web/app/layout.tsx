@@ -43,7 +43,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   }
 
   return (
-    <html lang="en">
+    <html lang="en" className="scroll-smooth">
       <body className={geist.variable}>
         <SiteShell hasBlogs={hasBlogs}>{children}</SiteShell>
       </body>

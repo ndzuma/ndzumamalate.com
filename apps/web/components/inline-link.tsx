@@ -2,20 +2,31 @@
 
 import { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowUpRight, GithubLogo } from "@phosphor-icons/react";
+import { ArrowUpRight, Link as LinkIcon } from "@phosphor-icons/react";
 
-type InlineProjectLinkProps = {
-  title?: string;
-  url?: string;
+type InlineLinkProps = {
+  title: string;
+  url: string;
   label?: string;
+  color?: "blue" | "orange" | "purple" | "green" | "gray" | "red";
 };
 
-export default function InlineProjectLink({ 
-  title = "probeTool", 
-  url = "https://github.com/ndzuma/probeTool",
-  label = "See project"
-}: InlineProjectLinkProps) {
+export default function InlineLink({ 
+  title, 
+  url,
+  label = "Visit link",
+  color = "blue"
+}: InlineLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
+
+  const colorStyles = {
+    blue: "bg-blue-100 hover:bg-blue-200",
+    orange: "bg-orange-100 hover:bg-orange-200",
+    purple: "bg-purple-100 hover:bg-purple-200",
+    green: "bg-green-100 hover:bg-green-200",
+    gray: "bg-gray-100 hover:bg-gray-200",
+    red: "bg-red-100 hover:bg-red-200",
+  };
 
   return (
     <span 
@@ -24,7 +35,7 @@ export default function InlineProjectLink({
       onMouseLeave={() => setIsOpen(false)}
     >
       <span 
-        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className={`font-medium text-black px-1.5 py-0.5 rounded transition-colors cursor-pointer ${colorStyles[color]}`}
       >
         {title}
       </span>
@@ -44,7 +55,7 @@ export default function InlineProjectLink({
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
             >
-              <GithubLogo weight="fill" className="w-4 h-4" />
+              <LinkIcon weight="bold" className="w-3.5 h-3.5" />
               {label}
               <ArrowUpRight weight="bold" className="w-3 h-3 opacity-50 ml-0.5" />
             </a>
