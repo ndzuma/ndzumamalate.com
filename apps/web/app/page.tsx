@@ -76,7 +76,7 @@ export default async function Home() {
       {/* Featured Projects Carousel */}
       {displayProjects.length > 0 && (
         <Carousel title="Featured projects">
-          {displayProjects.map((project) => (
+          {displayProjects.map((project, index) => (
             <FeaturedCard
               key={project.id}
               href={`/projects/${project.slug || project.id}`}
@@ -84,6 +84,7 @@ export default async function Home() {
               image={project.image_url}
               liveUrl={project.live_url}
               className="w-[85vw] sm:w-[400px] lg:w-[480px]"
+              priority={index < 2}
             />
           ))}
         </Carousel>
@@ -92,7 +93,7 @@ export default async function Home() {
       {/* Featured Blogs Carousel */}
       {displayBlogs.length > 0 && (
         <Carousel title="Featured blogs">
-          {displayBlogs.map((blog) => (
+          {displayBlogs.map((blog, index) => (
             <FeaturedCard
               key={blog.id}
               href={`/blog/${blog.slug || blog.id}`}
@@ -100,6 +101,7 @@ export default async function Home() {
               date={blog.published_at ? new Date(blog.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined}
               image={blog.cover_image_url}
               className="w-[85vw] sm:w-[400px] lg:w-[480px]"
+              priority={index < 2}
             />
           ))}
         </Carousel>

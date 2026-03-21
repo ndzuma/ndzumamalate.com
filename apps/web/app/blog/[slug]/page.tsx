@@ -29,6 +29,17 @@ function formatDate(dateStr?: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
 }
 
+export async function generateStaticParams() {
+  try {
+    const blogs = await api.getBlogs();
+    return blogs.map((blog) => ({
+      slug: blog.slug || blog.id,
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
 export default async function BlogPage({ params }: Props) {
   const { slug } = await params;
   let blog;
@@ -71,6 +82,7 @@ export default async function BlogPage({ params }: Props) {
             src={blog.cover_image_url} 
             alt={blog.title} 
             fill 
+            sizes="(max-width: 896px) 100vw, 896px"
             className="object-cover"
             priority
           />

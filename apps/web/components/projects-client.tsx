@@ -58,7 +58,7 @@ export default function ProjectsClient({ initialProjects, tags = [] }: ProjectsC
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredProjects.map((project) => (
+          {filteredProjects.map((project, index) => (
             <FeaturedCard
               key={project.id}
               href={`/projects/${project.slug || project.id}`}
@@ -66,6 +66,7 @@ export default function ProjectsClient({ initialProjects, tags = [] }: ProjectsC
               image={project.image_url}
               repoUrl={project.repo_url}
               liveUrl={project.live_url}
+              priority={index < 4}
             />
           ))}
         </div>

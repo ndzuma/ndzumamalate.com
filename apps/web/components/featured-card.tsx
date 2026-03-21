@@ -12,9 +12,10 @@ type FeaturedCardProps = {
   repoUrl?: string;
   liveUrl?: string;
   className?: string; // added to allow carousel sizing
+  priority?: boolean;
 };
 
-export default function FeaturedCard({ href, title, date, image, repoUrl, liveUrl, className = "" }: FeaturedCardProps) {
+export default function FeaturedCard({ href, title, date, image, repoUrl, liveUrl, className = "", priority = false }: FeaturedCardProps) {
   return (
     <div className={`group flex flex-col gap-4 snap-start shrink-0 ${className}`}>
       <div className="w-full aspect-[16/9] rounded-3xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-md block">
@@ -26,6 +27,7 @@ export default function FeaturedCard({ href, title, date, image, repoUrl, liveUr
               fill 
               sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
               className="object-cover transition-transform duration-700 group-hover:scale-105" 
+              priority={priority}
             />
           ) : (
             <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>

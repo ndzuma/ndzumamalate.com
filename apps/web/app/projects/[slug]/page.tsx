@@ -29,6 +29,17 @@ function formatDate(dateStr?: string) {
   return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
 }
 
+export async function generateStaticParams() {
+  try {
+    const projects = await api.getProjects();
+    return projects.map((project) => ({
+      slug: project.slug || project.id,
+    }));
+  } catch (e) {
+    return [];
+  }
+}
+
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   let project;
@@ -107,6 +118,7 @@ export default async function ProjectPage({ params }: Props) {
             src={project.image_url} 
             alt={project.title} 
             fill 
+            sizes="(max-width: 896px) 100vw, 896px"
             className="object-cover"
             priority
           />

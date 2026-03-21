@@ -55,7 +55,7 @@ export default function BlogClient({ initialBlogs, tags = [] }: BlogClientProps)
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {filteredBlogs.map((blog) => (
+          {filteredBlogs.map((blog, index) => (
             <FeaturedCard
               key={blog.id}
               href={`/blog/${blog.slug || blog.id}`}
@@ -70,6 +70,7 @@ export default function BlogClient({ initialBlogs, tags = [] }: BlogClientProps)
                   : undefined
               }
               image={blog.cover_image_url}
+              priority={index < 4}
             />
           ))}
         </div>
