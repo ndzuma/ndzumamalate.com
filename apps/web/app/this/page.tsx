@@ -259,44 +259,59 @@ export default function ThisPage() {
             </p>
 
             {/* CMS Previews */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-              <div className="w-full aspect-[4/3] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col">
-                <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2">
+            <div className="flex flex-col gap-8 mt-8">
+              <div className="w-full aspect-[3568/2096] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col">
+                <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2 shrink-0">
                   <div className="w-2 h-2 rounded-full bg-red-400" />
                   <div className="w-2 h-2 rounded-full bg-yellow-400" />
                   <div className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-[10px] font-mono text-black/40 ml-2">localhost:8080/#/dashboard</span>
+                  <span className="text-[10px] font-mono text-black/40 ml-2">#/dashboard</span>
                 </div>
-                <div className="flex-1 p-4 flex gap-4">
-                  <div className="w-1/4 h-full bg-black/5 rounded-lg border border-black/5" />
-                  <div className="flex-1 h-full bg-white rounded-lg border border-black/5 shadow-sm p-4 flex flex-col gap-3">
-                    <div className="w-1/3 h-4 bg-black/10 rounded" />
-                    <div className="w-full h-8 bg-black/5 rounded" />
-                    <div className="w-full h-8 bg-black/5 rounded" />
-                    <div className="w-full h-8 bg-black/5 rounded" />
-                  </div>
+                <div className="flex-1 relative bg-white">
+                  <Image 
+                    src="https://5qpxxrwjkp.ufs.sh/f/NnmmcSZaZgmnbaXgHSs5XIqnNegTBwEPySRKdH9FZYkVlG7D" 
+                    alt="CMS Dashboard" 
+                    fill 
+                    className="object-cover object-top"
+                  />
                 </div>
               </div>
 
-              <div className="w-full aspect-[4/3] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col">
-                <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2">
+              <div className="w-full aspect-[3568/2096] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col">
+                <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2 shrink-0">
                   <div className="w-2 h-2 rounded-full bg-red-400" />
                   <div className="w-2 h-2 rounded-full bg-yellow-400" />
                   <div className="w-2 h-2 rounded-full bg-green-400" />
-                  <span className="text-[10px] font-mono text-black/40 ml-2">localhost:8080/#/projects/edit</span>
+                  <span className="text-[10px] font-mono text-black/40 ml-2">#/editor/project</span>
                 </div>
-                <div className="flex-1 p-4 flex flex-col gap-3 bg-white">
-                  <div className="w-1/2 h-6 bg-black/10 rounded" />
-                  <div className="w-full h-10 border border-black/10 rounded flex items-center px-2">
-                    <span className="text-[10px] text-black/30 font-mono">Title...</span>
-                  </div>
-                  <div className="w-full flex-1 border border-black/10 rounded p-2">
-                    <span className="text-[10px] text-black/30 font-mono">Markdown Content...</span>
-                  </div>
+                <div className="flex-1 relative bg-white">
+                  <Image 
+                    src="https://5qpxxrwjkp.ufs.sh/f/NnmmcSZaZgmnYpwAySGB6idegsExNlF1TjK2ztVPQJkuoHCG" 
+                    alt="CMS Editor" 
+                    fill 
+                    className="object-cover object-top"
+                  />
+                </div>
+              </div>
+
+              <div className="w-full aspect-[3568/2096] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col">
+                <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2 shrink-0">
+                  <div className="w-2 h-2 rounded-full bg-red-400" />
+                  <div className="w-2 h-2 rounded-full bg-yellow-400" />
+                  <div className="w-2 h-2 rounded-full bg-green-400" />
+                  <span className="text-[10px] font-mono text-black/40 ml-2">#/editor/project/options</span>
+                </div>
+                <div className="flex-1 relative bg-white">
+                  <Image 
+                    src="https://5qpxxrwjkp.ufs.sh/f/NnmmcSZaZgmnsCI4tbwTDK0PjnZO3QpC5NarmI862qXtLyvV" 
+                    alt="CMS Editor Options" 
+                    fill 
+                    className="object-cover object-top"
+                  />
                 </div>
               </div>
             </div>
-            <div className="text-center text-xs text-black/40 font-mono mt-2">Simulated CMS interface views</div>
+            <div className="text-center text-xs text-black/40 font-mono mt-2">CMS interface views</div>
           </div>
         </section>
 
