@@ -201,7 +201,7 @@ export function DesignSystemShowcase() {
           <div>
             <div className="text-xs font-mono text-black/40 mb-3">Scrollable Carousel</div>
             <div className="relative w-full border border-black/5 bg-black/[0.02] rounded-2xl p-4 sm:p-6 overflow-hidden">
-              <Carousel title="Demo Carousel">
+              <Carousel title="Demo Carousel" className="w-full">
                 {Array.from({ length: 5 }).map((_, i) => (
                   <div key={i} className="flex-none w-[200px] aspect-square rounded-xl bg-white border border-black/10 shadow-sm flex items-center justify-center text-black/40 font-mono text-sm">
                     Item {i + 1}

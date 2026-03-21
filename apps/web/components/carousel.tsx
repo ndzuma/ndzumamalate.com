@@ -6,9 +6,10 @@ import { CaretLeft, CaretRight } from "@phosphor-icons/react";
 type CarouselProps = {
   title: string;
   children: React.ReactNode;
+  className?: string;
 };
 
-export default function Carousel({ title, children }: CarouselProps) {
+export default function Carousel({ title, children, className = "mt-32 w-full" }: CarouselProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showLeft, setShowLeft] = useState(false);
   const [showRight, setShowRight] = useState(true);
@@ -38,7 +39,7 @@ export default function Carousel({ title, children }: CarouselProps) {
   };
 
   return (
-    <section className="mt-32 w-full">
+    <section className={className}>
       <div className="flex items-center justify-between mb-8">
         <h2 className="text-xl sm:text-2xl font-medium tracking-tight">
           {title}
