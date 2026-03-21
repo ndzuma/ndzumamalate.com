@@ -112,7 +112,7 @@ export default function ThisPage() {
 
                 {/* Connector Lines */}
                 <div className="flex md:flex-col items-center justify-center gap-2 text-black/30 font-mono text-[10px] uppercase tracking-widest md:w-24 rotate-90 md:rotate-0 z-0">
-                  <span className="bg-black/5 px-2 py-1 rounded">REST API</span>
+                  <span className="bg-black/5 px-2 py-1 rounded -rotate-90 md:rotate-0">REST API</span>
                   <div className="w-full h-px bg-black/10 border-t border-dashed border-black/20" />
                 </div>
 
