@@ -46,9 +46,9 @@ export default async function ExperiencePage() {
             <div className="w-full text-sm text-black/80">
               {education.map(edu => (
                 <div key={edu.id} className="border-b border-black/10 last:border-0 py-4">
-                  <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_2fr_1fr] gap-x-4 gap-y-1 sm:gap-y-0 w-full items-baseline">
+                  <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_2fr_auto] gap-x-4 gap-y-1 sm:gap-y-0 w-full items-baseline">
                     <div className="font-medium order-1 col-span-1">{edu.company}</div>
-                    <div className="text-right font-mono text-black/50 order-2 sm:order-3 col-span-1">
+                    <div className="text-right font-mono text-black/50 order-2 sm:order-3 col-span-1 whitespace-nowrap">
                       {formatDate(edu.start_date)} — {formatDate(edu.end_date)}
                     </div>
                     <div className="text-black/60 order-3 sm:order-2 col-span-2 sm:col-span-1 mt-1 sm:mt-0">

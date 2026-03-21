@@ -122,6 +122,7 @@ export default function ThisPage() {
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">POST</span> /refresh</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">POST</span> /logout</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /me</div>
+                    <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /activity</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">POST</span> /change-password</div>
                   </div>
                   <div className="pt-3 border-t border-black/5 mt-4 text-[11px] text-black/40">

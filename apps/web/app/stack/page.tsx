@@ -103,7 +103,7 @@ export default async function StackPage() {
           <ul className="space-y-3 text-black/80 text-base sm:text-lg">
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Day to day:</strong> Gemini 3.1 Pro (sometimes Kimi k2.5)</span>
+              <span><strong>Day to day:</strong> Gemini 3.1 Pro Preview (sometimes Kimi k2.5)</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
