@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"os"
 
@@ -43,27 +42,16 @@ func (a *API) uploadFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "UPLOADTHING_API_KEY is not set")
 	}
 
-	form, err := c.MultipartForm()
-	if err != nil {
-		return echo.NewHTTPError(http.StatusBadRequest, "Invalid multipart form")
+	var reqData UTUploadRequest
+	if err := c.Bind(&reqData); err != nil {
+		return echo.NewHTTPError(http.StatusBadRequest, "Invalid JSON body")
 	}
 
-	files := form.File["files"]
-	if len(files) == 0 {
+	if len(reqData.Files) == 0 {
 		return echo.NewHTTPError(http.StatusBadRequest, "No files provided")
 	}
 
-	// 1. Prepare metadata for UploadThing
-	var utFiles []UTFileMeta
-	for _, file := range files {
-		utFiles = append(utFiles, UTFileMeta{
-			Name: file.Filename,
-			Size: file.Size,
-			Type: file.Header.Get("Content-Type"),
-		})
-	}
-
-	reqBody, _ := json.Marshal(UTUploadRequest{Files: utFiles})
+	reqBody, _ := json.Marshal(reqData)
 
 	req, err := http.NewRequest("POST", "https://api.uploadthing.com/v6/uploadFiles", bytes.NewReader(reqBody))
 	if err != nil {
@@ -90,71 +78,5 @@ func (a *API) uploadFile(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "Failed to decode UploadThing response")
 	}
 
-	if len(utResp.Data) != len(files) {
-		return echo.NewHTTPError(http.StatusInternalServerError, "UploadThing response mismatch")
-	}
-
-	// 2. Upload each file to S3
-	type FrontendResult struct {
-		Data struct {
-			Url    string `json:"url"`
-			UfsUrl string `json:"ufsUrl"`
-		} `json:"data"`
-		Error *string `json:"error"`
-	}
-
-	var results []FrontendResult
-
-	for i, file := range files {
-		uploadData := utResp.Data[i]
-
-		src, err := file.Open()
-		if err != nil {
-			continue // Skip or handle error
-		}
-
-		var b bytes.Buffer
-		w := multipart.NewWriter(&b)
-
-		// Fields MUST be added before the file
-		for k, v := range uploadData.Fields {
-			_ = w.WriteField(k, v)
-		}
-
-		fw, err := w.CreateFormFile("file", file.Filename)
-		if err == nil {
-			_, _ = io.Copy(fw, src)
-		}
-		w.Close()
-		src.Close()
-
-		req2, err := http.NewRequest("POST", uploadData.Url, &b)
-		if err == nil {
-			req2.Header.Set("Content-Type", w.FormDataContentType())
-			resp2, err := client.Do(req2)
-			if err == nil {
-				resp2.Body.Close()
-				if resp2.StatusCode >= 200 && resp2.StatusCode < 300 {
-					results = append(results, FrontendResult{
-						Data: struct {
-							Url    string `json:"url"`
-							UfsUrl string `json:"ufsUrl"`
-						}{
-							Url:    uploadData.UfsUrl,
-							UfsUrl: uploadData.UfsUrl,
-						},
-					})
-					continue
-				} else {
-					body, _ := io.ReadAll(resp2.Body)
-					fmt.Println("S3 upload failed:", string(body))
-				}
-			}
-		}
-
-		errStr := "Failed to upload to storage"
-		results = append(results, FrontendResult{Error: &errStr})
-	}
-
-	return c.JSON(http.StatusOK, results)
+	return c.JSON(http.StatusOK, utResp.Data)
 }

@@ -74,7 +74,11 @@ func (s *RedisStore) DeleteUserRefreshTokens(ctx context.Context, userID string)
 }
 
 func (s *RedisStore) AllowLoginAttempt(ctx context.Context, identifier string, limit int, window time.Duration) (bool, error) {
-	key := loginRateLimitKey(identifier)
+	return s.AllowAction(ctx, "login", identifier, limit, window)
+}
+
+func (s *RedisStore) AllowAction(ctx context.Context, action, identifier string, limit int, window time.Duration) (bool, error) {
+	key := fmt.Sprintf("rate-limit:%s:%s", action, identifier)
 	count, err := s.client.Incr(ctx, key).Result()
 	if err != nil {
 		return false, err

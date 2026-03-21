@@ -14,19 +14,36 @@
 
     uploading = true;
     try {
-      const formData = new FormData();
-      for (const file of fileList) {
-        formData.append("files", file);
-      }
+      const filesMeta = fileList.map(f => ({
+        name: f.name,
+        size: f.size,
+        type: f.type || "application/octet-stream"
+      }));
 
-      const response = await files.upload(formData);
+      const presignedUrls = await files.getPresignedUrls(filesMeta);
       
       const successfulUrls = [];
-      for (const result of response) {
-        if (result.data?.url) {
-          successfulUrls.push(result.data.url);
-        } else if (result.error) {
-          console.error("Upload error:", result.error);
+      for (let i = 0; i < fileList.length; i++) {
+        const file = fileList[i];
+        const uploadData = presignedUrls[i];
+        
+        if (!uploadData || !uploadData.url) continue;
+
+        const formData = new FormData();
+        for (const [key, value] of Object.entries(uploadData.fields)) {
+          formData.append(key, value);
+        }
+        formData.append("file", file);
+
+        const res = await fetch(uploadData.url, {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (res.ok) {
+          successfulUrls.push(uploadData.ufsUrl);
+        } else {
+          console.error("Upload error for file", file.name, await res.text());
         }
       }
       

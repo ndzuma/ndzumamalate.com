@@ -25,6 +25,7 @@ type TokenStore interface {
 	DeleteRefreshToken(ctx context.Context, userID, tokenID string) error
 	DeleteUserRefreshTokens(ctx context.Context, userID string) error
 	AllowLoginAttempt(ctx context.Context, identifier string, limit int, window time.Duration) (bool, error)
+	AllowAction(ctx context.Context, action, identifier string, limit int, window time.Duration) (bool, error)
 }
 
 type Service struct {
@@ -214,6 +215,10 @@ func (s *Service) ClearRefreshCookie() *http.Cookie {
 
 func (s *Service) AllowLoginAttempt(ctx context.Context, identifier string, limit int, window time.Duration) (bool, error) {
 	return s.tokenStore.AllowLoginAttempt(ctx, identifier, limit, window)
+}
+
+func (s *Service) AllowAction(ctx context.Context, action, identifier string, limit int, window time.Duration) (bool, error) {
+	return s.tokenStore.AllowAction(ctx, action, identifier, limit, window)
 }
 
 func (s *Service) ParseActorFromAccessToken(token string) (*Actor, error) {

@@ -118,20 +118,5 @@ export const webhooks = {
 export { ApiError };
 
 export const files = {
-  upload: async (formData) => {
-    const res = await fetch(`${BASE}/admin/upload`, {
-      method: 'POST',
-      body: formData,
-      credentials: 'same-origin',
-    });
-    if (!res.ok) {
-      if (res.status === 401) {
-        // Handle token refresh logic here if needed or just fail
-        throw new ApiError(401, 'Session expired');
-      }
-      const err = await res.json().catch(() => ({ message: res.statusText }));
-      throw new ApiError(res.status, err.message || res.statusText);
-    }
-    return res.json();
-  }
+  getPresignedUrls: (filesMeta) => request('POST', '/admin/upload', { files: filesMeta }),
 };

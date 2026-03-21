@@ -26,11 +26,11 @@ type API struct {
 	resendClient    ContactSender
 	rateLimitMax    int
 	rateLimitWindow time.Duration
+	allowedOrigins  []string
 	logger          *slog.Logger
 }
 
 type Store interface {
-
 	CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error)
 	DeactivateLoginEvents(context.Context, string) error
 	GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error)
@@ -86,7 +86,7 @@ type ContactSender interface {
 	SendContact(context.Context, models.ContactMessage) error
 }
 
-func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration, logger *slog.Logger) *API {
+func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration, allowedOrigins []string, logger *slog.Logger) *API {
 	return &API{
 		store:           store,
 		authService:     authService,
@@ -95,6 +95,7 @@ func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, web
 		resendClient:    resendClient,
 		rateLimitMax:    rateLimitMax,
 		rateLimitWindow: rateLimitWindow,
+		allowedOrigins:  allowedOrigins,
 		logger:          logger,
 	}
 }
@@ -105,7 +106,15 @@ func (a *API) Register(e *echo.Echo) {
 	e.Use(middleware.Recover())
 	e.Use(middleware.RequestID())
 	e.Use(logging.RequestLogger(a.logger))
-	e.Use(middleware.CORS())
+
+	if len(a.allowedOrigins) > 0 {
+		e.Use(middleware.CORSWithConfig(middleware.CORSConfig{
+			AllowOrigins:     a.allowedOrigins,
+			AllowCredentials: true,
+		}))
+	} else {
+		e.Use(middleware.CORS())
+	}
 
 	e.GET("/health", a.health)
 
@@ -184,6 +193,18 @@ func (a *API) health(c echo.Context) error {
 }
 
 func (a *API) streamEvents(c echo.Context) error {
+	allowed, err := a.authService.AllowAction(c.Request().Context(), "sse", c.RealIP(), 20, 10*time.Minute)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if !allowed {
+		a.logger.Warn("sse rate limit exceeded", slog.String("ip", c.RealIP()))
+		return echo.NewHTTPError(http.StatusTooManyRequests, "too many sse connections")
+	}
+
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Minute)
+	defer cancel()
+
 	res := c.Response()
 	res.Header().Set(echo.HeaderContentType, "text/event-stream")
 	res.Header().Set(echo.HeaderCacheControl, "no-cache")
@@ -205,7 +226,7 @@ func (a *API) streamEvents(c echo.Context) error {
 
 	for {
 		select {
-		case <-c.Request().Context().Done():
+		case <-ctx.Done():
 			return nil
 		case event, ok := <-events:
 			if !ok {
@@ -232,6 +253,20 @@ func (a *API) sendContact(c echo.Context) error {
 	if strings.TrimSpace(input.Name) == "" || strings.TrimSpace(input.Email) == "" || strings.TrimSpace(input.Subject) == "" || strings.TrimSpace(input.Message) == "" {
 		return echo.NewHTTPError(http.StatusBadRequest, "name, email, subject, and message are required")
 	}
+
+	if len(input.Name) > 100 || len(input.Email) > 255 || len(input.Subject) > 255 || len(input.Message) > 2000 {
+		return echo.NewHTTPError(http.StatusBadRequest, "input exceeds maximum length limits")
+	}
+
+	allowed, err := a.authService.AllowAction(c.Request().Context(), "contact", c.RealIP(), 4, 24*time.Hour)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if !allowed {
+		a.logger.Warn("contact rate limit exceeded", slog.String("ip", c.RealIP()))
+		return echo.NewHTTPError(http.StatusTooManyRequests, "too many contact requests")
+	}
+
 	if err := a.resendClient.SendContact(c.Request().Context(), input); err != nil {
 		a.logger.Error("contact submission failed", slog.String("email", input.Email), slog.String("error", err.Error()))
 		return echo.NewHTTPError(http.StatusBadGateway, err.Error())

@@ -81,6 +81,14 @@ func run(ctx context.Context) error {
 
 	authService := auth.NewService(cfg.JWTIssuer, cfg.AccessTTL, cfg.RefreshTTL, cfg.PrivateKey, redisStore, cfg.CookieDomain, cfg.CookieSecure)
 	broker := realtime.NewBroker()
+
+	allowedOrigins := []string{}
+	if cfg.AppEnv == "development" {
+		allowedOrigins = []string{"http://localhost:3000", "http://localhost:5173", "http://localhost:5174"}
+	} else {
+		allowedOrigins = []string{"https://ndzumamalate.com", "https://web-production-bd469.up.railway.app"}
+	}
+
 	api := handlers.NewAPI(
 		store,
 		authService,
@@ -89,6 +97,7 @@ func run(ctx context.Context) error {
 		notifications.NewResendClient(cfg.ResendAPIKey, cfg.ContactFromEmail, cfg.ContactToEmail, logger),
 		cfg.RateLimitMax,
 		cfg.RateLimitWindow,
+		allowedOrigins,
 		logger,
 	)
 
@@ -101,7 +110,15 @@ func run(ctx context.Context) error {
 	serverErr := make(chan error, 1)
 	go func() {
 		logger.Info("server starting", slog.String("addr", ":"+cfg.Port))
-		serverErr <- e.Start(":" + cfg.Port)
+		s := &http.Server{
+			Addr:              ":" + cfg.Port,
+			Handler:           e,
+			ReadTimeout:       15 * time.Second,
+			WriteTimeout:      15 * time.Second,
+			IdleTimeout:       60 * time.Second,
+			ReadHeaderTimeout: 10 * time.Second,
+		}
+		serverErr <- e.StartServer(s)
 	}()
 
 	select {
