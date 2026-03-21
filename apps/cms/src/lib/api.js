@@ -52,6 +52,7 @@ async function request(method, path, body = null) {
 export const auth = {
   login: (email, password) => request('POST', '/auth/login', { email, password }),
   logout: () => request('POST', '/auth/logout'),
+  ping: () => request('POST', '/auth/ping'),
   me: () => request('GET', '/auth/me'),
   changePassword: (current_password, new_password) =>
     request('POST', '/auth/change-password', { current_password, new_password }),

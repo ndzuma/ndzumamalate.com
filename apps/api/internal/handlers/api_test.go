@@ -23,10 +23,15 @@ type stubStore struct{}
 
 func (s *stubStore) Ping(context.Context) error { return nil }
 func (s *stubStore) CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error) {
-	return nil, nil
+	return &models.LoginEvent{ID: "evt-1"}, nil
 }
+func (s *stubStore) DeactivateSession(context.Context, string) error         { return nil }
 func (s *stubStore) DeactivateLoginEvents(context.Context, string) error     { return nil }
 func (s *stubStore) UpdateLoginEventsLastSeen(context.Context, string) error { return nil }
+func (s *stubStore) UpdateSessionLastSeen(context.Context, string) error     { return nil }
+func (s *stubStore) GetSessionLastSeen(context.Context, string) (time.Time, bool, error) {
+	return time.Now(), true, nil
+}
 func (s *stubStore) GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error) {
 	return nil, nil
 }

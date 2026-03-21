@@ -33,7 +33,10 @@ type API struct {
 type Store interface {
 	CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error)
 	DeactivateLoginEvents(context.Context, string) error
+	DeactivateSession(context.Context, string) error
 	UpdateLoginEventsLastSeen(context.Context, string) error
+	UpdateSessionLastSeen(context.Context, string) error
+	GetSessionLastSeen(context.Context, string) (time.Time, bool, error)
 	CleanupExpiredLoginEvents(context.Context, time.Time) error
 	GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error)
 	GetRecentLoginEvents(context.Context, string, int) ([]models.LoginEvent, error)
@@ -138,6 +141,7 @@ func (a *API) Register(e *echo.Echo) {
 	authGroup.POST("/login", a.login)
 	authGroup.POST("/refresh", a.refresh)
 	authGroup.POST("/logout", a.logout)
+	authGroup.POST("/ping", a.ping, a.requireAuth)
 	authGroup.GET("/me", a.me, a.requireAuth)
 	authGroup.GET("/activity", a.activity, a.requireAuth)
 	authGroup.POST("/change-password", a.changePassword, a.requireAuth)
@@ -319,12 +323,17 @@ func (a *API) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "invalid credentials")
 	}
 
-	session, err := a.authService.IssueSession(c.Request().Context(), user.ID, user.Email)
+	_ = a.store.UpdateAdminLastLogin(c.Request().Context(), user.ID, time.Now().UTC())
+	evt, err := a.store.CreateLoginEvent(c.Request().Context(), user.ID, c.RealIP(), c.Request().UserAgent())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
+	}
+
+	session, err := a.authService.IssueSession(c.Request().Context(), user.ID, user.Email, evt.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
-	_ = a.store.UpdateAdminLastLogin(c.Request().Context(), user.ID, time.Now().UTC())
-	_, _ = a.store.CreateLoginEvent(c.Request().Context(), user.ID, c.RealIP(), c.Request().UserAgent())
+
 	a.logger.Info("login succeeded", slog.String("user_id", user.ID), slog.String("email", user.Email), slog.String("ip", c.RealIP()))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
@@ -339,12 +348,24 @@ func (a *API) refresh(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusUnauthorized, "missing refresh token")
 	}
 
+	claims, err := a.authService.ParseToken(refreshCookie.Value, "refresh")
+	if err == nil && claims.SessionID != "" {
+		lastSeen, isActive, err := a.store.GetSessionLastSeen(c.Request().Context(), claims.SessionID)
+		if err != nil || !isActive || time.Since(lastSeen) > 5*time.Minute {
+			_ = a.store.DeactivateSession(c.Request().Context(), claims.SessionID)
+			_ = a.authService.RevokeRefreshToken(c.Request().Context(), refreshCookie.Value)
+			c.SetCookie(a.authService.ClearAccessCookie())
+			c.SetCookie(a.authService.ClearRefreshCookie())
+			return echo.NewHTTPError(http.StatusUnauthorized, "session expired due to inactivity")
+		}
+	}
+
 	session, err := a.authService.RotateRefreshToken(c.Request().Context(), refreshCookie.Value)
 	if err != nil {
 		a.logger.Warn("refresh failed", slog.String("error", err.Error()))
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
-	_ = a.store.UpdateLoginEventsLastSeen(c.Request().Context(), session.UserID)
+	_ = a.store.UpdateSessionLastSeen(c.Request().Context(), session.SessionID)
 	a.logger.Info("session refreshed", slog.String("user_id", session.UserID), slog.String("email", session.Email))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
@@ -356,7 +377,9 @@ func (a *API) refresh(c echo.Context) error {
 func (a *API) logout(c echo.Context) error {
 	if refreshCookie, err := c.Cookie(auth.RefreshCookieName); err == nil {
 		claims, _ := a.authService.ParseToken(refreshCookie.Value, "refresh")
-		if claims != nil {
+		if claims != nil && claims.SessionID != "" {
+			_ = a.store.DeactivateSession(c.Request().Context(), claims.SessionID)
+		} else if claims != nil {
 			_ = a.store.DeactivateLoginEvents(c.Request().Context(), claims.Subject)
 		}
 		_ = a.authService.RevokeRefreshToken(c.Request().Context(), refreshCookie.Value)
@@ -365,6 +388,19 @@ func (a *API) logout(c echo.Context) error {
 	c.SetCookie(a.authService.ClearAccessCookie())
 	c.SetCookie(a.authService.ClearRefreshCookie())
 	return c.NoContent(http.StatusNoContent)
+}
+
+func (a *API) ping(c echo.Context) error {
+	actor := getActor(c)
+	if actor == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	}
+
+	err := a.store.UpdateSessionLastSeen(c.Request().Context(), actor.SessionID)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	return c.JSON(http.StatusOK, map[string]string{"status": "ok"})
 }
 
 func (a *API) me(c echo.Context) error {
@@ -409,8 +445,12 @@ func (a *API) changePassword(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	_ = a.store.DeactivateLoginEvents(c.Request().Context(), actor.UserID)
+	evt, err := a.store.CreateLoginEvent(c.Request().Context(), actor.UserID, c.RealIP(), c.Request().UserAgent())
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, "failed to create session")
+	}
 
-	session, err := a.authService.IssueSession(c.Request().Context(), actor.UserID, actor.Email)
+	session, err := a.authService.IssueSession(c.Request().Context(), actor.UserID, actor.Email, evt.ID)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -432,6 +472,20 @@ func (a *API) requireAuth(next echo.HandlerFunc) echo.HandlerFunc {
 		if err != nil {
 			return echo.NewHTTPError(http.StatusUnauthorized, "invalid access token")
 		}
+
+		if actor.SessionID == "" {
+			return echo.NewHTTPError(http.StatusUnauthorized, "invalid session format, please log in again")
+		}
+
+		lastSeen, isActive, err := a.store.GetSessionLastSeen(c.Request().Context(), actor.SessionID)
+		if err != nil || !isActive {
+			return echo.NewHTTPError(http.StatusUnauthorized, "session inactive")
+		}
+		// 5-minute strict timeout for bank style
+		if time.Since(lastSeen) > 5*time.Minute {
+			return echo.NewHTTPError(http.StatusUnauthorized, "session expired due to inactivity")
+		}
+
 		c.Set("actor", actor)
 		return next(c)
 	}

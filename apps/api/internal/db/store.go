@@ -967,6 +967,16 @@ func (s *Store) CreateLoginEvent(ctx context.Context, userID, ipAddress, userAge
 	return &evt, nil
 }
 
+func (s *Store) DeactivateSession(ctx context.Context, sessionID string) error {
+	q := `
+		UPDATE login_events
+		SET is_active = false, last_seen_at = NOW()
+		WHERE id = $1 AND is_active = true
+	`
+	_, err := s.pool.Exec(ctx, q, sessionID)
+	return err
+}
+
 func (s *Store) DeactivateLoginEvents(ctx context.Context, userID string) error {
 	q := `
 		UPDATE login_events
@@ -985,6 +995,30 @@ func (s *Store) UpdateLoginEventsLastSeen(ctx context.Context, userID string) er
 	`
 	_, err := s.pool.Exec(ctx, q, userID)
 	return err
+}
+
+func (s *Store) UpdateSessionLastSeen(ctx context.Context, sessionID string) error {
+	q := `
+		UPDATE login_events
+		SET last_seen_at = NOW()
+		WHERE id = $1 AND is_active = true
+	`
+	_, err := s.pool.Exec(ctx, q, sessionID)
+	return err
+}
+
+func (s *Store) GetSessionLastSeen(ctx context.Context, sessionID string) (time.Time, bool, error) {
+	q := `SELECT last_seen_at, is_active FROM login_events WHERE id = $1`
+	var lastSeen time.Time
+	var isActive bool
+	err := s.pool.QueryRow(ctx, q, sessionID).Scan(&lastSeen, &isActive)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return time.Time{}, false, nil
+		}
+		return time.Time{}, false, err
+	}
+	return lastSeen, isActive, nil
 }
 
 func (s *Store) GetLatestLoginEvent(ctx context.Context, userID string) (*models.LoginEvent, error) {

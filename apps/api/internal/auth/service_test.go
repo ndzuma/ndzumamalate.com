@@ -77,7 +77,7 @@ func TestIssueAndRotateSession(t *testing.T) {
 	store := newMemoryTokenStore()
 	service := NewService("issuer", 15*time.Minute, 24*time.Hour, privateKey, store, "", false)
 
-	session, err := service.IssueSession(context.Background(), "user-1", "test@example.com")
+	session, err := service.IssueSession(context.Background(), "user-1", "test@example.com", "sess-1")
 	if err != nil {
 		t.Fatalf("IssueSession returned error: %v", err)
 	}

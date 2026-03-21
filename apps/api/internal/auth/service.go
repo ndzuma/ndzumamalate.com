@@ -42,6 +42,7 @@ type Service struct {
 type Claims struct {
 	TokenType string `json:"token_type"`
 	Email     string `json:"email"`
+	SessionID string `json:"session_id"`
 	jwt.RegisteredClaims
 }
 
@@ -51,11 +52,13 @@ type Session struct {
 	AccessExpiry time.Time
 	UserID       string
 	Email        string
+	SessionID    string
 }
 
 type Actor struct {
-	UserID string
-	Email  string
+	UserID    string
+	Email     string
+	SessionID string
 }
 
 func NewService(issuer string, accessTTL, refreshTTL time.Duration, privateKey *rsa.PrivateKey, tokenStore TokenStore, cookieDomain string, cookieSecure bool) *Service {
@@ -90,7 +93,7 @@ func (s *Service) RefreshTTL() time.Duration {
 	return s.refreshTTL
 }
 
-func (s *Service) IssueSession(ctx context.Context, userID, email string) (*Session, error) {
+func (s *Service) IssueSession(ctx context.Context, userID, email, sessionID string) (*Session, error) {
 	now := time.Now().UTC()
 	accessID, err := generateID()
 	if err != nil {
@@ -107,6 +110,7 @@ func (s *Service) IssueSession(ctx context.Context, userID, email string) (*Sess
 	accessToken, err := s.signToken(Claims{
 		TokenType: accessTokenType,
 		Email:     email,
+		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    s.issuer,
 			Subject:   userID,
@@ -122,6 +126,7 @@ func (s *Service) IssueSession(ctx context.Context, userID, email string) (*Sess
 	refreshToken, err := s.signToken(Claims{
 		TokenType: refreshTokenType,
 		Email:     email,
+		SessionID: sessionID,
 		RegisteredClaims: jwt.RegisteredClaims{
 			Issuer:    s.issuer,
 			Subject:   userID,
@@ -144,6 +149,7 @@ func (s *Service) IssueSession(ctx context.Context, userID, email string) (*Sess
 		AccessExpiry: accessExpiry,
 		UserID:       userID,
 		Email:        email,
+		SessionID:    sessionID,
 	}, nil
 }
 
@@ -165,7 +171,7 @@ func (s *Service) RotateRefreshToken(ctx context.Context, refreshToken string) (
 		return nil, err
 	}
 
-	return s.IssueSession(ctx, claims.Subject, claims.Email)
+	return s.IssueSession(ctx, claims.Subject, claims.Email, claims.SessionID)
 }
 
 func (s *Service) RevokeRefreshToken(ctx context.Context, refreshToken string) error {
@@ -230,7 +236,7 @@ func (s *Service) ParseActorFromAccessToken(token string) (*Actor, error) {
 	if err != nil {
 		return nil, err
 	}
-	return &Actor{UserID: claims.Subject, Email: claims.Email}, nil
+	return &Actor{UserID: claims.Subject, Email: claims.Email, SessionID: claims.SessionID}, nil
 }
 
 func (s *Service) signToken(claims Claims) (string, error) {
