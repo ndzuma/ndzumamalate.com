@@ -60,6 +60,9 @@ export default async function Home() {
             <div>
               If you want to connect on an ambitious project, reach out on my <InlineSocialLink profile={profile} /> or shoot me an <InlineEmailLink />.
             </div>
+            <div>
+              Oh I forgot, here's my CV.
+            </div>
           </div>
         </section>
 

@@ -107,11 +107,11 @@ export default async function StackPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Heavy lifting:</strong> OpenAI GPT-5.4 or Sonnet 4.6</span>
+              <span><strong>Heavy lifting:</strong> OpenAI GPT 5.4 or Claude Sonnet 4.6</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span><strong>Design/UI:</strong> Opus 4.6</span>
+              <span><strong>Design/UI:</strong> Claude Opus 4.6</span>
             </li>
           </ul>
         </section>
