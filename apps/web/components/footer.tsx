@@ -20,11 +20,11 @@ export default function Footer() {
   };
 
   return (
-    <footer className="mt-32 pt-12 pb-8 border-t border-black/10 flex flex-col gap-16 font-sans w-full">
+    <footer className="pt-12 pb-8 border-t border-black/10 flex flex-col gap-16 font-sans w-full">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
         
         {/* Left: Logo */}
-        <Link href="/" className="hover:scale-105 transition-transform">
+        <Link href="/" className="inline-block hover:scale-105 transition-transform">
           <Image 
             src="/assets/Face logo.svg" 
             alt="ndzuma malate" 
@@ -41,7 +41,7 @@ export default function Footer() {
           </p>
           <a 
             href="mailto:ndzumaxx@gmail.com" 
-            className="text-black/50 hover:text-black transition-colors font-medium underline decoration-black/20 hover:decoration-black/40 underline-offset-4"
+            className="inline-block text-black/50 hover:text-black transition-colors font-medium underline decoration-black/20 hover:decoration-black/40 underline-offset-4"
           >
             ndzumaxx@gmail.com
           </a>
@@ -60,7 +60,7 @@ export default function Footer() {
             href={profile?.github_url || "https://github.com/ndzuma"} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hover:text-black hover:scale-110 transition-all"
+            className="inline-block hover:text-black hover:scale-110 transition-all"
             aria-label="GitHub"
           >
             <GithubLogo weight="fill" className="w-5 h-5" />
@@ -69,7 +69,7 @@ export default function Footer() {
             href={profile?.linkedin_url || "https://linkedin.com/in/ndzuma"} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hover:text-[#0A66C2] hover:scale-110 transition-all"
+            className="inline-block hover:text-[#0A66C2] hover:scale-110 transition-all"
             aria-label="LinkedIn"
           >
             <LinkedinLogo weight="fill" className="w-5 h-5" />
@@ -78,7 +78,7 @@ export default function Footer() {
             href={profile?.threads_url || "https://threads.net"} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hover:text-black hover:scale-110 transition-all"
+            className="inline-block hover:text-black hover:scale-110 transition-all"
             aria-label="Threads"
           >
             <ThreadsLogo weight="fill" className="w-5 h-5" />
@@ -87,7 +87,7 @@ export default function Footer() {
             href={profile?.twitter_url || "https://twitter.com/ndzumaxx"} 
             target="_blank" 
             rel="noopener noreferrer"
-            className="hover:text-[#1DA1F2] hover:scale-110 transition-all"
+            className="inline-block hover:text-[#1DA1F2] hover:scale-110 transition-all"
             aria-label="X (Twitter)"
           >
             <XLogo weight="fill" className="w-5 h-5" />
