@@ -33,6 +33,8 @@ type API struct {
 type Store interface {
 	CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error)
 	DeactivateLoginEvents(context.Context, string) error
+	UpdateLoginEventsLastSeen(context.Context, string) error
+	CleanupExpiredLoginEvents(context.Context, time.Time) error
 	GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error)
 	GetRecentLoginEvents(context.Context, string, int) ([]models.LoginEvent, error)
 	Ping(context.Context) error
@@ -342,6 +344,7 @@ func (a *API) refresh(c echo.Context) error {
 		a.logger.Warn("refresh failed", slog.String("error", err.Error()))
 		return echo.NewHTTPError(http.StatusUnauthorized, err.Error())
 	}
+	_ = a.store.UpdateLoginEventsLastSeen(c.Request().Context(), session.UserID)
 	a.logger.Info("session refreshed", slog.String("user_id", session.UserID), slog.String("email", session.Email))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
@@ -405,6 +408,7 @@ func (a *API) changePassword(c echo.Context) error {
 	if err := a.authService.RevokeAllSessions(c.Request().Context(), actor.UserID); err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
+	_ = a.store.DeactivateLoginEvents(c.Request().Context(), actor.UserID)
 
 	session, err := a.authService.IssueSession(c.Request().Context(), actor.UserID, actor.Email)
 	if err != nil {
@@ -916,6 +920,12 @@ func (a *API) activity(c echo.Context) error {
 	if actor == nil {
 		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
 	}
+
+	threshold := time.Now().UTC().Add(-a.authService.RefreshTTL())
+	if err := a.store.CleanupExpiredLoginEvents(c.Request().Context(), threshold); err != nil {
+		a.logger.Warn("failed to cleanup expired login events", slog.String("error", err.Error()))
+	}
+
 	events, err := a.store.GetRecentLoginEvents(c.Request().Context(), actor.UserID, 5)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())

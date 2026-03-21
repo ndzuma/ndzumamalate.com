@@ -42,6 +42,12 @@ func (m *memoryTokenStore) DeleteUserRefreshTokens(_ context.Context, userID str
 	return nil
 }
 
+func (m *memoryTokenStore) AllowAction(_ context.Context, action, identifier string, limit int, _ time.Duration) (bool, error) {
+	key := action + ":" + identifier
+	m.hits[key]++
+	return m.hits[key] <= limit, nil
+}
+
 func (m *memoryTokenStore) AllowLoginAttempt(_ context.Context, identifier string, limit int, _ time.Duration) (bool, error) {
 	m.hits[identifier]++
 	return m.hits[identifier] <= limit, nil

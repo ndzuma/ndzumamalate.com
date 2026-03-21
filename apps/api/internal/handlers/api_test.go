@@ -22,6 +22,17 @@ import (
 type stubStore struct{}
 
 func (s *stubStore) Ping(context.Context) error { return nil }
+func (s *stubStore) CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error) {
+	return nil, nil
+}
+func (s *stubStore) DeactivateLoginEvents(context.Context, string) error     { return nil }
+func (s *stubStore) UpdateLoginEventsLastSeen(context.Context, string) error { return nil }
+func (s *stubStore) GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error) {
+	return nil, nil
+}
+func (s *stubStore) GetRecentLoginEvents(context.Context, string, int) ([]models.LoginEvent, error) {
+	return nil, nil
+}
 func (s *stubStore) BootstrapAdmin(context.Context, string, string) (*models.AdminUser, bool, error) {
 	return &models.AdminUser{ID: "admin-1", Email: "admin@example.com"}, true, nil
 }
@@ -56,6 +67,9 @@ func (s *stubStore) GetProfile(context.Context) (*models.Profile, error) {
 }
 func (s *stubStore) GetActiveCV(context.Context) (*models.CV, error) {
 	return &models.CV{ID: "cv-1"}, nil
+}
+func (s *stubStore) CleanupExpiredLoginEvents(context.Context, time.Time) error {
+	return nil
 }
 func (s *stubStore) ListTags(context.Context) ([]models.Tag, error) { return []models.Tag{}, nil }
 func (s *stubStore) CreateTag(context.Context, models.TagInput) (*models.Tag, error) {
@@ -137,6 +151,10 @@ func (m *memoryTokens) HasRefreshToken(context.Context, string, string) (bool, e
 }
 func (m *memoryTokens) DeleteRefreshToken(context.Context, string, string) error { return nil }
 func (m *memoryTokens) DeleteUserRefreshTokens(context.Context, string) error    { return nil }
+func (m *memoryTokens) AllowAction(context.Context, string, string, int, time.Duration) (bool, error) {
+	return true, nil
+}
+
 func (m *memoryTokens) AllowLoginAttempt(context.Context, string, int, time.Duration) (bool, error) {
 	return true, nil
 }
@@ -155,6 +173,7 @@ func TestLoginSetsCookies(t *testing.T) {
 		&noopResend{},
 		5,
 		time.Minute,
+		nil,
 		slog.Default(),
 	)
 

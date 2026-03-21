@@ -86,6 +86,10 @@ func ComparePassword(hash, password string) error {
 	return bcrypt.CompareHashAndPassword([]byte(hash), []byte(password))
 }
 
+func (s *Service) RefreshTTL() time.Duration {
+	return s.refreshTTL
+}
+
 func (s *Service) IssueSession(ctx context.Context, userID, email string) (*Session, error) {
 	now := time.Now().UTC()
 	accessID, err := generateID()

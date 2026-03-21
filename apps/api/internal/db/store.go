@@ -977,6 +977,16 @@ func (s *Store) DeactivateLoginEvents(ctx context.Context, userID string) error 
 	return err
 }
 
+func (s *Store) UpdateLoginEventsLastSeen(ctx context.Context, userID string) error {
+	q := `
+		UPDATE login_events
+		SET last_seen_at = NOW()
+		WHERE user_id = $1 AND is_active = true
+	`
+	_, err := s.pool.Exec(ctx, q, userID)
+	return err
+}
+
 func (s *Store) GetLatestLoginEvent(ctx context.Context, userID string) (*models.LoginEvent, error) {
 	q := `
 		SELECT id, user_id, is_active, ip_address, user_agent, last_seen_at, created_at
@@ -996,6 +1006,16 @@ func (s *Store) GetLatestLoginEvent(ctx context.Context, userID string) (*models
 		return nil, fmt.Errorf("get latest login event: %w", err)
 	}
 	return &evt, nil
+}
+
+func (s *Store) CleanupExpiredLoginEvents(ctx context.Context, threshold time.Time) error {
+	q := `
+		UPDATE login_events
+		SET is_active = false
+		WHERE is_active = true AND last_seen_at < $1
+	`
+	_, err := s.pool.Exec(ctx, q, threshold)
+	return err
 }
 
 func (s *Store) GetRecentLoginEvents(ctx context.Context, userID string, limit int) ([]models.LoginEvent, error) {
