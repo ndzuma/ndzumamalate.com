@@ -54,6 +54,7 @@ export default function ContactForm() {
             type="text" 
             id="name" 
             name="name" 
+            maxLength={100}
             required 
             disabled={loading}
             className="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/5 focus:border-black/20 focus:bg-transparent outline-none transition-all text-black placeholder:text-black/30 disabled:opacity-50"
@@ -67,6 +68,7 @@ export default function ContactForm() {
             type="email" 
             id="email" 
             name="email" 
+            maxLength={255}
             required 
             disabled={loading}
             className="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/5 focus:border-black/20 focus:bg-transparent outline-none transition-all text-black placeholder:text-black/30 disabled:opacity-50"
@@ -81,6 +83,7 @@ export default function ContactForm() {
           type="text" 
           id="subject" 
           name="subject" 
+          maxLength={255}
           required 
           disabled={loading}
           className="w-full px-4 py-3 rounded-2xl bg-black/[0.03] border border-black/5 focus:border-black/20 focus:bg-transparent outline-none transition-all text-black placeholder:text-black/30 disabled:opacity-50"
@@ -93,6 +96,7 @@ export default function ContactForm() {
         <textarea 
           id="message" 
           name="message" 
+          maxLength={2000}
           rows={6}
           required 
           disabled={loading}

@@ -258,6 +258,15 @@ func (a *API) sendContact(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusBadRequest, "input exceeds maximum length limits")
 	}
 
+	globalAllowed, err := a.authService.AllowAction(c.Request().Context(), "contact_global", time.Now().UTC().Format("2006-01-02"), 100, 24*time.Hour)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if !globalAllowed {
+		a.logger.Warn("global contact rate limit exceeded")
+		return echo.NewHTTPError(http.StatusTooManyRequests, "Daily contact limit reached. Please email me at n.malate@pulsefolio.net")
+	}
+
 	allowed, err := a.authService.AllowAction(c.Request().Context(), "contact", c.RealIP(), 4, 24*time.Hour)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
