@@ -12,11 +12,26 @@ const geist = Geist({
 });
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://ndzumamalate.com"),
   title: {
-    template: "%s | Ndzuma",
+    template: "%s | Ndzuma Malate",
     default: "Ndzuma Malate",
   },
-  description: "Personal website project scaffold",
+  description: "Software Engineer crafting thoughtful, performant, and scalable digital experiences.",
+  authors: [{ name: "Ndzuma Malate", url: "https://ndzumamalate.com" }],
+  creator: "Ndzuma Malate",
+  publisher: "Ndzuma Malate",
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-video-preview": -1,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
   icons: {
     icon: [
       { url: "/assets/favicons/favicon.ico" },
@@ -26,6 +41,29 @@ export const metadata: Metadata = {
     apple: "/assets/favicons/apple-touch-icon.png",
   },
   manifest: "/assets/favicons/site.webmanifest",
+  openGraph: {
+    title: "Ndzuma Malate",
+    description: "Software Engineer crafting thoughtful, performant, and scalable digital experiences.",
+    url: "https://ndzumamalate.com",
+    siteName: "Ndzuma Malate",
+    images: [
+      {
+        url: "/assets/banner.png",
+        width: 1200,
+        height: 630,
+        alt: "Ndzuma Malate - Software Engineer",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Ndzuma Malate",
+    description: "Software Engineer crafting thoughtful, performant, and scalable digital experiences.",
+    creator: "@ndzumamalate",
+    images: ["/assets/banner.png"],
+  },
 };
 
 type RootLayoutProps = {
