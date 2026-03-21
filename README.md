@@ -19,7 +19,7 @@ The CMS is a single-page application built with Svelte 5 and Vite 8. On build, t
 
 | Layer     | Tech                                                      |
 | --------- | --------------------------------------------------------- |
-| API       | Go, Echo v4, pgx v5, JWT, Redis, HMAC webhook signing     |
+| API       | Go, Echo v4, pgx v5, JWT, Redis, HMAC webhook signing, CORS & Rate limiting |
 | CMS       | Svelte 5 (runes), Vite 8, Geist Sans, phosphor-svelte    |
 | Website   | Next.js                                                   |
 | DB        | PostgreSQL                                                |
@@ -76,6 +76,7 @@ All admin endpoints require JWT auth via HTTP-only cookies with automatic refres
 | POST   | `/api/v1/auth/logout`             | Logout                   |
 | POST   | `/api/v1/auth/refresh`            | Refresh token            |
 | GET    | `/api/v1/auth/me`                 | Current user             |
+| GET    | `/api/v1/auth/activity`           | Recent login activity    |
 | POST   | `/api/v1/auth/change-password`    | Change password          |
 | GET    | `/api/v1/admin/projects`          | List projects            |
 | POST   | `/api/v1/admin/projects`          | Create project           |
@@ -104,6 +105,7 @@ All admin endpoints require JWT auth via HTTP-only cookies with automatic refres
 | DELETE | `/api/v1/admin/cv/:id`            | Delete CV                |
 | GET    | `/api/v1/admin/profile`           | Get profile              |
 | PUT    | `/api/v1/admin/profile`           | Update profile           |
+| POST   | `/api/v1/admin/upload`            | Upload file              |
 | GET    | `/api/v1/admin/webhooks`          | List webhooks            |
 | POST   | `/api/v1/admin/webhooks`          | Create webhook           |
 | PUT    | `/api/v1/admin/webhooks/:id`      | Update webhook           |

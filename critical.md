@@ -41,7 +41,7 @@ Managed with **Turborepo**.
 
 ### Data
 - **Primary DB:** PostgreSQL
-- **Cache / ephemeral state:** Redis (session store, rate limiting, caching hot
+- **Cache / ephemeral state:** Redis (session store, rate limiting for auth/contact/events, caching hot
   content like active CV and skills)
 - **Object store:** UploadThing (project images, CV file uploads)
 
@@ -72,7 +72,8 @@ Fully native Go, no external auth service:
 - JWTs signed with RS256 (asymmetric — private key signs, public key verifies)
 - Tokens delivered via HTTP-only, Secure, SameSite=Strict cookies
 - Refresh token rotation stored in Redis with expiry
-- Rate limiting on `/auth/login` via Redis
+- Rate limiting on `/auth/login`, `/public/contact`, and `/public/events` via Redis
+- Recent login activity tracking for security monitoring
 
 ## Open Source
 
@@ -90,6 +91,7 @@ inventory.
 - `GET /api/v1/public/skills`
 - `GET /api/v1/public/experience`
 - `GET /api/v1/public/profile`
+- `GET /api/v1/public/tags`
 - `GET /api/v1/public/cv/active`
 - `POST /api/v1/public/contact`
 - `GET /api/v1/public/events`
@@ -97,6 +99,7 @@ inventory.
 - `POST /api/v1/auth/refresh`
 - `POST /api/v1/auth/logout`
 - `GET /api/v1/auth/me`
+- `GET /api/v1/auth/activity`
 - `POST /api/v1/auth/change-password`
 - `GET /api/v1/admin/tags`
 - `POST /api/v1/admin/tags`
@@ -104,6 +107,7 @@ inventory.
 - `DELETE /api/v1/admin/tags/:id`
 - `GET /api/v1/admin/projects`
 - `POST /api/v1/admin/projects`
+- `POST /api/v1/admin/projects/:id/reorder`
 - `PUT /api/v1/admin/projects/:id`
 - `DELETE /api/v1/admin/projects/:id`
 - `GET /api/v1/admin/blogs`
@@ -124,6 +128,7 @@ inventory.
 - `DELETE /api/v1/admin/cv/:id`
 - `GET /api/v1/admin/profile`
 - `PUT /api/v1/admin/profile`
+- `POST /api/v1/admin/upload`
 - `GET /api/v1/admin/webhooks`
 - `POST /api/v1/admin/webhooks`
 - `PUT /api/v1/admin/webhooks/:id`
