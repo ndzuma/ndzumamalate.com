@@ -9,11 +9,11 @@ import { api } from "../lib/api";
 
 export default async function Home() {
   const [profile, projects, blogs, skills, cv] = await Promise.all([
-    api.getProfile().catch(() => null),
-    api.getProjects().catch(() => []),
-    api.getBlogs().catch(() => []),
-    api.getSkills().catch(() => []),
-    api.getActiveCV().catch(() => null)
+    api.getProfile().catch((e) => { console.error("Profile fetch error:", e); return null; }),
+    api.getProjects().catch((e) => { console.error("Projects fetch error:", e); return []; }),
+    api.getBlogs().catch((e) => { console.error("Blogs fetch error:", e); return []; }),
+    api.getSkills().catch((e) => { console.error("Skills fetch error:", e); return []; }),
+    api.getActiveCV().catch((e) => { console.error("CV fetch error:", e); return null; })
   ]);
 
   // Projects and Blogs endpoints already return published=true.

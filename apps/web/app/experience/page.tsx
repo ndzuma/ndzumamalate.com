@@ -9,8 +9,8 @@ function formatDate(dateStr: string | undefined) {
 
 export default async function ExperiencePage() {
   const [experience, skills] = await Promise.all([
-    api.getExperience().catch(() => []),
-    api.getSkills().catch(() => [])
+    api.getExperience().catch((e) => { console.error("Fetch error:", e); return []; }),
+    api.getSkills().catch((e) => { console.error("Fetch error:", e); return []; })
   ]);
 
   const education = experience.filter(e => e.type === 'Education').sort((a, b) => new Date(b.start_date).getTime() - new Date(a.start_date).getTime());

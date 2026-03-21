@@ -3,17 +3,14 @@
 import Image from "next/image";
 import Link from "next/link";
 import { GithubLogo, LinkedinLogo, XLogo, ThreadsLogo, ArrowUp } from "@phosphor-icons/react";
-import { useEffect, useState } from "react";
-import { api } from "../lib/api";
 import { Profile } from "../types/api";
 
-export default function Footer() {
-  const year = new Date().getFullYear();
-  const [profile, setProfile] = useState<Profile | null>(null);
+type FooterProps = {
+  profile?: Profile | null;
+};
 
-  useEffect(() => {
-    api.getProfile().then(p => setProfile(p)).catch(() => {});
-  }, []);
+export default function Footer({ profile }: FooterProps) {
+  const year = new Date().getFullYear();
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });

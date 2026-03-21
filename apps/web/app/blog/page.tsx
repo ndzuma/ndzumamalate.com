@@ -8,8 +8,8 @@ export const metadata = {
 
 export default async function BlogPage() {
   const [allBlogs, allTags] = await Promise.all([
-    api.getBlogs().catch(() => []),
-    api.getTags().catch(() => [])
+    api.getBlogs().catch((e) => { console.error("Fetch error:", e); return []; }),
+    api.getTags().catch((e) => { console.error("Fetch error:", e); return []; })
   ]);
 
   return (

@@ -9,6 +9,7 @@ const nextConfig: NextConfig = {
     allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS.split(",").map(s => s.trim()),
   }),
   images: {
+    unoptimized: true,
     formats: ['image/avif', 'image/webp'],
     remotePatterns: [
       {

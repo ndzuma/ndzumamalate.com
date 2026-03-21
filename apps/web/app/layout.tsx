@@ -71,19 +71,25 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  // If no blogs, we can hide the Blog navigation link
+  // Fetch layout data server-side
   let hasBlogs = false;
+  let profile = null;
+  
   try {
-    const blogs = await api.getBlogs();
+    const [blogs, fetchedProfile] = await Promise.all([
+      api.getBlogs().catch(() => []),
+      api.getProfile().catch(() => null)
+    ]);
     hasBlogs = blogs && blogs.length > 0;
+    profile = fetchedProfile;
   } catch (error) {
-    console.error("Failed to fetch blogs for nav:", error);
+    console.error("Failed to fetch layout data:", error);
   }
 
   return (
     <html lang="en" className="scroll-smooth">
       <body className={geist.variable}>
-        <SiteShell hasBlogs={hasBlogs}>{children}</SiteShell>
+        <SiteShell hasBlogs={hasBlogs} profile={profile}>{children}</SiteShell>
       </body>
     </html>
   );

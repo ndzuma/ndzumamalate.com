@@ -6,12 +6,14 @@ import type { PropsWithChildren } from "react";
 
 import FloatingNav from "./floating-nav";
 import Footer from "./footer";
+import { Profile } from "../types/api";
 
 type SiteShellProps = PropsWithChildren<{
   hasBlogs?: boolean;
+  profile?: Profile | null;
 }>;
 
-export default function SiteShell({ children, hasBlogs = true }: SiteShellProps) {
+export default function SiteShell({ children, hasBlogs = true, profile = null }: SiteShellProps) {
   const pathname = usePathname() ?? "/";
 
   return (
@@ -27,7 +29,7 @@ export default function SiteShell({ children, hasBlogs = true }: SiteShellProps)
           className="mx-auto w-full max-w-[min(96vw,112rem)] px-5 pt-24 pb-8 sm:px-8 sm:pt-28 min-h-screen flex flex-col"
         >
           <div className="flex-grow">{children}</div>
-          <Footer />
+          <Footer profile={profile} />
         </motion.div>
       </AnimatePresence>
     </>
