@@ -8,13 +8,21 @@ type TickerRowProps = {
 function TickerRow({ reverse = false, skills }: TickerRowProps) {
   if (!skills || skills.length === 0) return null;
   
+  // Shuffle the base skills array so each row has a unique random order
+  const shuffledSkills = [...skills].sort(() => Math.random() - 0.5);
+
   // Multiply the array to ensure it's wide enough for a continuous scrolling effect, especially if few items
-  const repeatCount = Math.max(2, Math.ceil(10 / skills.length));
-  const shiftedLogos = Array(repeatCount).fill(skills).flat();
+  const repeatCount = Math.max(2, Math.ceil(10 / shuffledSkills.length));
+  const shiftedLogos = Array(repeatCount).fill(shuffledSkills).flat();
+  
+  // Calculate duration based on the number of items to keep speed constant
+  const speedPerItem = 3; // seconds per item
+  const duration = shiftedLogos.length * speedPerItem;
 
   return (
     <div 
       className={`flex w-max pause-on-hover ${reverse ? 'animate-scroll-right' : 'animate-scroll-left'}`}
+      style={{ animationDuration: `${duration}s` }}
     >
       {[0, 1].map((group) => (
         <div key={group} className="flex shrink-0 items-center justify-around w-max gap-12 px-6 sm:gap-16 sm:px-8">

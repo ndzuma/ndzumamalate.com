@@ -44,7 +44,7 @@ export default function FeaturedCard({ href, title, date, image, repoUrl, liveUr
                 title="Go to repo"
               >
                 <GithubLogo weight="bold" className="w-4 h-4 shrink-0" />
-                <span className="max-w-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
+                <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
                   Go to repo
                 </span>
               </a>
@@ -58,7 +58,7 @@ export default function FeaturedCard({ href, title, date, image, repoUrl, liveUr
                 title="Try it out"
               >
                 <Globe weight="bold" className="w-4 h-4 shrink-0" />
-                <span className="max-w-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
+                <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
                   Try it out
                 </span>
               </a>

@@ -77,6 +77,7 @@ export default async function Home() {
               href={`/projects/${project.slug || project.id}`}
               title={project.title}
               image={project.image_url}
+              liveUrl={project.live_url}
               className="w-[85vw] sm:w-[400px] lg:w-[480px]"
             />
           ))}

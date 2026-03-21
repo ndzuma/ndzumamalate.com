@@ -11,8 +11,6 @@ export default async function ProjectsPage() {
     api.getProjects().catch(() => []),
     api.getTags().catch(() => [])
   ]);
-  console.log(allProjects)
-  console.log(allTags)
   
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">

@@ -5,6 +5,9 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  ...(process.env.ALLOWED_DEV_ORIGINS && {
+    allowedDevOrigins: process.env.ALLOWED_DEV_ORIGINS.split(",").map(s => s.trim()),
+  }),
   images: {
     remotePatterns: [
       {
