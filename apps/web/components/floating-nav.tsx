@@ -62,7 +62,7 @@ export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavPr
                   width={32}
                   height={32}
                   priority
-                  className="nav-logo"
+                  className="nav-logo h-auto w-auto"
                 />
               </Link>
             </div>

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowUpRight, GithubLogo } from "@phosphor-icons/react";
+import posthog from "posthog-js";
 
 type InlineProjectLinkProps = {
   title?: string;
@@ -55,6 +56,7 @@ export default function InlineProjectLink({
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('project_link_clicked', { project: title })}
                 className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
               >
                 <GithubLogo weight="fill" className="w-4 h-4" />

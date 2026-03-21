@@ -5,6 +5,7 @@ import { api } from "../lib/api";
 
 import "./globals.css";
 import SiteShell from "../components/site-shell";
+import { CSPostHogProvider } from "./providers";
 
 const geist = Geist({
   variable: "--font-geist-sans",
@@ -89,7 +90,9 @@ export default async function RootLayout({ children }: RootLayoutProps) {
   return (
     <html lang="en" className="scroll-smooth">
       <body className={geist.variable}>
-        <SiteShell hasBlogs={hasBlogs} profile={profile}>{children}</SiteShell>
+        <CSPostHogProvider>
+          <SiteShell hasBlogs={hasBlogs} profile={profile}>{children}</SiteShell>
+        </CSPostHogProvider>
       </body>
     </html>
   );

@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { GithubLogo, LinkedinLogo, XLogo, ThreadsLogo } from "@phosphor-icons/react";
+import posthog from "posthog-js";
 import { Profile } from "../types/api";
 
 type InlineSocialLinkProps = {
@@ -50,6 +51,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 href={profile?.linkedin_url || "https://linkedin.com"} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('social_link_clicked', { platform: 'LinkedIn' })}
                 className="flex items-center justify-center bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] p-2 rounded-lg transition-colors cursor-pointer"
                 aria-label="LinkedIn"
               >
@@ -59,6 +61,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 href={profile?.github_url || "https://github.com"} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('social_link_clicked', { platform: 'GitHub' })}
                 className="flex items-center justify-center bg-black/5 hover:bg-black/10 text-black p-2 rounded-lg transition-colors cursor-pointer"
                 aria-label="GitHub"
               >
@@ -68,6 +71,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 href={profile?.twitter_url || "https://twitter.com"} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('social_link_clicked', { platform: 'Twitter' })}
                 className="flex items-center justify-center bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 text-[#1DA1F2] p-2 rounded-lg transition-colors cursor-pointer"
                 aria-label="Twitter / X"
               >
@@ -77,6 +81,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 href={profile?.threads_url || "https://threads.net"} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('social_link_clicked', { platform: 'Threads' })}
                 className="flex items-center justify-center bg-black/5 hover:bg-black/10 text-black p-2 rounded-lg transition-colors cursor-pointer"
                 aria-label="Threads"
               >

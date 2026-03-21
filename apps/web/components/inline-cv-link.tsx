@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { FilePdf, ArrowUpRight } from "@phosphor-icons/react";
+import posthog from "posthog-js";
 import type { CV } from "../types/api";
 
 type InlineCvLinkProps = {
@@ -55,6 +56,7 @@ export default function InlineCvLink({ cv }: InlineCvLinkProps) {
                 href={cv.file_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
+                onClick={() => posthog.capture('cv_viewed')}
                 className="flex items-center gap-1.5 bg-[#E23636]/10 hover:bg-[#E23636]/20 text-[#E23636] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
               >
                 <FilePdf weight="fill" className="w-4 h-4" />
