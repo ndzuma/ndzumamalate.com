@@ -40,10 +40,10 @@ export default function Footer() {
             Thanks for stopping by.
           </p>
           <a 
-            href="mailto:ndzumaxx@gmail.com" 
+            href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}`} 
             className="inline-block text-black/50 hover:text-black transition-colors font-medium underline decoration-black/20 hover:decoration-black/40 underline-offset-4"
           >
-            ndzumaxx@gmail.com
+            {process.env.NEXT_PUBLIC_CONTACT_EMAIL}
           </a>
         </div>
 

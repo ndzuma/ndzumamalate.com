@@ -42,11 +42,11 @@ export default function InlineEmailLink() {
           >
             <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
               <a 
-                href="mailto:ndzumaxx@gmail.com" 
+                href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}`} 
                 className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
               >
                 <EnvelopeSimple weight="bold" className="w-4 h-4" />
-                ndzumaxx@gmail.com
+                {process.env.NEXT_PUBLIC_CONTACT_EMAIL}
                 <ArrowUpRight weight="bold" className="w-3 h-3 opacity-50 ml-0.5" />
               </a>
             </div>
