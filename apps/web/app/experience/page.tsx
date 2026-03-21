@@ -30,7 +30,7 @@ export default async function ExperiencePage() {
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
-      <section className="mt-8 sm:mt-16 max-w-2xl mb-12 px-4 sm:px-0">
+      <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
           experience
         </h1>
@@ -39,7 +39,7 @@ export default async function ExperiencePage() {
         </p>
       </section>
 
-      <div className="max-w-2xl space-y-16 px-4 sm:px-0">
+      <div className="max-w-2xl space-y-16">
         
         {education.length > 0 && (
           <section>

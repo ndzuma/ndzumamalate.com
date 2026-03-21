@@ -35,7 +35,7 @@ const dummyProfile = {
 export default function ThisPage() {
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24 relative">
-      <section className="mt-8 sm:mt-16 max-w-3xl mb-16 px-4 sm:px-0">
+      <section className="mt-8 sm:mt-16 max-w-2xl mb-16">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
           this
         </h1>
@@ -55,8 +55,8 @@ export default function ThisPage() {
         </div>
       </section>
 
-      <div className="flex flex-col lg:flex-row gap-16 px-4 sm:px-0">
-        <div className="flex-1 max-w-3xl space-y-24">
+      <div className="flex flex-col lg:flex-row gap-16">
+        <div className="flex-1 max-w-2xl space-y-24">
 
           {/* SECTION 1: SYSTEM ARCHITECTURE */}
           <section id="architecture" className="scroll-mt-32">
@@ -418,7 +418,7 @@ export default function ThisPage() {
                 {/* Featured Card */}
                 <div>
                   <div className="text-xs font-mono text-black/40 mb-3">Featured Card Component</div>
-                  <div className="relative max-w-[320px] ml-8 mt-14">
+                  <div className="relative w-[85%] sm:w-full max-w-[320px] ml-8 mt-14">
                     {/* Width Indicator */}
                     <div className="absolute -top-6 left-0 right-0 h-[1px] bg-black/10">
                       <div className="absolute -top-1 left-0 w-[1px] h-2 bg-black/20" />
@@ -453,7 +453,7 @@ export default function ThisPage() {
           <h2 className="text-xl sm:text-2xl font-medium mb-6 tracking-tight flex items-center gap-3">
             <span className="text-black/30">05</span> Sitemap
           </h2>
-          <div className="font-mono text-sm text-black/70 bg-black/[0.02] border border-black/5 p-6 rounded-2xl leading-loose">
+          <div className="font-mono text-sm text-black/70 bg-black/[0.02] border border-black/5 p-6 rounded-2xl leading-loose overflow-x-auto">
             <div>/ (Home)</div>
             <div className="pl-6 border-l border-black/10 ml-2">├── /projects</div>
             <div className="pl-12 border-l border-black/10 ml-2 text-black/50">└── /[slug]</div>
