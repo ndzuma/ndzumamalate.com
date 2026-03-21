@@ -3,8 +3,15 @@ import InlineMusicLink from "../../components/inline-music-link";
 import InlineBookLink from "../../components/inline-book-link";
 import InlineSocialLink from "../../components/inline-social-link";
 import InlineProjectLink from "../../components/inline-project-link";
+import InlineTechLink from "../../components/inline-tech-link";
+import InlineEmailLink from "../../components/inline-email-link";
+import InlineCvLink from "../../components/inline-cv-link";
 import FeaturedCard from "../../components/featured-card";
 import { InteractiveFilter } from "./interactive-filter";
+import LogosTicker from "../../components/logos-ticker";
+import Carousel from "../../components/carousel";
+import ContactForm from "../../components/contact-form";
+import { ExperienceDescription } from "../../components/experience-description";
 import { ArrowLeft, GithubLogo, Globe, ArrowUp } from "@phosphor-icons/react/dist/ssr";
 
 // Dummy profile for component demonstration
@@ -20,6 +27,25 @@ const dummyProfile = {
   created_at: "",
   updated_at: ""
 };
+
+const dummyCv = {
+  id: "1",
+  file_url: "#",
+  label: "Resume.pdf",
+  is_active: true,
+  uploaded_at: "",
+};
+
+const dummySkills = [
+  { id: "1", name: "TypeScript", category: "programming_language", icon_url: "https://cdn.simpleicons.org/typescript", proficiency: 100, sort_order: 1, created_at: "" },
+  { id: "2", name: "React", category: "framework", icon_url: "https://cdn.simpleicons.org/react", proficiency: 100, sort_order: 2, created_at: "" },
+  { id: "3", name: "Next.js", category: "framework", icon_url: "https://cdn.simpleicons.org/nextdotjs", proficiency: 100, sort_order: 3, created_at: "" },
+  { id: "4", name: "Go", category: "programming_language", icon_url: "https://cdn.simpleicons.org/go", proficiency: 100, sort_order: 4, created_at: "" },
+  { id: "5", name: "PostgreSQL", category: "database", icon_url: "https://cdn.simpleicons.org/postgresql", proficiency: 100, sort_order: 5, created_at: "" },
+  { id: "6", name: "Redis", category: "database", icon_url: "https://cdn.simpleicons.org/redis", proficiency: 100, sort_order: 6, created_at: "" },
+  { id: "7", name: "Bun", category: "tool", icon_url: "https://cdn.simpleicons.org/bun", proficiency: 100, sort_order: 7, created_at: "" },
+  { id: "8", name: "Tailwind", category: "tool", icon_url: "https://cdn.simpleicons.org/tailwindcss", proficiency: 100, sort_order: 8, created_at: "" },
+] as const;
 
 export function DesignSystemShowcase() {
   return (
@@ -129,7 +155,9 @@ export function DesignSystemShowcase() {
               <div>Embedded <InlineSocialLink profile={dummyProfile} /> link.</div>
               <div>Currently playing <InlineMusicLink spotifyUrl="#" appleMusicUrl="#" />.</div>
               <div>Referencing <InlineBookLink title="Dune" url="#" /> natively.</div>
-              <div>And internal linking via <InlineProjectLink title="demo" url="#" label="View Demo" />.</div>
+              <div>Internal linking via <InlineProjectLink title="demo" url="#" label="View Demo" />.</div>
+              <div>Discussing <InlineTechLink /> and reaching out via <InlineEmailLink />.</div>
+              <div>Downloading the active <InlineCvLink cv={dummyCv} />.</div>
             </div>
           </div>
 
@@ -158,6 +186,44 @@ export function DesignSystemShowcase() {
                 repoUrl="#"
                 liveUrl="#"
               />
+            </div>
+          </div>
+
+          {/* Logos Ticker */}
+          <div>
+            <div className="text-xs font-mono text-black/40 mb-3">Infinite Logos Ticker</div>
+            <div className="relative w-full border border-black/5 bg-black/[0.02] rounded-2xl py-8 overflow-hidden">
+              <LogosTicker skills={dummySkills as any} />
+            </div>
+          </div>
+
+          {/* Carousel */}
+          <div>
+            <div className="text-xs font-mono text-black/40 mb-3">Scrollable Carousel</div>
+            <div className="relative w-full border border-black/5 bg-black/[0.02] rounded-2xl p-4 sm:p-6 overflow-hidden">
+              <Carousel title="Demo Carousel">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <div key={i} className="flex-none w-[200px] aspect-square rounded-xl bg-white border border-black/10 shadow-sm flex items-center justify-center text-black/40 font-mono text-sm">
+                    Item {i + 1}
+                  </div>
+                ))}
+              </Carousel>
+            </div>
+          </div>
+
+          {/* Experience Description */}
+          <div>
+            <div className="text-xs font-mono text-black/40 mb-3">Expandable Text (Experience)</div>
+            <div className="relative w-full border border-black/5 bg-black/[0.02] rounded-2xl p-6">
+              <ExperienceDescription description="This is a really long experience description that demonstrates how the component truncates text by default but allows the user to expand it to read the full context. It's particularly useful for the experience timeline where brevity is preferred initially, but detail is available for those who are interested." />
+            </div>
+          </div>
+
+          {/* Contact Form */}
+          <div>
+            <div className="text-xs font-mono text-black/40 mb-3">Contact Form</div>
+            <div className="relative w-full max-w-md border border-black/5 bg-black/[0.02] rounded-2xl p-6 sm:p-8">
+              <ContactForm />
             </div>
           </div>
 
