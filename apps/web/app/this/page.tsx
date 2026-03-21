@@ -44,10 +44,10 @@ export default function ThisPage() {
         </p>
         <div className="text-base sm:text-lg text-black/80 leading-relaxed space-y-4">
           <div>
-            I built this over the course of a week using <strong>OpenCode</strong> as my coding agent, primarily powered by <strong>Gemini 3.1 Pro Preview</strong>. While the architecture and system design were fully thought out by myself, I used agents to write the boilerplate, debug, and rapidly prototype. I still had to step in frequently to fix logic, rebuild components, and correct the model when it missed my specific style guidelines or failed on implementation details.
+            I built this over a week with the help of <strong>OpenCode</strong> and <strong>Gemini 3.1 Pro Preview</strong>. I designed the systems and architecture, while agents handled boilerplate and rapid prototyping. I stepped in frequently to fix logic, rebuild components, and enforce my style guidelines.
           </div>
           <div>
-            This setup is intentionally over-engineered. It is a public demonstration of my technical capabilities. However, I can't act like the design came purely from my own head—I had ideas from other people. You can find my references in the <a href="#inspirations" className="font-medium text-black bg-blue-100 px-1.5 py-0.5 rounded hover:bg-blue-200 transition-colors">inspirations</a> section below.
+            This setup is intentionally over-engineered to demonstrate my technical capabilities. The design is heavily inspired by others, and you can find my references in the <a href="#inspirations" className="font-medium text-black bg-blue-100 px-1.5 py-0.5 rounded hover:bg-blue-200 transition-colors">inspirations</a> section below. The website uses Phosphor Icons, and the home screen logo ticker uses Simple Icons.
           </div>
           <div>
             Check out the <InlineProjectLink title="project repo" url="https://github.com/ndzuma/ndzumamalate.com" label="View on Github" />.
