@@ -4,14 +4,16 @@ import Carousel from "../components/carousel";
 import InlineProjectLink from "../components/inline-project-link";
 import InlineSocialLink from "../components/inline-social-link";
 import InlineEmailLink from "../components/inline-email-link";
+import InlineCvLink from "../components/inline-cv-link";
 import { api } from "../lib/api";
 
 export default async function Home() {
-  const [profile, projects, blogs, skills] = await Promise.all([
+  const [profile, projects, blogs, skills, cv] = await Promise.all([
     api.getProfile().catch(() => null),
     api.getProjects().catch(() => []),
     api.getBlogs().catch(() => []),
-    api.getSkills().catch(() => [])
+    api.getSkills().catch(() => []),
+    api.getActiveCV().catch(() => null)
   ]);
 
   // Projects and Blogs endpoints already return published=true.
@@ -61,7 +63,7 @@ export default async function Home() {
               If you want to connect on an ambitious project, reach out on my <InlineSocialLink profile={profile} /> or shoot me an <InlineEmailLink />.
             </div>
             <div>
-              Oh I forgot, here's my CV.
+              Oh I forgot, here's my <InlineCvLink cv={cv} />.
             </div>
           </div>
         </section>
