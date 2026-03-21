@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
     }
 
     // 2. Clear the 'cms' tag cache
-    revalidateTag("cms");
+    await revalidateTag("cms");
 
     return NextResponse.json({ revalidated: true, now: Date.now() });
   } catch (err) {
