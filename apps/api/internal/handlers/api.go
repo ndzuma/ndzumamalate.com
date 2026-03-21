@@ -30,6 +30,11 @@ type API struct {
 }
 
 type Store interface {
+
+	CreateLoginEvent(context.Context, string, string, string) (*models.LoginEvent, error)
+	DeactivateLoginEvents(context.Context, string) error
+	GetLatestLoginEvent(context.Context, string) (*models.LoginEvent, error)
+	GetRecentLoginEvents(context.Context, string, int) ([]models.LoginEvent, error)
 	Ping(context.Context) error
 	BootstrapAdmin(context.Context, string, string) (*models.AdminUser, bool, error)
 	GetAdminByEmail(context.Context, string) (*models.AdminUser, error)
@@ -123,6 +128,7 @@ func (a *API) Register(e *echo.Echo) {
 	authGroup.POST("/refresh", a.refresh)
 	authGroup.POST("/logout", a.logout)
 	authGroup.GET("/me", a.me, a.requireAuth)
+	authGroup.GET("/activity", a.activity, a.requireAuth)
 	authGroup.POST("/change-password", a.changePassword, a.requireAuth)
 
 	admin := v1.Group("/admin", a.requireAuth)
@@ -272,6 +278,7 @@ func (a *API) login(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
 	_ = a.store.UpdateAdminLastLogin(c.Request().Context(), user.ID, time.Now().UTC())
+	_, _ = a.store.CreateLoginEvent(c.Request().Context(), user.ID, c.RealIP(), c.Request().UserAgent())
 	a.logger.Info("login succeeded", slog.String("user_id", user.ID), slog.String("email", user.Email), slog.String("ip", c.RealIP()))
 
 	c.SetCookie(a.authService.BuildAccessCookie(session.AccessToken, session.AccessExpiry))
@@ -301,6 +308,10 @@ func (a *API) refresh(c echo.Context) error {
 
 func (a *API) logout(c echo.Context) error {
 	if refreshCookie, err := c.Cookie(auth.RefreshCookieName); err == nil {
+		claims, _ := a.authService.ParseToken(refreshCookie.Value, "refresh")
+		if claims != nil {
+			_ = a.store.DeactivateLoginEvents(c.Request().Context(), claims.Subject)
+		}
 		_ = a.authService.RevokeRefreshToken(c.Request().Context(), refreshCookie.Value)
 	}
 	a.logger.Info("logout completed")
@@ -854,4 +865,19 @@ func webhookEventType(create bool) string {
 		return "webhook.created"
 	}
 	return "webhook.updated"
+}
+
+func (a *API) activity(c echo.Context) error {
+	actor := getActor(c)
+	if actor == nil {
+		return echo.NewHTTPError(http.StatusUnauthorized, "unauthorized")
+	}
+	events, err := a.store.GetRecentLoginEvents(c.Request().Context(), actor.UserID, 5)
+	if err != nil {
+		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
+	}
+	if len(events) == 0 {
+		return c.JSON(http.StatusOK, []models.LoginEvent{})
+	}
+	return c.JSON(http.StatusOK, events)
 }

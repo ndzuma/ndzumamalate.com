@@ -4,7 +4,7 @@
   import { toast } from '../lib/toast.svelte.js';
   import { navigate } from '../lib/router.svelte.js';
   import { getUser } from '../lib/auth.svelte.js';
-  import { projects, blogs, skills, experience, cv, tags } from '../lib/api.js';
+  import { projects, blogs, skills, experience, cv, tags, auth } from '../lib/api.js';
   import { Star, Article, Lightning, Briefcase, FilePdf, Tag, Trash, PencilSimple, Plus, CaretDown, ArrowUp, ArrowDown, CheckCircle } from 'phosphor-svelte';
 
   // ── Data ──
@@ -16,6 +16,7 @@
   let allExperience = $state([]);
   let allCvs = $state([]);
   let allTags = $state([]);
+  let loginActivities = $state([]);
   let loadingData = $state(true);
 
   // ── Active tab ──
@@ -36,14 +37,16 @@
   async function loadData() {
     loadingData = true;
     try {
-      const [p, b, s, e, c, t] = await Promise.all([
+      const [p, b, s, e, c, t, act] = await Promise.all([
         projects.list().catch(() => []),
         blogs.list().catch(() => []),
         skills.list().catch(() => []),
         experience.list().catch(() => []),
         cv.list().catch(() => []),
         tags.list().catch(() => []),
+        auth.activity().catch(() => []),
       ]);
+      loginActivities = act || [];
       allProjects = p || [];
       allBlogs = b || [];
       allSkills = s || [];
@@ -124,6 +127,63 @@
     }
   }
 
+  function resolveTagIds(slugs) {
+    if (!slugs) return [];
+    return slugs.map(slug => {
+      const found = allTags.find(t => t.slug === slug);
+      return found?.id || slug;
+    });
+  }
+
+  // ── Projects toggle ──
+  async function toggleProjectBool(item, field) {
+    try {
+      const payload = {
+        title: item.title,
+        slug: item.slug,
+        summary: item.summary,
+        content: item.content,
+        image_url: item.image_url,
+        live_url: item.live_url,
+        repo_url: item.repo_url,
+        featured: item.featured,
+        published: item.published,
+        sort_order: item.sort_order,
+        start_date: item.start_date ? item.start_date.split('T')[0] : '',
+        end_date: item.end_date ? item.end_date.split('T')[0] : '',
+        tag_ids: resolveTagIds(item.tags)
+      };
+      payload[field] = !item[field];
+      await projects.update(item.id, payload);
+      await loadData();
+      toast('Project updated');
+    } catch (_) {
+      toast('Failed to update project', 'error');
+    }
+  }
+
+  // ── Blogs toggle ──
+  async function toggleBlogBool(item, field) {
+    try {
+      const payload = {
+        title: item.title,
+        slug: item.slug,
+        summary: item.summary,
+        content: item.content,
+        cover_image_url: item.cover_image_url,
+        published: item.published,
+        published_at: item.published_at || '',
+        tag_ids: resolveTagIds(item.tags)
+      };
+      payload[field] = !item[field];
+      await blogs.update(item.id, payload);
+      await loadData();
+      toast('Blog updated');
+    } catch (_) {
+      toast('Failed to update blog', 'error');
+    }
+  }
+
   // ── CV active toggle ──
   async function toggleCvActive(item) {
     try {
@@ -198,6 +258,34 @@
     activeTab = value;
     dropdownOpen = false;
   }
+
+  function getDeviceName(ua) {
+    if (!ua) return 'Unknown';
+    if (ua.includes('Macintosh')) return 'Mac';
+    if (ua.includes('Windows')) return 'Windows';
+    if (ua.includes('iPhone')) return 'iPhone';
+    if (ua.includes('iPad')) return 'iPad';
+    if (ua.includes('Android')) return 'Android';
+    if (ua.includes('Linux')) return 'Linux';
+    // Fallback to the first word if we don't recognize it
+    return ua.split('/')[0].split(' ')[0] || 'Unknown';
+  }
+
+  function formatTimeAgo(dateString) {
+    if (!dateString) return '--';
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    
+    if (diffHours < 24) return `${diffHours} hour${diffHours === 1 ? '' : 's'} ago`;
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffDays < 7) return `${diffDays} day${diffDays === 1 ? '' : 's'} ago`;
+    const diffWeeks = Math.floor(diffDays / 7);
+    if (diffWeeks < 52) return `${diffWeeks} week${diffWeeks === 1 ? '' : 's'} ago`;
+    const diffYears = Math.floor(diffWeeks / 52);
+    return `${diffYears} year${diffYears === 1 ? '' : 's'} ago`;
+  }
 </script>
 
 <svelte:window onclick={(e) => {
@@ -245,10 +333,22 @@
       <div class="card">
         <div class="card-label mono">LOGIN ACTIVITY</div>
         <div class="card-body">
-          <div class="card-item">
-            <span class="item-title">{getUser()?.email || '--'}</span>
-            <span class="item-meta mono">ACTIVE</span>
-          </div>
+          {#if loginActivities.length === 0}
+            <span class="empty-text">No activity found</span>
+          {:else}
+            {#each loginActivities as act}
+              <div class="card-item">
+                <span class="item-title" title="{act.user_agent}">
+                  {getDeviceName(act.user_agent)} • {act.ip_address || 'Unknown IP'}
+                </span>
+                {#if act.is_active}
+                  <span class="item-meta mono" style="color: #10b981;">ACTIVE</span>
+                {:else}
+                  <span class="item-meta mono">{formatTimeAgo(act.last_seen_at).toUpperCase()}</span>
+                {/if}
+              </div>
+            {/each}
+          {/if}
         </div>
       </div>
     </section>
@@ -333,6 +433,26 @@
                         {:else if col === 'filter'}
                           <input type="checkbox" bind:checked={tagForm.filter} />
                         {/if}
+                      {:else if (col === 'published' || col === 'featured') && activeTab === 'projects'}
+                        <button
+                          class="active-badge"
+                          class:is-active={item[col]}
+                          onclick={() => toggleProjectBool(item, col)}
+                          title={item[col] ? `${col} (click to undo)` : `Click to set as ${col}`}
+                        >
+                          <CheckCircle size={12} weight={item[col] ? 'fill' : 'regular'} />
+                          <span>{item[col] ? 'Yes' : 'No'}</span>
+                        </button>
+                      {:else if col === 'published' && activeTab === 'blogs'}
+                        <button
+                          class="active-badge"
+                          class:is-active={item[col]}
+                          onclick={() => toggleBlogBool(item, col)}
+                          title={item[col] ? `${col} (click to undo)` : `Click to set as ${col}`}
+                        >
+                          <CheckCircle size={12} weight={item[col] ? 'fill' : 'regular'} />
+                          <span>{item[col] ? 'Yes' : 'No'}</span>
+                        </button>
                       {:else if col === 'is_active' && activeTab === 'cv'}
                         <button
                           class="active-badge"

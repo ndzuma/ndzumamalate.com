@@ -56,6 +56,7 @@ export const auth = {
   changePassword: (current_password, new_password) =>
     request('POST', '/auth/change-password', { current_password, new_password }),
   refresh: () => request('POST', '/auth/refresh'),
+  activity: () => request('GET', '/auth/activity'),
 };
 
 // ── Admin CRUD ──

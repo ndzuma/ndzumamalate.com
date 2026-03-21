@@ -561,6 +561,16 @@ export default function ThisPage() {
               <SchemaRow name="updated_at" type="TIMESTAMPTZ" />
             </SchemaTable>
 
+            <SchemaTable name="login_events">
+              <SchemaRow name="id" type="UUID (PK)" />
+              <SchemaRow name="user_id" type="UUID (FK)" />
+              <SchemaRow name="is_active" type="BOOLEAN" />
+              <SchemaRow name="ip_address" type="TEXT" />
+              <SchemaRow name="user_agent" type="TEXT" />
+              <SchemaRow name="last_seen_at" type="TIMESTAMPTZ" />
+              <SchemaRow name="created_at" type="TIMESTAMPTZ" />
+            </SchemaTable>
+
             <SchemaTable name="cv">
               <SchemaRow name="id" type="UUID (PK)" />
               <SchemaRow name="file_url" type="TEXT" />

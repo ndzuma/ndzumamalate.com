@@ -209,3 +209,13 @@ type Event struct {
 	OccurredAt time.Time   `json:"occurred_at"`
 	Payload    interface{} `json:"payload,omitempty"`
 }
+
+type LoginEvent struct {
+	ID         string    `json:"id"`
+	UserID     string    `json:"user_id"`
+	IsActive   bool      `json:"is_active"`
+	IPAddress  string    `json:"ip_address,omitempty"`
+	UserAgent  string    `json:"user_agent,omitempty"`
+	LastSeenAt time.Time `json:"last_seen_at"`
+	CreatedAt  time.Time `json:"created_at"`
+}

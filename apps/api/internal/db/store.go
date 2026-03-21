@@ -948,3 +948,77 @@ func nullableTimestamp(value string) (*time.Time, error) {
 	}
 	return &parsed, nil
 }
+
+// Login Events
+
+func (s *Store) CreateLoginEvent(ctx context.Context, userID, ipAddress, userAgent string) (*models.LoginEvent, error) {
+	q := `
+		INSERT INTO login_events (user_id, is_active, ip_address, user_agent, last_seen_at, created_at)
+		VALUES ($1, true, $2, $3, NOW(), NOW())
+		RETURNING id, user_id, is_active, ip_address, user_agent, last_seen_at, created_at
+	`
+	var evt models.LoginEvent
+	err := s.pool.QueryRow(ctx, q, userID, ipAddress, userAgent).Scan(
+		&evt.ID, &evt.UserID, &evt.IsActive, &evt.IPAddress, &evt.UserAgent, &evt.LastSeenAt, &evt.CreatedAt,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("create login event: %w", err)
+	}
+	return &evt, nil
+}
+
+func (s *Store) DeactivateLoginEvents(ctx context.Context, userID string) error {
+	q := `
+		UPDATE login_events
+		SET is_active = false, last_seen_at = NOW()
+		WHERE user_id = $1 AND is_active = true
+	`
+	_, err := s.pool.Exec(ctx, q, userID)
+	return err
+}
+
+func (s *Store) GetLatestLoginEvent(ctx context.Context, userID string) (*models.LoginEvent, error) {
+	q := `
+		SELECT id, user_id, is_active, ip_address, user_agent, last_seen_at, created_at
+		FROM login_events
+		WHERE user_id = $1
+		ORDER BY last_seen_at DESC
+		LIMIT 1
+	`
+	var evt models.LoginEvent
+	err := s.pool.QueryRow(ctx, q, userID).Scan(
+		&evt.ID, &evt.UserID, &evt.IsActive, &evt.IPAddress, &evt.UserAgent, &evt.LastSeenAt, &evt.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil // No login event found
+		}
+		return nil, fmt.Errorf("get latest login event: %w", err)
+	}
+	return &evt, nil
+}
+
+func (s *Store) GetRecentLoginEvents(ctx context.Context, userID string, limit int) ([]models.LoginEvent, error) {
+	q := `
+		SELECT id, user_id, is_active, ip_address, user_agent, last_seen_at, created_at
+		FROM login_events
+		WHERE user_id = $1
+		ORDER BY last_seen_at DESC
+		LIMIT $2
+	`
+	rows, err := s.pool.Query(ctx, q, userID, limit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var events []models.LoginEvent
+	for rows.Next() {
+		var evt models.LoginEvent
+		if err := rows.Scan(&evt.ID, &evt.UserID, &evt.IsActive, &evt.IPAddress, &evt.UserAgent, &evt.LastSeenAt, &evt.CreatedAt); err != nil {
+			return nil, err
+		}
+		events = append(events, evt)
+	}
+	return events, rows.Err()
+}
