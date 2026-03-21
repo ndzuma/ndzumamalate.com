@@ -43,15 +43,15 @@ export default function ThisPage() {
           How this site was built, the architecture behind it, and why it exists.
         </p>
         <div className="text-base sm:text-lg text-black/80 leading-relaxed space-y-4">
-          <p>
+          <div>
             I built this over the course of a week using <strong>OpenCode</strong> as my coding agent, primarily powered by <strong>Gemini 3.1 Pro Preview</strong>. While the architecture and system design were fully thought out by myself, I used agents to write the boilerplate, debug, and rapidly prototype. I still had to step in frequently to fix logic, rebuild components, and correct the model when it missed my specific style guidelines or failed on implementation details.
-          </p>
-          <p>
+          </div>
+          <div>
             This setup is intentionally over-engineered. It is a public demonstration of my technical capabilities. However, I can't act like the design came purely from my own head—I had ideas from other people. You can find my references in the <a href="#inspirations" className="font-medium text-black bg-blue-100 px-1.5 py-0.5 rounded hover:bg-blue-200 transition-colors">inspirations</a> section below.
-          </p>
-          <p>
+          </div>
+          <div>
             Check out the <InlineProjectLink title="project repo" url="https://github.com/ndzuma/ndzumamalate.com" label="View on Github" />.
-          </p>
+          </div>
         </div>
       </section>
 

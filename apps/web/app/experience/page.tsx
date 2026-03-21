@@ -43,26 +43,26 @@ export default async function ExperiencePage() {
         
         {education.length > 0 && (
           <section>
-            <table className="w-full text-left text-sm text-black/80">
-              <tbody>
-                {education.map(edu => (
-                  <tr key={edu.id} className="border-b border-black/10 last:border-0 align-top">
-                    <td className="py-4 font-medium w-1/3 sm:w-1/4">{edu.company}</td>
-                    <td className="py-4 text-black/60 w-1/2 sm:w-auto">
+            <div className="w-full text-sm text-black/80">
+              {education.map(edu => (
+                <div key={edu.id} className="border-b border-black/10 last:border-0 py-4">
+                  <div className="grid grid-cols-[1fr_auto] sm:grid-cols-[1fr_2fr_1fr] gap-x-4 gap-y-1 sm:gap-y-0 w-full items-baseline">
+                    <div className="font-medium order-1 col-span-1">{edu.company}</div>
+                    <div className="text-right font-mono text-black/50 order-2 sm:order-3 col-span-1">
+                      {formatDate(edu.start_date)} — {formatDate(edu.end_date)}
+                    </div>
+                    <div className="text-black/60 order-3 sm:order-2 col-span-2 sm:col-span-1 mt-1 sm:mt-0">
                       <div className={edu.description ? "mb-2 font-medium" : ""}>{edu.role}</div>
                       {edu.description && (
-                        <div className="text-sm">
+                        <div className="text-sm mt-1">
                           <ExperienceDescription description={edu.description} />
                         </div>
                       )}
-                    </td>
-                    <td className="py-4 text-right font-mono text-black/50 sm:w-1/4">
-                      {new Date(edu.start_date).getFullYear()} {edu.end_date ? `— ${new Date(edu.end_date).getFullYear()}` : '— Present'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
           </section>
         )}
 
