@@ -102,3 +102,11 @@ func refreshIndexKey(userID string) string {
 func loginRateLimitKey(identifier string) string {
 	return fmt.Sprintf("login-rate:%s", identifier)
 }
+
+func (s *RedisStore) Set(ctx context.Context, key string, value []byte, expiration time.Duration) error {
+	return s.client.Set(ctx, key, value, expiration).Err()
+}
+
+func (s *RedisStore) Get(ctx context.Context, key string) ([]byte, error) {
+	return s.client.Get(ctx, key).Bytes()
+}

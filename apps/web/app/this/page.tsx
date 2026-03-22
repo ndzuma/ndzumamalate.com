@@ -108,6 +108,7 @@ export default function ThisPage() {
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /cv/active</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">POST</span> /contact</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-bold">SSE</span> /events (realtime)</div>
+                    <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /f1 (proxy)</div>
                   </div>
                   <div className="pt-3 border-t border-black/5 mt-4 text-[11px] text-black/40">
                     No auth required. Used by Next.js for ISR & static generation. Open to the public.

@@ -78,6 +78,40 @@ export interface CV {
   uploaded_at: string;
 }
 
+export interface F1Meeting {
+  meeting_name: string;
+  location: string;
+  country_name: string;
+  country_flag: string;
+  circuit_short_name: string;
+  circuit_image: string;
+  date_start: string;
+  date_end: string;
+}
+
+export interface F1Team {
+  position_current: number;
+  team_name: string;
+  points_start: number;
+  points_current: number;
+}
+
+export interface F1Driver {
+  position_current: number;
+  driver_number: number;
+  points_start: number;
+  points_current: number;
+  full_name: string;
+  team_name: string;
+  team_colour: string;
+}
+
+export interface F1WidgetData {
+  meeting: F1Meeting;
+  teams: F1Team[];
+  drivers: F1Driver[];
+}
+
 export interface Profile {
   id: number;
   open_to_work: boolean;

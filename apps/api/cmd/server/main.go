@@ -91,6 +91,7 @@ func run(ctx context.Context) error {
 
 	api := handlers.NewAPI(
 		store,
+		redisStore,
 		authService,
 		broker,
 		notifications.NewDispatcher(store, cfg.WebhookTargets, cfg.WebhookSecret, logger),

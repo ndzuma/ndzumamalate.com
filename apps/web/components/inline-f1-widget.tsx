@@ -3,13 +3,21 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowUpRight } from "@phosphor-icons/react";
+import { api } from "../lib/api";
+import { F1WidgetData } from "../types/api";
+
+let globalF1Data: F1WidgetData | null = null;
+let globalF1Promise: Promise<F1WidgetData> | null = null;
 
 export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "center" | "right" | "auto" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // Check if we're on mobile to adjust positioning so it doesn't overflow the screen
+  const [data, setData] = useState<F1WidgetData | null>(globalF1Data);
+  const [loading, setLoading] = useState(!globalF1Data);
+  const [error, setError] = useState(false);
+
   useEffect(() => {
     const checkMobile = () => {
       setIsMobile(window.innerWidth < 640);
@@ -17,6 +25,24 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
     checkMobile();
     window.addEventListener('resize', checkMobile);
     return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  useEffect(() => {
+    if (globalF1Data) return;
+    
+    if (!globalF1Promise) {
+      globalF1Promise = api.getF1Data();
+    }
+    
+    globalF1Promise.then(res => {
+      globalF1Data = res;
+      setData(res);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch F1 data", err);
+      setError(true);
+      setLoading(false);
+    });
   }, []);
 
   const handleMouseEnter = () => {
@@ -41,6 +67,44 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
     positionClasses = isMobile ? 'right-0 origin-top-right' : 'left-0 origin-top-left';
   }
 
+  // Helpers to format names
+  const getDriverName = (fullName: string) => {
+    if (!fullName) return "---";
+    const parts = fullName.split(' ');
+    if (parts.length === 1) return fullName;
+    const firstName = parts[0];
+    const lastName = parts[parts.length - 1];
+    return `${firstName} ${lastName.charAt(0)}.`;
+  };
+
+  const getTeamName = (teamName: string) => {
+    if (!teamName) return "---";
+    if (teamName.toLowerCase().includes("red bull")) return "Red Bull";
+    if (teamName.toLowerCase().includes("mercedes")) return "Mercedes";
+    if (teamName.toLowerCase().includes("ferrari")) return "Ferrari";
+    if (teamName.toLowerCase().includes("mclaren")) return "McLaren";
+    if (teamName.toLowerCase().includes("aston")) return "Aston Martin";
+    if (teamName.toLowerCase().includes("alpine")) return "Alpine";
+    if (teamName.toLowerCase().includes("williams")) return "Williams";
+    if (teamName.toLowerCase().includes("haas")) return "Haas";
+    if (teamName.toLowerCase().includes("sauber")) return "Sauber";
+    if (teamName.toLowerCase().includes("rb")) return "RB";
+    return teamName.split(' ')[0];
+  };
+
+  const formatDateRange = (startStr: string, endStr: string) => {
+    try {
+      const start = new Date(startStr);
+      const end = new Date(endStr);
+      const startDay = start.getDate();
+      const endDay = end.getDate();
+      const month = end.toLocaleString('default', { month: 'short' }); // e.g. "Mar"
+      return `${startDay} - ${endDay} ${month}`;
+    } catch (e) {
+      return "";
+    }
+  };
+
   return (
     <span 
       className="relative inline-block" 
@@ -62,13 +126,10 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
             transition={{ duration: 0.15 }}
             className={`absolute top-full pt-2 z-50 w-max ${positionClasses}`}
           >
-            {/* Outer White wrapper */}
             <div className="bg-white/95 backdrop-blur-md border border-black/10 rounded-2xl p-1.5 shadow-xl font-sans">
               
-              {/* Inner container */}
               <div className="bg-[#F6F5F3] rounded-xl flex flex-col">
                 
-                {/* Row 1: Content Columns */}
                 <div className="flex flex-col sm:flex-row px-4 sm:px-5 py-4 sm:py-4 items-start sm:items-center">
                   
                   {/* Col 1: Latest Meeting */}
@@ -78,80 +139,118 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
                       alt="F1 Logo" 
                       className="h-5 sm:h-6 object-contain self-start" 
                     />
+                    {!loading && !error && data && data.meeting.circuit_image && (
+                      <img 
+                        src={data.meeting.circuit_image} 
+                        alt="Circuit Layout" 
+                        className="h-16 w-auto object-contain mix-blend-multiply opacity-80 self-start my-1" 
+                      />
+                    )}
                     <div className="flex flex-col gap-0.5 mt-1">
-                      <span className="text-sm font-semibold text-black tracking-tight">Saudi Arabia</span>
-                      <span className="text-[11px] text-black/50 font-medium">Jeddah Corniche</span>
+                      {loading || error || !data ? (
+                        <>
+                          <div className="h-4 w-24 bg-black/5 rounded animate-pulse mb-1"></div>
+                          <div className="h-3 w-32 bg-black/5 rounded animate-pulse"></div>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-1.5">
+                            <span className="text-sm font-semibold text-black tracking-tight">{data.meeting.country_name || data.meeting.location}</span>
+                            {data.meeting.country_flag && (
+                              <img 
+                                src={data.meeting.country_flag} 
+                                alt={data.meeting.country_name || "Flag"} 
+                                className="h-3 w-auto rounded-[2px] object-cover" 
+                              />
+                            )}
+                          </div>
+                          <span className="text-[11px] text-black/50 font-medium">
+                            {data.meeting.circuit_short_name || data.meeting.meeting_name}
+                            {data.meeting.date_start && data.meeting.date_end && (
+                              <> • {formatDateRange(data.meeting.date_start, data.meeting.date_end)}</>
+                            )}
+                          </span>
+                        </>
+                      )}
                     </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="w-full h-[1px] sm:w-[1px] sm:h-[60px] bg-black/10 my-4 sm:my-0 sm:mx-5" />
+                  <div className="w-full h-[1px] sm:w-[1px] sm:h-auto sm:self-stretch bg-black/10 my-4 sm:my-0 sm:mx-5" />
 
                   {/* Col 2: Drivers Championship */}
                   <div className="flex flex-col gap-2.5 min-w-[180px] sm:min-w-[130px] w-full sm:w-auto py-1 sm:py-0">
                     <span className="text-[10px] text-black/40 font-bold uppercase tracking-widest">Drivers</span>
                     <div className="flex flex-col gap-1.5">
-                      {/* Standing 1 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black text-right">1</span>
-                        <div className="w-0.5 h-3.5 bg-[#3671C6] rounded-full mx-2"></div>
-                        <span className="font-bold text-black w-8">VER</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">+0.000</span>
-                      </div>
-                      {/* Standing 2 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black/60 text-right">2</span>
-                        <div className="w-0.5 h-3.5 bg-[#E8002D] rounded-full mx-2"></div>
-                        <span className="font-bold text-black w-8">LEC</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">+12.4</span>
-                      </div>
-                      {/* Standing 3 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black/60 text-right">3</span>
-                        <div className="w-0.5 h-3.5 bg-[#FF8000] rounded-full mx-2"></div>
-                        <span className="font-bold text-black w-8">NOR</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">+14.2</span>
-                      </div>
+                      {loading || error || !data ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="flex items-center text-xs">
+                            <span className="w-3 font-semibold text-black/60 text-right">{i + 1}</span>
+                            <div className="w-0.5 h-3.5 bg-black/10 rounded-full mx-2"></div>
+                            <div className="h-3 w-16 bg-black/5 rounded animate-pulse"></div>
+                            <div className="h-3 w-10 bg-black/5 rounded animate-pulse ml-auto"></div>
+                          </div>
+                        ))
+                      ) : (
+                        data.drivers.slice(0, 5).map((driver, i) => (
+                          <div key={driver.driver_number} className="flex items-center text-xs">
+                            <span className={`w-3 font-semibold text-right ${i === 0 ? 'text-black' : 'text-black/60'}`}>
+                              {driver.position_current}
+                            </span>
+                            <div 
+                              className="w-0.5 h-3.5 rounded-full mx-2" 
+                              style={{ backgroundColor: driver.team_colour ? `#${driver.team_colour}` : '#999' }}
+                            ></div>
+                            <span className="font-bold text-black min-w-[60px] truncate pr-2">{getDriverName(driver.full_name)}</span>
+                            <span className="text-[10px] text-black/50 ml-auto font-medium">{driver.points_current} PTS</span>
+                          </div>
+                        ))
+                      )}
                     </div>
                   </div>
 
-                  {/* Divider */}
-                  <div className="w-full h-[1px] sm:w-[1px] sm:h-[60px] bg-black/10 my-4 sm:my-0 sm:mx-5" />
+                  <div className="w-full h-[1px] sm:w-[1px] sm:h-auto sm:self-stretch bg-black/10 my-4 sm:my-0 sm:mx-5" />
 
                   {/* Col 3: Teams Championship */}
                   <div className="flex flex-col gap-2.5 min-w-[180px] sm:min-w-[130px] w-full sm:w-auto py-1 sm:py-0">
                     <span className="text-[10px] text-black/40 font-bold uppercase tracking-widest">Teams</span>
                     <div className="flex flex-col gap-1.5">
-                      {/* Standing 1 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black text-right">1</span>
-                        <div className="w-0.5 h-3.5 bg-[#3671C6] rounded-full mx-2"></div>
-                        <span className="font-bold text-black">RBR</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">113 PTS</span>
-                      </div>
-                      {/* Standing 2 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black/60 text-right">2</span>
-                        <div className="w-0.5 h-3.5 bg-[#E8002D] rounded-full mx-2"></div>
-                        <span className="font-bold text-black">FER</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">98 PTS</span>
-                      </div>
-                      {/* Standing 3 */}
-                      <div className="flex items-center text-xs">
-                        <span className="w-3 font-semibold text-black/60 text-right">3</span>
-                        <div className="w-0.5 h-3.5 bg-[#FF8000] rounded-full mx-2"></div>
-                        <span className="font-bold text-black">MCL</span>
-                        <span className="text-[10px] text-black/50 ml-auto font-medium pl-3">84 PTS</span>
-                      </div>
+                      {loading || error || !data ? (
+                        Array.from({ length: 5 }).map((_, i) => (
+                          <div key={i} className="flex items-center text-xs">
+                            <span className="w-3 font-semibold text-black/60 text-right">{i + 1}</span>
+                            <div className="w-0.5 h-3.5 bg-black/10 rounded-full mx-2"></div>
+                            <div className="h-3 w-16 bg-black/5 rounded animate-pulse"></div>
+                            <div className="h-3 w-10 bg-black/5 rounded animate-pulse ml-auto"></div>
+                          </div>
+                        ))
+                      ) : (
+                        data.teams.slice(0, 5).map((team, i) => {
+                          // Try to match team color from top drivers to team (hacky but works since we don't have team_color in /championship_teams)
+                          const driverInTeam = data.drivers.find(d => d.team_name === team.team_name);
+                          const color = driverInTeam?.team_colour ? `#${driverInTeam.team_colour}` : '#999';
+
+                          return (
+                            <div key={team.team_name} className="flex items-center text-xs">
+                              <span className={`w-3 font-semibold text-right ${i === 0 ? 'text-black' : 'text-black/60'}`}>
+                                {team.position_current}
+                              </span>
+                              <div 
+                                className="w-0.5 h-3.5 rounded-full mx-2" 
+                                style={{ backgroundColor: color }}
+                              ></div>
+                              <span className="font-bold text-black min-w-[60px] truncate pr-2">{getTeamName(team.team_name)}</span>
+                              <span className="text-[10px] text-black/50 ml-auto font-medium">{team.points_current} PTS</span>
+                            </div>
+                          );
+                        })
+                      )}
                     </div>
                   </div>
 
                 </div>
 
-                {/* Horizontal Divider */}
                 <div className="h-[1px] bg-black/10 mx-4 sm:mx-8" />
 
-                {/* Row 2: Disclaimer */}
                 <div className="py-3 px-4 text-center text-[10px] text-black/50 font-medium w-full max-w-[200px] sm:max-w-none mx-auto leading-[1.6]">
                   Data sourced from{' '}
                   <a 

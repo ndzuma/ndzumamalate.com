@@ -20,6 +20,7 @@ import (
 
 type API struct {
 	store           Store
+	cache           CacheStore
 	authService     *auth.Service
 	broker          *realtime.Broker
 	webhookDispatch WebhookDispatcher
@@ -83,6 +84,11 @@ type Store interface {
 	DeleteWebhookEndpoint(context.Context, string) error
 }
 
+type CacheStore interface {
+	Get(context.Context, string) ([]byte, error)
+	Set(context.Context, string, []byte, time.Duration) error
+}
+
 type WebhookDispatcher interface {
 	Dispatch(context.Context, models.Event)
 }
@@ -91,9 +97,10 @@ type ContactSender interface {
 	SendContact(context.Context, models.ContactMessage) error
 }
 
-func NewAPI(store Store, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration, allowedOrigins []string, logger *slog.Logger) *API {
+func NewAPI(store Store, cache CacheStore, authService *auth.Service, broker *realtime.Broker, webhookDispatch WebhookDispatcher, resendClient ContactSender, rateLimitMax int, rateLimitWindow time.Duration, allowedOrigins []string, logger *slog.Logger) *API {
 	return &API{
 		store:           store,
+		cache:           cache,
 		authService:     authService,
 		broker:          broker,
 		webhookDispatch: webhookDispatch,
@@ -136,6 +143,7 @@ func (a *API) Register(e *echo.Echo) {
 	public.GET("/cv/active", a.getActiveCV)
 	public.POST("/contact", a.sendContact)
 	public.GET("/events", a.streamEvents)
+	public.GET("/f1", a.getF1Data)
 
 	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", a.login)
