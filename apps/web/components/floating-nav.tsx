@@ -110,7 +110,7 @@ export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavPr
                 className="flex h-11 px-5 items-center justify-center rounded-full bg-white/60 backdrop-blur-xl border border-black/5 text-black text-sm font-medium tracking-tight transition-transform hover:scale-105 shadow-sm"
                 aria-label="Contact"
               >
-                Contact me
+                Get in Contact
               </Link>
             </div>
 

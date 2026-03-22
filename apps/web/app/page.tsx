@@ -5,6 +5,7 @@ import InlineProjectLink from "../components/inline-project-link";
 import InlineSocialLink from "../components/inline-social-link";
 import InlineEmailLink from "../components/inline-email-link";
 import InlineCvLink from "../components/inline-cv-link";
+import InlineF1Widget from "../components/inline-f1-widget";
 import { api } from "../lib/api";
 
 export default async function Home() {
@@ -57,7 +58,7 @@ export default async function Home() {
 
           <div className="space-y-6 text-base sm:text-lg leading-relaxed tracking-tight text-black/80">
             <div>
-              I'm a final-year CS & AI student who builds things. Pulseportfolio is live, <InlineProjectLink /> is in beta, and for my final year project an accessible software for visually impaired professionals. When I'm not coding I'm obsessing over music, learning about geopolitics and rocket engines, and I've recently fallen down an F1 rabbit hole.
+              I'm a final-year CS & AI student who builds things. Pulseportfolio is live, <InlineProjectLink /> is in beta, and for my final year project an accessible software for visually impaired professionals. When I'm not coding I'm obsessing over music, learning about geopolitics and rocket engines, and I've recently fallen down an <InlineF1Widget /> rabbit hole.
             </div>
             <div>
               If you want to connect on an ambitious project, reach out on my <InlineSocialLink profile={profile} /> or shoot me an <InlineEmailLink />.
