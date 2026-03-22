@@ -44,7 +44,7 @@ export default function InlineTechLink() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            className="absolute left-0 top-full pt-2 z-10 w-max"
+            className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
             <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg grid grid-cols-2 gap-1">
               {topics.map((topic, i) => (
