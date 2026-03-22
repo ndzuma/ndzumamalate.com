@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 
-export default function InlineF1Widget() {
+export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "center" | "right" | "auto" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -30,6 +30,17 @@ export default function InlineF1Widget() {
     }, 150);
   };
 
+  let positionClasses = "";
+  if (isMobile && align === "center") {
+    positionClasses = "left-1/2 -translate-x-1/2 origin-top";
+  } else if (align === "left") {
+    positionClasses = "left-0 origin-top-left";
+  } else if (align === "right") {
+    positionClasses = "right-0 origin-top-right";
+  } else {
+    positionClasses = isMobile ? 'right-0 origin-top-right' : 'left-0 origin-top-left';
+  }
+
   return (
     <span 
       className="relative inline-block" 
@@ -49,8 +60,7 @@ export default function InlineF1Widget() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 5, scale: 0.95 }}
             transition={{ duration: 0.15 }}
-            // On mobile we shift it left to keep it on screen, on desktop we drop it straight down
-            className={`absolute top-full pt-2 z-50 w-max ${isMobile ? 'right-0 origin-top-right' : 'left-0 origin-top-left'}`}
+            className={`absolute top-full pt-2 z-50 w-max ${positionClasses}`}
           >
             {/* Outer White wrapper */}
             <div className="bg-white/95 backdrop-blur-md border border-black/10 rounded-2xl p-1.5 shadow-xl font-sans">

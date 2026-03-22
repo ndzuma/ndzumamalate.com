@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import InlineMusicLink from "../../components/inline-music-link";
 import InlineBookLink from "../../components/inline-book-link";
 import InlineTechLink from "../../components/inline-tech-link";
+import InlineF1Widget from "../../components/inline-f1-widget";
 import { api } from "../../lib/api";
 
 export const metadata: Metadata = {
@@ -45,7 +46,7 @@ export default async function StackPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Obsessing over F1 (a recent rabbit hole)</span>
+              <span>Obsessing over <InlineF1Widget align="center" /> (a recent rabbit hole)</span>
             </li>
             {profile?.currently_reading_title && profile?.currently_reading_url && (
               <li className="flex gap-3 text-black/80">

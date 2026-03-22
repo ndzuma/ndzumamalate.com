@@ -6,6 +6,7 @@ import InlineProjectLink from "../../components/inline-project-link";
 import InlineTechLink from "../../components/inline-tech-link";
 import InlineEmailLink from "../../components/inline-email-link";
 import InlineCvLink from "../../components/inline-cv-link";
+import InlineF1Widget from "../../components/inline-f1-widget";
 import FeaturedCard from "../../components/featured-card";
 import { InteractiveFilter } from "./interactive-filter";
 import LogosTicker from "../../components/logos-ticker";
@@ -158,6 +159,7 @@ export function DesignSystemShowcase() {
               <div>Internal linking via <InlineProjectLink title="demo" url="#" label="View Demo" />.</div>
               <div>Discussing <InlineTechLink /> and reaching out via <InlineEmailLink />.</div>
               <div>Downloading the active <InlineCvLink cv={dummyCv} />.</div>
+              <div>Checking the latest <InlineF1Widget align="center" /> standings.</div>
             </div>
           </div>
 
