@@ -195,7 +195,7 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
 
                       {/* Company Logo Top Right (Absolutely positioned to top right of parent) */}
                       {data.provider_logo && (
-                        <div className="absolute right-3 top-3 w-[72px] h-[72px] pl-2 bg-[#F6F5F3] flex items-start justify-end">
+                        <div className="absolute right-3 top-3 w-[72px] h-[72px] pl-2 pt-3 bg-[#F6F5F3] flex items-start justify-end">
                           <img 
                             src={data.provider_logo} 
                             alt="Company Logo" 
