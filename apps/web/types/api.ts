@@ -112,6 +112,18 @@ export interface F1WidgetData {
   drivers: F1Driver[];
 }
 
+export interface SpaceLaunch {
+  name: string;
+  provider: string;
+  provider_logo: string;
+  image: string;
+  pad: string;
+  location: string;
+  net: string;
+  stream_url: string;
+  info_url: string;
+}
+
 export interface Profile {
   id: number;
   open_to_work: boolean;

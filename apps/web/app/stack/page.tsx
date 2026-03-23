@@ -42,7 +42,7 @@ export default async function StackPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Learning about <InlineTechLink />, finance, geopolitics, and rocket engines</span>
+              <span>Learning about <InlineTechLink />, finance, geopolitics, and Rocketry</span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>

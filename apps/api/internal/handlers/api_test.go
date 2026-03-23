@@ -164,6 +164,12 @@ func (m *memoryTokens) AllowLoginAttempt(context.Context, string, int, time.Dura
 	return true, nil
 }
 
+type noopCacheStore struct{}
+
+func (n *noopCacheStore) Get(context.Context, string) ([]byte, error)              { return nil, nil }
+func (n *noopCacheStore) Set(context.Context, string, []byte, time.Duration) error { return nil }
+func (n *noopCacheStore) Delete(context.Context, string) error                     { return nil }
+
 func TestLoginSetsCookies(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
@@ -172,6 +178,7 @@ func TestLoginSetsCookies(t *testing.T) {
 
 	api := NewAPI(
 		&stubStore{},
+		&noopCacheStore{},
 		auth.NewService("issuer", time.Minute, time.Hour, privateKey, &memoryTokens{}, "", false),
 		realtime.NewBroker(),
 		&noopDispatcher{},

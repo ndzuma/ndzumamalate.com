@@ -1,4 +1,4 @@
-import { Project, Blog, Skill, Experience, CV, Profile, Tag, F1WidgetData } from '../types/api';
+import { Project, Blog, Skill, Experience, CV, Profile, Tag, F1WidgetData, SpaceLaunch } from '../types/api';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
@@ -68,6 +68,13 @@ export const api = {
   // F1 Data
   async getF1Data(): Promise<F1WidgetData> {
     return fetchAPI<F1WidgetData>('/f1', {
+      cache: 'no-store'
+    });
+  },
+
+  // Space Data
+  async getSpaceData(): Promise<SpaceLaunch> {
+    return fetchAPI<SpaceLaunch>('/space', {
       cache: 'no-store'
     });
   },

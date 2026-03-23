@@ -2,25 +2,22 @@
 
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { ArrowUpRight } from "@phosphor-icons/react";
+import { ArrowUpRight, Play, Link as LinkIcon } from "@phosphor-icons/react";
+import { api } from "../lib/api";
+import { SpaceLaunch } from "../types/api";
 
-// Dummy data for initial UI build
-// Set a launch date 2 days, 14 hours, 45 mins in the future for dummy countdown
-const dummyLaunchDate = new Date(Date.now() + 1000 * (2 * 86400 + 14 * 3600 + 45 * 60));
-
-const dummyData = {
-  missionName: "Starlink Group 7-16",
-  provider: "SpaceX",
-  targetDate: dummyLaunchDate,
-  rocketImage: "https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=200&auto=format&fit=crop",
-  companyLogo: "https://cdn.simpleicons.org/spacex/black",
-};
+let globalSpaceData: SpaceLaunch | null = null;
+let globalSpacePromise: Promise<SpaceLaunch> | null = null;
 
 export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" | "center" | "right" | "auto" }) {
   const [isOpen, setIsOpen] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [timeLeft, setTimeLeft] = useState("");
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const [data, setData] = useState<SpaceLaunch | null>(globalSpaceData);
+  const [loading, setLoading] = useState(!globalSpaceData);
+  const [error, setError] = useState(false);
 
   useEffect(() => {
     const checkMobile = () => {
@@ -32,9 +29,31 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
   }, []);
 
   useEffect(() => {
+    if (globalSpaceData) return;
+    
+    if (!globalSpacePromise) {
+      globalSpacePromise = api.getSpaceData();
+    }
+    
+    globalSpacePromise.then(res => {
+      globalSpaceData = res;
+      setData(res);
+      setLoading(false);
+    }).catch(err => {
+      console.error("Failed to fetch Space data", err);
+      setError(true);
+      setLoading(false);
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!data) return;
+
+    const targetDate = new Date(data.net);
+
     const updateCountdown = () => {
       const now = new Date();
-      const diff = dummyData.targetDate.getTime() - now.getTime();
+      const diff = targetDate.getTime() - now.getTime();
       
       if (diff <= 0) {
         setTimeLeft("T- 00:00:00:00");
@@ -57,7 +76,7 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
     updateCountdown();
     const interval = setInterval(updateCountdown, 1000);
     return () => clearInterval(interval);
-  }, []);
+  }, [data]);
 
   const handleMouseEnter = () => {
     if (timeoutRef.current) clearTimeout(timeoutRef.current);
@@ -106,38 +125,86 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
             <div className="bg-white/95 backdrop-blur-md border border-black/10 rounded-2xl p-1.5 shadow-xl font-sans w-max max-w-[calc(100vw-2rem)] sm:max-w-none">
               
               {/* Inner container */}
-              <div className="bg-[#F6F5F3] rounded-xl flex flex-col overflow-hidden relative w-[320px] sm:w-[400px]">
+              <div className="bg-[#F6F5F3] rounded-xl flex flex-col overflow-hidden relative w-[340px] sm:w-[460px]">
                 
                 {/* Main Content Row */}
-                <div className="flex flex-row p-3 gap-4 relative">
+                <div className="flex flex-row p-3 gap-4 relative min-h-[120px]">
                   
-                  {/* Col 1: Padded Image */}
-                  <img 
-                    src={dummyData.rocketImage} 
-                    alt="Rocket" 
-                    className="w-24 h-24 object-cover rounded-xl shrink-0" 
-                  />
-                  
-                  {/* Col 2: Details */}
-                  <div className="flex flex-col flex-1 justify-center min-w-0 pr-12">
-                    <span className="text-sm font-semibold text-black tracking-tight truncate leading-tight">
-                      {dummyData.missionName}
-                    </span>
-                    <span className="text-[11px] text-black/70 font-medium mt-1 truncate">
-                      {dummyData.provider}
-                    </span>
-                    <span className="text-[11px] font-mono text-black/60 font-medium mt-1 truncate tracking-wide">
-                      {timeLeft || "Calculating..."}
-                    </span>
-                  </div>
+                  {loading || error || !data ? (
+                    <>
+                      {/* Loading Skeleton */}
+                      <div className="w-24 h-24 bg-black/5 rounded-xl shrink-0 animate-pulse" />
+                      <div className="flex flex-col flex-1 justify-center min-w-0 pr-[72px] gap-2">
+                        <div className="h-4 w-3/4 bg-black/5 rounded animate-pulse" />
+                        <div className="h-3 w-1/2 bg-black/5 rounded animate-pulse" />
+                        <div className="h-2.5 w-2/3 bg-black/5 rounded animate-pulse mt-0.5" />
+                        <div className="flex items-center gap-3 mt-1">
+                          <div className="h-3 w-20 bg-black/5 rounded animate-pulse" />
+                          <div className="h-3 w-12 bg-black/5 rounded animate-pulse" />
+                          <div className="h-3 w-12 bg-black/5 rounded animate-pulse" />
+                        </div>
+                      </div>
+                    </>
+                  ) : (
+                    <>
+                      {/* Col 1: Padded Image */}
+                      <img 
+                        src={data.image || "https://images.unsplash.com/photo-1517976487492-5750f3195933?q=80&w=200&auto=format&fit=crop"} 
+                        alt="Rocket" 
+                        className="w-24 h-24 object-cover rounded-xl shrink-0" 
+                      />
+                      
+                      {/* Col 2: Details */}
+                      <div className="flex flex-col flex-1 justify-center min-w-0 pr-[72px]">
+                        <span className="text-sm font-semibold text-black tracking-tight leading-tight">
+                          {data.name}
+                        </span>
+                        <span className="text-[11px] text-black/70 font-medium mt-1 truncate">
+                          {data.provider}
+                        </span>
+                        <span className="text-[10px] text-black/50 truncate mt-0.5">
+                          {data.pad}, {data.location}
+                        </span>
+                        
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-[11px] font-mono text-black/60 font-medium truncate tracking-wide">
+                            {timeLeft || "Calculating..."}
+                          </span>
+                          <div className="flex items-center gap-2.5">
+                            {data.stream_url && (
+                              <a 
+                                href={data.stream_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="flex items-center gap-1 text-[10px] font-semibold text-blue-600 hover:text-blue-800 transition-colors"
+                              >
+                                <Play weight="fill" className="w-2.5 h-2.5" /> Watch
+                              </a>
+                            )}
+                            <a 
+                              href={data.info_url} 
+                              target="_blank" 
+                              rel="noopener noreferrer" 
+                              className="flex items-center gap-1 text-[10px] font-semibold text-black/40 hover:text-black/70 transition-colors"
+                            >
+                              <LinkIcon weight="bold" className="w-2.5 h-2.5" /> Company
+                            </a>
+                          </div>
+                        </div>
+                      </div>
 
-                  {/* Company Logo Top Right (Absolutely positioned to top right of parent) */}
-                  <img 
-                    src={dummyData.companyLogo} 
-                    alt="Company Logo" 
-                    className="absolute right-3 top-3 w-8 h-8 object-contain opacity-20 mix-blend-multiply" 
-                  />
-
+                      {/* Company Logo Top Right (Absolutely positioned to top right of parent) */}
+                      {data.provider_logo && (
+                        <div className="absolute right-3 top-3 w-[72px] h-[72px] pl-2 bg-[#F6F5F3] flex items-start justify-end">
+                          <img 
+                            src={data.provider_logo} 
+                            alt="Company Logo" 
+                            className="w-full h-full object-contain object-top" 
+                          />
+                        </div>
+                      )}
+                    </>
+                  )}
                 </div>
 
                 <div className="h-[1px] bg-black/10 mx-4 sm:mx-5" />

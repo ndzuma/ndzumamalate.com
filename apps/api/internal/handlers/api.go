@@ -144,6 +144,7 @@ func (a *API) Register(e *echo.Echo) {
 	public.POST("/contact", a.sendContact)
 	public.GET("/events", a.streamEvents)
 	public.GET("/f1", a.getF1Data)
+	public.GET("/space", a.getSpaceData)
 
 	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", a.login)
