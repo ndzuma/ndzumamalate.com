@@ -7,6 +7,7 @@ import InlineTechLink from "../../components/inline-tech-link";
 import InlineEmailLink from "../../components/inline-email-link";
 import InlineCvLink from "../../components/inline-cv-link";
 import InlineF1Widget from "../../components/inline-f1-widget";
+import InlineSpaceWidget from "../../components/inline-space-widget";
 import FeaturedCard from "../../components/featured-card";
 import { InteractiveFilter } from "./interactive-filter";
 import LogosTicker from "../../components/logos-ticker";
@@ -160,6 +161,7 @@ export function DesignSystemShowcase() {
               <div>Discussing <InlineTechLink /> and reaching out via <InlineEmailLink />.</div>
               <div>Downloading the active <InlineCvLink cv={dummyCv} />.</div>
               <div>Checking the latest <InlineF1Widget align="center" /> standings.</div>
+              <div>Watching the next <InlineSpaceWidget align="center" /> into orbit.</div>
             </div>
           </div>
 
