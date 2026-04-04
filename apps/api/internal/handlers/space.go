@@ -14,7 +14,7 @@ import (
 
 func (a *API) getSpaceData(c echo.Context) error {
 	ctx := c.Request().Context()
-	cacheKey := "space_widget_data"
+	cacheKey := "space_widget_data_v2"
 
 	// Try cache
 	if cachedData, err := a.cache.Get(ctx, cacheKey); err == nil && len(cachedData) > 0 {
@@ -73,7 +73,8 @@ func fetchSpaceData(ctx context.Context) (*models.SpaceLaunch, error) {
 				LaunchServiceProvider struct {
 					Name    string `json:"name"`
 					LogoURL string `json:"logo_url"`
-				} `json:"launch_service_provider"`
+					InfoURL string `json:"info_url"`
+				} `json:"launch_service_provider" `
 				Rocket struct {
 					Configuration struct {
 						ImageURL string `json:"image_url"`
@@ -115,7 +116,7 @@ func fetchSpaceData(ctx context.Context) (*models.SpaceLaunch, error) {
 					Location:     res.Pad.Location.Name,
 					Net:          res.Net,
 					StreamURL:    streamURL,
-					InfoURL:      res.URL,
+					InfoURL:      res.LaunchServiceProvider.InfoURL,
 				})
 			}
 		}

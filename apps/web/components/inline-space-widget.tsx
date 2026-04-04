@@ -181,14 +181,16 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
                                 <Play weight="fill" className="w-2.5 h-2.5" /> Watch
                               </a>
                             )}
-                            <a 
-                              href={data.info_url} 
-                              target="_blank" 
-                              rel="noopener noreferrer" 
-                              className="flex items-center gap-1 text-[10px] font-semibold text-black/40 hover:text-black/70 transition-colors"
-                            >
-                              <LinkIcon weight="bold" className="w-2.5 h-2.5" /> Company
-                            </a>
+                            {data.info_url && (
+                              <a 
+                                href={data.info_url} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className="flex items-center gap-1 text-[10px] font-semibold text-black/40 hover:text-black/70 transition-colors"
+                              >
+                                <LinkIcon weight="bold" className="w-2.5 h-2.5" /> Company
+                              </a>
+                            )}
                           </div>
                         </div>
                       </div>
