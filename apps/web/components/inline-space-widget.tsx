@@ -107,9 +107,9 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-blue-900 bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
       >
-        launch
+        rocketry
       </span>
 
       <AnimatePresence>

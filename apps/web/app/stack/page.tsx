@@ -3,6 +3,7 @@ import InlineMusicLink from "../../components/inline-music-link";
 import InlineBookLink from "../../components/inline-book-link";
 import InlineTechLink from "../../components/inline-tech-link";
 import InlineF1Widget from "../../components/inline-f1-widget";
+import InlineSpaceWidget from "../../components/inline-space-widget";
 import { api } from "../../lib/api";
 
 export const metadata: Metadata = {
@@ -38,11 +39,7 @@ export default async function StackPage() {
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>
-              <span>Music — specifically amapiano, afro house, and old school R&B</span>
-            </li>
-            <li className="flex gap-3">
-              <span className="text-black/30 mt-1">↳</span>
-              <span>Learning about <InlineTechLink />, finance, geopolitics, and Rocketry</span>
+              <span>Learning about <InlineTechLink />, finance, geopolitics, and <InlineSpaceWidget /></span>
             </li>
             <li className="flex gap-3">
               <span className="text-black/30 mt-1">↳</span>

@@ -161,7 +161,7 @@ export function DesignSystemShowcase() {
               <div>Discussing <InlineTechLink /> and reaching out via <InlineEmailLink />.</div>
               <div>Downloading the active <InlineCvLink cv={dummyCv} />.</div>
               <div>Checking the latest <InlineF1Widget align="center" /> standings.</div>
-              <div>Watching the next <InlineSpaceWidget align="center" /> into orbit.</div>
+              <div>Keeping up with the latest in <InlineSpaceWidget align="center" />.</div>
             </div>
           </div>
 
