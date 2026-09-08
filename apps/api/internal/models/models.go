@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"encoding/json"
+	"time"
+)
 
 type AdminUser struct {
 	ID           string     `json:"id"`
@@ -206,8 +209,21 @@ type Event struct {
 	Resource   string      `json:"resource"`
 	Action     string      `json:"action"`
 	ResourceID string      `json:"resource_id,omitempty"`
+	Version    int64       `json:"version,omitempty"`
 	OccurredAt time.Time   `json:"occurred_at"`
 	Payload    interface{} `json:"payload,omitempty"`
+}
+
+// PageContent is a free-form JSON document that drives an editable page
+// (homepage, stack page, section intros) on the public site.
+type PageContent struct {
+	Key       string          `json:"key"`
+	Data      json.RawMessage `json:"data"`
+	UpdatedAt time.Time       `json:"updated_at"`
+}
+
+type PageContentInput struct {
+	Data json.RawMessage `json:"data"`
 }
 
 type LoginEvent struct {

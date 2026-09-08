@@ -110,3 +110,7 @@ func (s *RedisStore) Set(ctx context.Context, key string, value []byte, expirati
 func (s *RedisStore) Get(ctx context.Context, key string) ([]byte, error) {
 	return s.client.Get(ctx, key).Bytes()
 }
+
+func (s *RedisStore) Incr(ctx context.Context, key string) (int64, error) {
+	return s.client.Incr(ctx, key).Result()
+}

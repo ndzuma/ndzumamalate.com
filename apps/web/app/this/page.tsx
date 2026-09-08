@@ -64,7 +64,7 @@ export default function ThisPage() {
               <li className="flex gap-3">
                 <span className="text-black/30 mt-1">↳</span>
                 <div>
-                  <strong>Next.js App Router:</strong> The public-facing site. It consumes the Go REST API, handles caching and ISR, and integrates with <strong>PostHog</strong> for product analytics and <strong>Resend</strong> for communications.
+                  <strong>Next.js App Router:</strong> The public-facing site. It consumes the Go REST API, keeps an in-process content cache that the sync layer refreshes the instant something changes in the CMS, and integrates with <strong>PostHog</strong> for product analytics and <strong>Resend</strong> for communications.
                 </div>
               </li>
             </ul>
@@ -108,10 +108,12 @@ export default function ThisPage() {
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /cv/active</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-blue-100 text-blue-700 font-bold">POST</span> /contact</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-purple-100 text-purple-700 font-bold">SSE</span> /events (realtime)</div>
+                    <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /pages [/:key]</div>
+                    <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /version</div>
                     <div className="flex items-center gap-2"><span className="px-1.5 py-0.5 rounded bg-green-100 text-green-700 font-bold">GET</span> /f1 (proxy)</div>
                   </div>
                   <div className="pt-3 border-t border-black/5 mt-4 text-[11px] text-black/40">
-                    No auth required. Used by Next.js for ISR & static generation. Open to the public.
+                    No auth required. Used by the Next.js server (cached in-process, refreshed live). Open to the public.
                   </div>
                 </div>
 
@@ -235,7 +237,7 @@ export default function ThisPage() {
             <div className="pl-12 border-l border-black/10 ml-2 text-black/50">└── /[slug]</div>
             <div className="pl-6 border-l border-black/10 ml-2">├── /experience</div>
             <div className="pl-6 border-l border-black/10 ml-2">├── /stack</div>
-            <div className="pl-6 border-l border-black/10 ml-2">├── /blog</div>
+            <div className="pl-6 border-l border-black/10 ml-2">├── /writings</div>
             <div className="pl-12 border-l border-black/10 ml-2 text-black/50">└── /[slug]</div>
             <div className="pl-6 border-l border-black/10 ml-2">├── /contact</div>
             <div className="pl-6 border-l border-transparent ml-2">└── /this (you are here)</div>

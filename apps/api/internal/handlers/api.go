@@ -82,11 +82,15 @@ type Store interface {
 	CreateWebhookEndpoint(context.Context, models.WebhookEndpointInput) (*models.WebhookEndpoint, error)
 	UpdateWebhookEndpoint(context.Context, string, models.WebhookEndpointInput) (*models.WebhookEndpoint, error)
 	DeleteWebhookEndpoint(context.Context, string) error
+	ListPageContent(context.Context) ([]models.PageContent, error)
+	GetPageContent(context.Context, string) (*models.PageContent, error)
+	UpsertPageContent(context.Context, string, models.PageContentInput) (*models.PageContent, error)
 }
 
 type CacheStore interface {
 	Get(context.Context, string) ([]byte, error)
 	Set(context.Context, string, []byte, time.Duration) error
+	Incr(context.Context, string) (int64, error)
 }
 
 type WebhookDispatcher interface {
@@ -145,6 +149,9 @@ func (a *API) Register(e *echo.Echo) {
 	public.GET("/events", a.streamEvents)
 	public.GET("/f1", a.getF1Data)
 	public.GET("/space", a.getSpaceData)
+	public.GET("/pages", a.listPageContent)
+	public.GET("/pages/:key", a.getPageContent)
+	public.GET("/version", a.getVersion)
 
 	authGroup := v1.Group("/auth")
 	authGroup.POST("/login", a.login)
@@ -190,6 +197,10 @@ func (a *API) Register(e *echo.Echo) {
 	admin.GET("/profile", a.getProfile)
 	admin.PUT("/profile", a.upsertProfile)
 
+	admin.GET("/pages", a.listPageContent)
+	admin.GET("/pages/:key", a.getPageContent)
+	admin.PUT("/pages/:key", a.upsertPageContent)
+
 	admin.POST("/upload", a.uploadFile)
 
 	admin.GET("/webhooks", a.listWebhookEndpoints)
@@ -208,7 +219,7 @@ func (a *API) health(c echo.Context) error {
 }
 
 func (a *API) streamEvents(c echo.Context) error {
-	allowed, err := a.authService.AllowAction(c.Request().Context(), "sse", c.RealIP(), 20, 10*time.Minute)
+	allowed, err := a.authService.AllowAction(c.Request().Context(), "sse", c.RealIP(), 60, 10*time.Minute)
 	if err != nil {
 		return echo.NewHTTPError(http.StatusInternalServerError, err.Error())
 	}
@@ -217,13 +228,20 @@ func (a *API) streamEvents(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusTooManyRequests, "too many sse connections")
 	}
 
-	ctx, cancel := context.WithTimeout(c.Request().Context(), 10*time.Minute)
+	ctx, cancel := context.WithTimeout(c.Request().Context(), 30*time.Minute)
 	defer cancel()
 
 	res := c.Response()
 	res.Header().Set(echo.HeaderContentType, "text/event-stream")
 	res.Header().Set(echo.HeaderCacheControl, "no-cache")
 	res.Header().Set(echo.HeaderConnection, "keep-alive")
+	res.Header().Set("X-Accel-Buffering", "no")
+
+	// The server enforces a global WriteTimeout which would otherwise cut a
+	// long-lived stream after a few seconds; lift it for this response only.
+	if err := http.NewResponseController(res).SetWriteDeadline(time.Time{}); err != nil {
+		a.logger.Warn("sse could not clear write deadline", slog.String("error", err.Error()))
+	}
 
 	_, events, unsubscribe := a.broker.Subscribe()
 	defer unsubscribe()
@@ -233,7 +251,8 @@ func (a *API) streamEvents(c echo.Context) error {
 		return echo.NewHTTPError(http.StatusInternalServerError, "streaming unsupported")
 	}
 
-	_ = writeSSE(res, models.Event{Type: "stream.connected", OccurredAt: time.Now().UTC()})
+	res.WriteHeader(http.StatusOK)
+	_ = writeSSE(res, models.Event{Type: "stream.connected", Version: a.currentVersion(c), OccurredAt: time.Now().UTC()})
 	flush.Flush()
 
 	ticker := time.NewTicker(25 * time.Second)
@@ -917,6 +936,7 @@ func (a *API) publishEvent(c echo.Context, eventType, resource, action, resource
 		Resource:   resource,
 		Action:     action,
 		ResourceID: resourceID,
+		Version:    a.bumpVersion(c),
 		OccurredAt: time.Now().UTC(),
 		Payload:    payload,
 	}

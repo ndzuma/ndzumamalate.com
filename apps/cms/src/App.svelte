@@ -3,6 +3,7 @@
   import { checkAuth, isAuthenticated, isLoading } from './lib/auth.svelte.js';
   import Login from './pages/Login.svelte';
   import Dashboard from './pages/Dashboard.svelte';
+  import Collection from './pages/Collection.svelte';
   import Editor from './pages/Editor.svelte';
   import SkillForm from './pages/SkillForm.svelte';
   import ExperienceForm from './pages/ExperienceForm.svelte';
@@ -10,9 +11,15 @@
   import ProfileForm from './pages/ProfileForm.svelte';
   import ChangePassword from './pages/ChangePassword.svelte';
   import WebhookForm from './pages/WebhookForm.svelte';
+  import PagesEditor from './pages/PagesEditor.svelte';
   import Toast from './components/Toast.svelte';
 
   checkAuth();
+
+  // "writing" is the public name; the API still calls the resource "blog".
+  function editorType(type) {
+    return type === 'writing' || type === 'blog' ? 'blog' : 'project';
+  }
 </script>
 
 <Toast />
@@ -25,12 +32,15 @@
   <Login />
 {:else if getPath() === '/' || getPath() === '/dashboard'}
   <Dashboard />
+{:else if matchRoute('/collection/:type')}
+  {@const params = matchRoute('/collection/:type')}
+  <Collection type={params.type} />
 {:else if matchRoute('/editor/:type/:id')}
   {@const params = matchRoute('/editor/:type/:id')}
-  <Editor type={params.type} id={params.id} />
+  <Editor type={editorType(params.type)} id={params.id} />
 {:else if matchRoute('/editor/:type')}
   {@const params = matchRoute('/editor/:type')}
-  <Editor type={params.type} id={null} />
+  <Editor type={editorType(params.type)} id={null} />
 {:else if getPath() === '/skills/new'}
   <SkillForm id={null} />
 {:else if matchRoute('/skills/:id')}
@@ -46,6 +56,9 @@
 {:else if matchRoute('/cv/:id')}
   {@const params = matchRoute('/cv/:id')}
   <CvForm id={params.id} />
+{:else if matchRoute('/pages/:key')}
+  {@const params = matchRoute('/pages/:key')}
+  <PagesEditor page={params.key} />
 {:else if getPath() === '/profile'}
   <ProfileForm />
 {:else if getPath() === '/change-password'}
@@ -55,24 +68,3 @@
 {:else}
   <Dashboard />
 {/if}
-
-<style>
-  .loader {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    height: 100vh;
-    width: 100%;
-  }
-  .loader-dot {
-    width: 8px;
-    height: 8px;
-    background: #111;
-    border-radius: 50%;
-    animation: pulse 1s ease-in-out infinite;
-  }
-  @keyframes pulse {
-    0%, 100% { opacity: 0.2; transform: scale(0.8); }
-    50% { opacity: 1; transform: scale(1); }
-  }
-</style>
