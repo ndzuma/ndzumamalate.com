@@ -109,6 +109,12 @@ export const profile = {
   update: (data) => request('PUT', '/admin/profile', data),
 };
 
+export const pages = {
+  list: () => request('GET', '/admin/pages'),
+  get: (key) => request('GET', `/admin/pages/${key}`),
+  update: (key, data) => request('PUT', `/admin/pages/${key}`, { data }),
+};
+
 export const webhooks = {
   list: () => request('GET', '/admin/webhooks'),
   create: (data) => request('POST', '/admin/webhooks', data),

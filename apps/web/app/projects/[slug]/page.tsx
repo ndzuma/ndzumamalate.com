@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft, GithubLogo, Globe } from "@phosphor-icons/react/dist/ssr";
-import { api } from "../../../lib/api";
+import { api, ApiError } from "../../../lib/api";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import type { Metadata } from "next";
@@ -25,64 +25,52 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 function formatDate(dateStr?: string) {
-  if (!dateStr) return "Present";
-  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' });
-}
-
-export async function generateStaticParams() {
-  try {
-    const projects = await api.getProjects();
-    return projects.map((project) => ({
-      slug: project.slug || project.id,
-    }));
-  } catch (e) {
-    return [];
-  }
+  if (!dateStr) return "present";
+  return new Date(dateStr).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }).toLowerCase();
 }
 
 export default async function ProjectPage({ params }: Props) {
   const { slug } = await params;
   let project;
-  
+
   try {
     project = await api.getProjectBySlug(slug);
-  } catch {
-    notFound();
+  } catch (error) {
+    if (error instanceof ApiError && error.status === 404) notFound();
+    throw error;
   }
 
-  // Handle resolving tag names if needed, but the API returns tag IDs if not expanded. 
-  // Wait, does the API return tag strings or objects? Let's assume strings for now, or just render them.
-  // Actually, we should fetch tags to map them if project.tags contains IDs.
-  let tagMap: Record<string, string> = {};
+  // The API returns tag slugs; map them to display names.
+  const tagMap: Record<string, string> = {};
   try {
     const allTags = await api.getTags();
     allTags.forEach(t => {
       tagMap[t.id] = t.name;
       tagMap[t.slug] = t.name;
     });
-  } catch (e) {}
+  } catch {}
 
   const displayTags = project.tags || [];
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-4xl mx-auto pb-24 mt-6 sm:mt-10">
-      
+
       {/* Top Controls (Above Image) */}
       <div className="flex justify-between items-center mb-6">
-        <Link 
-          href="/projects" 
+        <Link
+          href="/projects"
           className="flex items-center justify-center h-10 w-10 bg-black/5 hover:bg-black/10 text-black rounded-full transition-all"
           aria-label="Back to projects"
         >
           <ArrowLeft weight="bold" />
         </Link>
-        
+
         {(project.live_url || project.repo_url) && (
           <div className="flex gap-2">
             {project.repo_url && (
-              <a 
-                href={project.repo_url} 
-                target="_blank" 
+              <a
+                href={project.repo_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 pr-4 hover:bg-black/10 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300"
                 title="Go to repo"
@@ -94,9 +82,9 @@ export default async function ProjectPage({ params }: Props) {
               </a>
             )}
             {project.live_url && (
-              <a 
-                href={project.live_url} 
-                target="_blank" 
+              <a
+                href={project.live_url}
+                target="_blank"
                 rel="noopener noreferrer"
                 className="group/btn flex items-center bg-black/5 text-black rounded-full p-2 pr-4 hover:bg-black/10 hover:scale-[1.05] hover:rotate-2 transition-all duration-300"
                 title="Try it out"
@@ -114,19 +102,19 @@ export default async function ProjectPage({ params }: Props) {
       {/* Cover Image & Header Layout */}
       <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden mb-8 bg-black/5">
         {project.image_url && (
-          <Image 
-            src={project.image_url} 
-            alt={project.title} 
-            fill 
+          <Image
+            src={project.image_url}
+            alt={project.title}
+            fill
             sizes="(max-width: 896px) 100vw, 896px"
             className="object-cover"
             priority
           />
         )}
-        
+
         {/* Soft diffused gradient from bottom left */}
         <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/10 to-transparent pointer-events-none" />
-        
+
         {/* Title bottom left, pure text */}
         <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 z-10 max-w-[85%]">
           <h1 className="text-xl md:text-3xl font-semibold tracking-tight text-white drop-shadow-md">
@@ -136,23 +124,21 @@ export default async function ProjectPage({ params }: Props) {
       </div>
 
       {/* Meta: Tags and Date (Plain text on one line) */}
-      <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-4 mb-10">
         <div className="text-sm font-medium text-black/60">
           {displayTags.map((t) => tagMap[t] || t).join(" · ") || "No tags"}
         </div>
-        
+
         {(project.start_date || project.end_date) && (
-          <div className="text-sm font-mono text-black/50">
+          <div className="text-sm font-medium text-black/50 lowercase">
             {formatDate(project.start_date)} — {formatDate(project.end_date)}
           </div>
         )}
       </div>
 
-      <hr className="border-black/10 mb-6" />
-
       {/* Summary */}
       {project.summary && (
-        <div className="mb-6">
+        <div className="mb-12">
           <span className="block text-xs font-semibold text-black/40 tracking-wider mb-2">
             short description
           </span>
@@ -161,8 +147,6 @@ export default async function ProjectPage({ params }: Props) {
           </p>
         </div>
       )}
-
-      <hr className="border-black/10 mb-8" />
 
       {/* Content */}
       {project.content ? (

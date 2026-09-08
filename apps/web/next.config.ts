@@ -5,6 +5,12 @@ const nextConfig: NextConfig = {
   turbopack: {
     root: path.join(__dirname, "../.."),
   },
+  async redirects() {
+    return [
+      { source: "/blog", destination: "/writings", permanent: true },
+      { source: "/blog/:slug", destination: "/writings/:slug", permanent: true },
+    ];
+  },
   async rewrites() {
     return [
       {

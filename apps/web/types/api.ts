@@ -138,3 +138,9 @@ export interface Profile {
   website_url?: string;
   updated_at: string;
 }
+
+export interface PageContent {
+  key: string;
+  data: Record<string, unknown>;
+  updated_at: string;
+}

@@ -1,10 +1,9 @@
 <script>
-  import TopBar from '../components/TopBar.svelte';
-  import BottomNav from '../components/BottomNav.svelte';
+  import Shell from '../components/Shell.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { changePassword } from '../lib/auth.svelte.js';
   import { toast } from '../lib/toast.svelte.js';
-  import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
+  import { LockKey } from 'phosphor-svelte';
 
   let currentPassword = $state('');
   let newPassword = $state('');
@@ -37,130 +36,40 @@
   }
 </script>
 
-<div class="form-page">
-  <TopBar pageName="Change Password" />
-
-  <main class="form-content">
-    <button class="back-link" onclick={() => navigate('/dashboard')}>
-      <ArrowLeft size={14} />
-      <span>Back to dashboard</span>
-    </button>
-
-    <form onsubmit={(e) => { e.preventDefault(); save(); }}>
+<Shell title="Change password" crumbs={[{ label: 'Settings' }]}>
+  <form class="form" onsubmit={(e) => { e.preventDefault(); save(); }}>
+    <div class="card card-pad stack">
       <div class="field">
-        <label class="mono">CURRENT PASSWORD</label>
-        <input type="password" bind:value={currentPassword} required />
+        <label for="cur">Current password</label>
+        <input id="cur" type="password" bind:value={currentPassword} autocomplete="current-password" required />
       </div>
-
       <div class="field">
-        <label class="mono">NEW PASSWORD</label>
-        <input type="password" bind:value={newPassword} required />
+        <label for="new">New password</label>
+        <input id="new" type="password" bind:value={newPassword} autocomplete="new-password" required />
+        <span class="hint">At least 8 characters.</span>
       </div>
-
       <div class="field">
-        <label class="mono">CONFIRM NEW PASSWORD</label>
-        <input type="password" bind:value={confirmPassword} required />
+        <label for="conf">Confirm new password</label>
+        <input id="conf" type="password" bind:value={confirmPassword} autocomplete="new-password" required />
       </div>
 
       {#if error}
-        <div class="error mono">{error}</div>
+        <div class="error-box">{error}</div>
       {/if}
 
-      <button type="submit" class="submit-btn" disabled={saving}>
-        <FloppyDisk size={14} />
-        {saving ? 'Saving...' : 'Change Password'}
-      </button>
-    </form>
-  </main>
-
-  <BottomNav />
-</div>
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" onclick={() => navigate('/dashboard')}>Cancel</button>
+        <button type="submit" class="btn btn-primary" disabled={saving}>
+          <LockKey size={14} />
+          {saving ? 'Updating…' : 'Update password'}
+        </button>
+      </div>
+    </div>
+  </form>
+</Shell>
 
 <style>
-  .form-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-  }
-
-  .form-content {
-    max-width: 520px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 32px 24px 120px;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 28px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .back-link:hover { color: #111; }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .field label {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999;
-    letter-spacing: 0.06em;
-  }
-
-  .field input {
-    padding: 10px 12px;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-
-  .field input:focus {
-    border-color: #111;
-    outline: none;
-  }
-
-  .error {
-    font-size: 12px;
-    color: #dc2626;
-    padding: 8px 12px;
-    background: #fef2f2;
-    border-radius: 6px;
-  }
-
-  .submit-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.12s;
-  }
-
-  .submit-btn:hover { opacity: 0.85; }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form { max-width: 520px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .actions { display: flex; justify-content: flex-end; gap: 8px; }
 </style>

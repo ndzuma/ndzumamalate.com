@@ -5,7 +5,7 @@ import FeaturedCard from "./featured-card";
 import FilterDropdown from "./filter-dropdown";
 import { Blog, Tag } from "../types/api";
 
-type BlogClientProps = {
+type WritingsClientProps = {
   initialBlogs: Blog[];
   tags?: Tag[];
 };
@@ -19,7 +19,7 @@ function formatTagName(tag: string): string {
     .join(" ");
 }
 
-export default function BlogClient({ initialBlogs, tags = [] }: BlogClientProps) {
+export default function WritingsClient({ initialBlogs, tags = [] }: WritingsClientProps) {
   const [selectedTag, setSelectedTag] = useState("all");
 
   const filterableTagSlugs = new Set(tags.filter(t => t.filter).map(t => t.slug));
@@ -58,7 +58,7 @@ export default function BlogClient({ initialBlogs, tags = [] }: BlogClientProps)
           {filteredBlogs.map((blog, index) => (
             <FeaturedCard
               key={blog.id}
-              href={`/blog/${blog.slug || blog.id}`}
+              href={`/writings/${blog.slug || blog.id}`}
               title={blog.title}
               date={
                 blog.published_at
