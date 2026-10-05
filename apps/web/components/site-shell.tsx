@@ -9,16 +9,16 @@ import Footer from "./footer";
 import { Profile } from "../types/api";
 
 type SiteShellProps = PropsWithChildren<{
-  hasBlogs?: boolean;
+  hasWritings?: boolean;
   profile?: Profile | null;
 }>;
 
-export default function SiteShell({ children, hasBlogs = true, profile = null }: SiteShellProps) {
+export default function SiteShell({ children, hasWritings = true, profile = null }: SiteShellProps) {
   const pathname = usePathname() ?? "/";
 
   return (
     <>
-      <FloatingNav pathname={pathname} hasBlogs={hasBlogs} />
+      <FloatingNav pathname={pathname} hasWritings={hasWritings} />
       <AnimatePresence mode="wait">
         <motion.div
           key={pathname}

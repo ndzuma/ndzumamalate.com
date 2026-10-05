@@ -1,10 +1,10 @@
 <script>
-  import TopBar from '../components/TopBar.svelte';
-  import BottomNav from '../components/BottomNav.svelte';
+  import Shell from '../components/Shell.svelte';
+  import Switch from '../components/Switch.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { profile } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
-  import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
+  import { FloppyDisk } from 'phosphor-svelte';
 
   let openToWork = $state(false);
   let spotifyUrl = $state('');
@@ -57,7 +57,6 @@
         website_url: websiteUrl,
       });
       toast('Profile updated');
-      navigate('/dashboard');
     } catch (e) {
       error = e.message || 'Failed to save';
       toast(error, 'error');
@@ -66,211 +65,97 @@
   }
 </script>
 
-<div class="form-page">
-  <TopBar pageName="Profile" />
+<Shell title="Profile" crumbs={[{ label: 'Settings' }]}>
+  {#snippet actions()}
+    <button class="btn btn-secondary" onclick={() => navigate('/dashboard')}>Back</button>
+    <button class="btn btn-primary" onclick={save} disabled={saving}>
+      <FloppyDisk size={14} />
+      {saving ? 'Saving…' : 'Save changes'}
+    </button>
+  {/snippet}
 
   {#if loading}
-    <div class="loader-center">Loading...</div>
+    <div class="loader-inline">Loading…</div>
   {:else}
-    <main class="form-content">
-      <button class="back-link" onclick={() => navigate('/dashboard')}>
-        <ArrowLeft size={14} />
-        <span>Back to dashboard</span>
-      </button>
+    <form class="form" onsubmit={(e) => { e.preventDefault(); save(); }}>
+      <div class="card card-pad">
+        <Switch bind:checked={openToWork} label="Open to work" hint="Shows a green badge next to your name on the homepage." />
+      </div>
 
-      <form onsubmit={(e) => { e.preventDefault(); save(); }}>
-        <div class="field">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={openToWork} />
-            <span>Open to work</span>
-          </label>
+      <div class="card card-pad stack">
+        <div>
+          <div class="card-title">Social links</div>
+          <div class="card-subtitle">Used by the footer and the {'{{social}}'} widget.</div>
         </div>
-
-        <div class="section-label mono">SOCIAL LINKS</div>
-
-        <div class="field">
-          <label class="mono">GITHUB URL</label>
-          <input bind:value={githubUrl} placeholder="https://github.com/..." />
+        <div class="field-row">
+          <div class="field">
+            <label for="gh">GitHub</label>
+            <input id="gh" bind:value={githubUrl} placeholder="https://github.com/…" />
+          </div>
+          <div class="field">
+            <label for="li">LinkedIn</label>
+            <input id="li" bind:value={linkedinUrl} placeholder="https://linkedin.com/in/…" />
+          </div>
         </div>
-
-        <div class="field">
-          <label class="mono">TWITTER URL</label>
-          <input bind:value={twitterUrl} placeholder="https://twitter.com/..." />
+        <div class="field-row">
+          <div class="field">
+            <label for="tw">X / Twitter</label>
+            <input id="tw" bind:value={twitterUrl} placeholder="https://x.com/…" />
+          </div>
+          <div class="field">
+            <label for="th">Threads</label>
+            <input id="th" bind:value={threadsUrl} placeholder="https://threads.net/…" />
+          </div>
         </div>
-
         <div class="field">
-          <label class="mono">THREADS URL</label>
-          <input bind:value={threadsUrl} placeholder="https://threads.net/..." />
+          <label for="web">Website</label>
+          <input id="web" bind:value={websiteUrl} placeholder="https://…" />
         </div>
+      </div>
 
-        <div class="field">
-          <label class="mono">LINKEDIN URL</label>
-          <input bind:value={linkedinUrl} placeholder="https://linkedin.com/in/..." />
+      <div class="card card-pad stack">
+        <div>
+          <div class="card-title">Listening to</div>
+          <div class="card-subtitle">Powers the {'{{music}}'} widget on the stack page.</div>
         </div>
-
-        <div class="field">
-          <label class="mono">WEBSITE URL</label>
-          <input bind:value={websiteUrl} placeholder="https://..." />
+        <div class="field-row">
+          <div class="field">
+            <label for="sp">Spotify</label>
+            <input id="sp" bind:value={spotifyUrl} placeholder="https://open.spotify.com/…" />
+          </div>
+          <div class="field">
+            <label for="am">Apple Music</label>
+            <input id="am" bind:value={appleMusicUrl} placeholder="https://music.apple.com/…" />
+          </div>
         </div>
+      </div>
 
-        <div class="section-label mono">MUSIC</div>
-
-        <div class="field">
-          <label class="mono">SPOTIFY URL</label>
-          <input bind:value={spotifyUrl} placeholder="https://open.spotify.com/..." />
+      <div class="card card-pad stack">
+        <div>
+          <div class="card-title">Currently reading</div>
+          <div class="card-subtitle">Powers the {'{{book}}'} widget. Leave empty to hide the line.</div>
         </div>
-
-        <div class="field">
-          <label class="mono">APPLE MUSIC URL</label>
-          <input bind:value={appleMusicUrl} placeholder="https://music.apple.com/..." />
+        <div class="field-row">
+          <div class="field">
+            <label for="bt">Book title</label>
+            <input id="bt" bind:value={currentlyReadingTitle} placeholder="Book title" />
+          </div>
+          <div class="field">
+            <label for="bu">Book URL</label>
+            <input id="bu" bind:value={currentlyReadingUrl} placeholder="https://…" />
+          </div>
         </div>
+      </div>
 
-        <div class="section-label mono">CURRENTLY READING</div>
-
-        <div class="field">
-          <label class="mono">BOOK TITLE</label>
-          <input bind:value={currentlyReadingTitle} placeholder="Book title" />
-        </div>
-
-        <div class="field">
-          <label class="mono">BOOK URL</label>
-          <input bind:value={currentlyReadingUrl} placeholder="https://..." />
-        </div>
-
-        {#if error}
-          <div class="error mono">{error}</div>
-        {/if}
-
-        <button type="submit" class="submit-btn" disabled={saving}>
-          <FloppyDisk size={14} />
-          {saving ? 'Saving...' : 'Update Profile'}
-        </button>
-      </form>
-    </main>
+      {#if error}
+        <div class="error-box">{error}</div>
+      {/if}
+      <button type="submit" hidden aria-label="Save"></button>
+    </form>
   {/if}
-
-  <BottomNav />
-</div>
+</Shell>
 
 <style>
-  .form-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-  }
-
-  .loader-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #999;
-  }
-
-  .form-content {
-    max-width: 520px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 32px 24px 120px;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 28px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .back-link:hover { color: #111; }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .section-label {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999;
-    letter-spacing: 0.06em;
-    padding-top: 8px;
-    border-top: 1px solid #f0f0f0;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .field label.mono {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999;
-    letter-spacing: 0.06em;
-  }
-
-  .field input:not([type="checkbox"]) {
-    padding: 10px 12px;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-
-  .field input:not([type="checkbox"]):focus {
-    border-color: #111;
-    outline: none;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #111;
-    cursor: pointer;
-  }
-
-  .error {
-    font-size: 12px;
-    color: #dc2626;
-    padding: 8px 12px;
-    background: #fef2f2;
-    border-radius: 6px;
-  }
-
-  .submit-btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.12s;
-  }
-
-  .submit-btn:hover { opacity: 0.85; }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .form { max-width: 720px; display: flex; flex-direction: column; gap: 14px; }
+  .stack { display: flex; flex-direction: column; gap: 16px; }
 </style>

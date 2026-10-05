@@ -4,16 +4,16 @@ import Image from "next/image";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
-import { EnvelopeSimple, List, X } from "@phosphor-icons/react";
+import { List, X } from "@phosphor-icons/react";
 
 type FloatingNavProps = {
   pathname: string;
-  hasBlogs?: boolean;
+  hasWritings?: boolean;
 };
 
 const defaultNavItems = [
   { href: "/projects", label: "Projects" },
-  { href: "/blog", label: "Blog" },
+  { href: "/writings", label: "Writings" },
   { href: "/experience", label: "Experience" },
   { href: "/stack", label: "Stack" },
   { href: "/this", label: "This" },
@@ -23,12 +23,12 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavProps) {
+export default function FloatingNav({ pathname, hasWritings = true }: FloatingNavProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Filter out blog if there are no blogs
+  // Hide writings until there is something to read
   const navItems = defaultNavItems.filter((item) => {
-    if (item.label === "Blog" && !hasBlogs) return false;
+    if (item.href === "/writings" && !hasWritings) return false;
     return true;
   });
 
@@ -103,16 +103,8 @@ export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavPr
               </div>
             </div>
 
-            {/* Right: Contact (Desktop only) */}
-            <div className="hidden sm:flex flex-1 items-center justify-end gap-2">
-              <Link
-                href="/contact"
-                className="flex h-11 px-5 items-center justify-center rounded-full bg-white/60 backdrop-blur-xl border border-black/5 text-black text-sm font-medium tracking-tight transition-transform hover:scale-105 shadow-sm"
-                aria-label="Contact"
-              >
-                Get in Contact
-              </Link>
-            </div>
+            {/* Right: spacer keeps the pill centred (Desktop only) */}
+            <div className="hidden sm:flex flex-1" />
 
             {/* Mobile: Hamburger Button */}
             <div className="flex sm:hidden flex-1 items-center justify-end">
@@ -150,15 +142,6 @@ export default function FloatingNav({ pathname, hasBlogs = true }: FloatingNavPr
                     </Link>
                   );
                 })}
-                
-                <div className="h-px w-full bg-black/5 my-1" />
-                
-                <Link
-                  href="/contact"
-                  className="flex items-center justify-between rounded-2xl px-4 py-3 text-sm font-medium tracking-tight text-black hover:bg-black/5 transition-colors"
-                >
-                  Contact me
-                </Link>
               </motion.div>
             )}
           </AnimatePresence>

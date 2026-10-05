@@ -2,8 +2,8 @@
   import { UploadSimple, CircleNotch } from 'phosphor-svelte';
   import { files } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
-  
-  let { onUpload = () => {}, accept = "image/*", label = "Upload Image" } = $props();
+
+  let { onUpload = () => {}, accept = "image/*", label = "Upload image", variant = 'secondary' } = $props();
 
   let uploading = $state(false);
   let fileInput = $state(null);
@@ -21,12 +21,12 @@
       }));
 
       const presignedUrls = await files.getPresignedUrls(filesMeta);
-      
+
       const successfulUrls = [];
       for (let i = 0; i < fileList.length; i++) {
         const file = fileList[i];
         const uploadData = presignedUrls[i];
-        
+
         if (!uploadData || !uploadData.url) continue;
 
         const formData = new FormData();
@@ -46,7 +46,7 @@
           console.error("Upload error for file", file.name, await res.text());
         }
       }
-      
+
       if (successfulUrls.length > 0) {
         onUpload(successfulUrls[0]);
       } else {
@@ -66,58 +66,27 @@
   }
 </script>
 
-<div class="uploader">
-  <input 
-    type="file" 
-    bind:this={fileInput} 
+<span class="uploader">
+  <input
+    type="file"
+    bind:this={fileInput}
     onchange={handleFiles}
     accept={accept}
-    style="display: none;" 
+    style="display: none;"
   />
-  <button class="upload-btn" onclick={trigger} disabled={uploading} type="button">
+  <button class="btn btn-sm {variant === 'primary' ? 'btn-primary' : 'btn-secondary'}" onclick={trigger} disabled={uploading} type="button">
     {#if uploading}
       <span class="spin"><CircleNotch size={14} /></span>
-      Uploading...
+      Uploading…
     {:else}
       <UploadSimple size={14} />
       {label}
     {/if}
   </button>
-</div>
+</span>
 
 <style>
-  .uploader {
-    display: inline-block;
-  }
-  .upload-btn {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 6px 10px;
-    background: #f5f5f5;
-    border: 1px solid #e5e5e5;
-    border-radius: 5px;
-    font-size: 11px;
-    font-weight: 500;
-    color: #555;
-    cursor: pointer;
-    transition: all 0.1s;
-    font-family: 'Geist Mono Variable', monospace;
-  }
-  .upload-btn:hover:not(:disabled) {
-    background: #e5e5e5;
-    color: #111;
-    border-color: #ccc;
-  }
-  .upload-btn:disabled {
-    opacity: 0.7;
-    cursor: not-allowed;
-  }
-  .spin {
-    display: flex;
-    animation: spin 1s linear infinite;
-  }
-  @keyframes spin {
-    to { transform: rotate(360deg); }
-  }
+  .uploader { display: inline-block; }
+  .spin { display: flex; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
 </style>

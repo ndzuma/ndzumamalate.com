@@ -1,4 +1,5 @@
 import { api } from "../../lib/api";
+import { content } from "../../lib/content";
 import { ExperienceDescription } from "../../components/experience-description";
 
 function formatDate(dateStr: string | undefined) {
@@ -8,7 +9,8 @@ function formatDate(dateStr: string | undefined) {
 }
 
 export default async function ExperiencePage() {
-  const [experience, skills] = await Promise.all([
+  const [intro, experience, skills] = await Promise.all([
+    content.intro("experience"),
     api.getExperience().catch((e) => { console.error("Fetch error:", e); return []; }),
     api.getSkills().catch((e) => { console.error("Fetch error:", e); return []; })
   ]);
@@ -32,10 +34,10 @@ export default async function ExperiencePage() {
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
-          experience
+          {intro.title}
         </h1>
         <p className="text-base sm:text-lg text-black/60 leading-relaxed">
-          My professional journey and the technical skills I've picked up along the way.
+          {intro.intro}
         </p>
       </section>
 
@@ -76,7 +78,6 @@ export default async function ExperiencePage() {
               <div className="space-y-8">
                 {section.data.map(job => (
                   <div key={job.id} className="group relative border-l border-black/10 pl-6 hover:border-black/30 transition-colors">
-                    <div className="absolute w-2 h-2 bg-black/10 rounded-full -left-[4.5px] top-2 group-hover:bg-black/30 transition-colors"></div>
                     <div className="flex flex-col sm:flex-row sm:items-baseline justify-between mb-2">
                       <h3 className="text-lg font-medium text-black/90">{job.role}</h3>
                       <span className="text-sm text-black/50 font-mono">

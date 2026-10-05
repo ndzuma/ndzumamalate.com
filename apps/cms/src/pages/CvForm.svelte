@@ -1,11 +1,11 @@
 <script>
-  import TopBar from '../components/TopBar.svelte';
-  import BottomNav from '../components/BottomNav.svelte';
+  import Shell from '../components/Shell.svelte';
+  import Switch from '../components/Switch.svelte';
+  import Uploader from '../components/Uploader.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { cv } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
-  import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
-  import Uploader from '../components/Uploader.svelte';
+  import { FloppyDisk, FilePdf, ArrowSquareOut } from 'phosphor-svelte';
 
   let { id = null } = $props();
 
@@ -42,8 +42,8 @@
       } else {
         await cv.create(data);
       }
-      toast(id ? 'CV updated' : 'CV created');
-      navigate('/dashboard');
+      toast(id ? 'CV updated' : 'CV added');
+      navigate('/collection/cv');
     } catch (e) {
       error = e.message || 'Failed to save';
       toast(error, 'error');
@@ -52,166 +52,65 @@
   }
 </script>
 
-<div class="form-page">
-  <TopBar pageName={id ? 'Edit CV' : 'New CV'} />
+<Shell title={id ? 'Edit CV' : 'New CV'} crumbs={[{ label: 'CV', href: '/collection/cv' }]}>
+  {#snippet actions()}
+    <button class="btn btn-secondary" onclick={() => navigate('/collection/cv')}>Cancel</button>
+    <button class="btn btn-primary" onclick={save} disabled={saving}>
+      <FloppyDisk size={14} />
+      {saving ? 'Saving…' : id ? 'Save changes' : 'Add CV'}
+    </button>
+  {/snippet}
 
   {#if loading}
-    <div class="loader-center">Loading...</div>
+    <div class="loader-inline">Loading…</div>
   {:else}
-    <main class="form-content">
-      <button class="back-link" onclick={() => navigate('/dashboard')}>
-        <ArrowLeft size={14} />
-        <span>Back to dashboard</span>
-      </button>
-
-      <form onsubmit={(e) => { e.preventDefault(); save(); }}>
+    <form class="form" onsubmit={(e) => { e.preventDefault(); save(); }}>
+      <div class="card card-pad stack">
         <div class="field">
-          <div style="display: flex; justify-content: space-between; align-items: center;">
-            <label class="mono">FILE URL</label>
-            <Uploader onUpload={(url) => fileUrl = url} accept=".pdf,.doc,.docx" label="Upload CV" />
+          <div class="label-row">
+            <label for="file">File</label>
+            <Uploader onUpload={(url) => fileUrl = url} accept=".pdf,.doc,.docx" label="Upload file" />
           </div>
-          <input bind:value={fileUrl} placeholder="https://..." required />
+          <div class="file-row">
+            <span class="file-icon"><FilePdf size={18} weight="fill" /></span>
+            <input id="file" bind:value={fileUrl} placeholder="https://…" required />
+            {#if fileUrl}
+              <a class="btn btn-ghost btn-icon" href={fileUrl} target="_blank" rel="noopener noreferrer" title="Open"><ArrowSquareOut size={15} /></a>
+            {/if}
+          </div>
         </div>
 
         <div class="field">
-          <label class="mono">LABEL</label>
-          <input bind:value={label} placeholder="e.g. CV March 2026" />
+          <label for="label">Label</label>
+          <input id="label" bind:value={label} placeholder="e.g. CV March 2026" />
+          <span class="hint">Shown on the homepage CV card.</span>
         </div>
 
-        <div class="field">
-          <label class="checkbox-label">
-            <input type="checkbox" bind:checked={isActive} />
-            <span>Set as active CV</span>
-          </label>
-        </div>
+        <Switch bind:checked={isActive} label="Active CV" hint="Only one CV is live at a time." />
 
         {#if error}
-          <div class="error mono">{error}</div>
+          <div class="error-box">{error}</div>
         {/if}
-
-        <button type="submit" class="submit-btn" disabled={saving}>
-          <FloppyDisk size={14} />
-          {saving ? 'Saving...' : id ? 'Update' : 'Create'}
-        </button>
-      </form>
-    </main>
+      </div>
+      <button type="submit" hidden aria-label="Save"></button>
+    </form>
   {/if}
-
-  <BottomNav />
-</div>
+</Shell>
 
 <style>
-  .form-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-  }
-
-  .loader-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #999;
-  }
-
-  .form-content {
-    max-width: 520px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 32px 24px 120px;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 28px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .back-link:hover { color: #111; }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-
-  .field label {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999;
-    letter-spacing: 0.06em;
-  }
-
-  .field input[type="text"],
-  .field input[type="url"],
-  .field input:not([type="checkbox"]) {
-    padding: 10px 12px;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-
-  .field input:not([type="checkbox"]):focus {
-    border-color: #111;
-    outline: none;
-  }
-
-  .checkbox-label {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 14px;
-    color: #333;
-    cursor: pointer;
-  }
-
-  .checkbox-label input[type="checkbox"] {
-    width: 16px;
-    height: 16px;
-    accent-color: #111;
-    cursor: pointer;
-  }
-
-  .error {
-    font-size: 12px;
-    color: #dc2626;
-    padding: 8px 12px;
-    background: #fef2f2;
-    border-radius: 6px;
-  }
-
-  .submit-btn {
+  .form { max-width: 640px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .label-row { display: flex; align-items: center; justify-content: space-between; }
+  .file-row { display: flex; align-items: center; gap: 8px; }
+  .file-icon {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius);
+    background: var(--danger-soft);
+    color: var(--danger);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.12s;
+    flex-shrink: 0;
   }
-
-  .submit-btn:hover { opacity: 0.85; }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 </style>

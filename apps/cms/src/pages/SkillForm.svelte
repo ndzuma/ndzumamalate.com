@@ -1,10 +1,9 @@
 <script>
-  import TopBar from '../components/TopBar.svelte';
-  import BottomNav from '../components/BottomNav.svelte';
+  import Shell from '../components/Shell.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { skills } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
-  import { ArrowLeft, FloppyDisk } from 'phosphor-svelte';
+  import { FloppyDisk } from 'phosphor-svelte';
 
   let { id = null } = $props();
 
@@ -18,11 +17,11 @@
   let error = $state('');
 
   const categories = [
-    { value: 'programming_language', label: 'Programming Language' },
+    { value: 'programming_language', label: 'Programming language' },
     { value: 'framework', label: 'Framework' },
     { value: 'database', label: 'Database' },
     { value: 'tool', label: 'Tool' },
-    { value: 'soft_skill', label: 'Soft Skill' },
+    { value: 'soft_skill', label: 'Soft skill' },
     { value: 'other', label: 'Other' },
   ];
 
@@ -55,7 +54,7 @@
         await skills.create(data);
       }
       toast(id ? 'Skill updated' : 'Skill created');
-      navigate('/dashboard');
+      navigate('/collection/skills');
     } catch (e) {
       error = e.message || 'Failed to save';
       toast(error, 'error');
@@ -64,166 +63,81 @@
   }
 </script>
 
-<div class="form-page">
-  <TopBar pageName={id ? 'Edit Skill' : 'New Skill'} />
+<Shell title={id ? 'Edit skill' : 'New skill'} crumbs={[{ label: 'Skills', href: '/collection/skills' }]}>
+  {#snippet actions()}
+    <button class="btn btn-secondary" onclick={() => navigate('/collection/skills')}>Cancel</button>
+    <button class="btn btn-primary" onclick={save} disabled={saving}>
+      <FloppyDisk size={14} />
+      {saving ? 'Saving…' : id ? 'Save changes' : 'Create skill'}
+    </button>
+  {/snippet}
 
   {#if loading}
-    <div class="loader-center">Loading...</div>
+    <div class="loader-inline">Loading…</div>
   {:else}
-    <main class="form-content">
-      <button class="back-link" onclick={() => navigate('/dashboard')}>
-        <ArrowLeft size={14} />
-        <span>Back to dashboard</span>
-      </button>
-
-      <form onsubmit={(e) => { e.preventDefault(); save(); }}>
+    <form class="form" onsubmit={(e) => { e.preventDefault(); save(); }}>
+      <div class="card card-pad stack">
         <div class="field">
-          <label class="mono">NAME</label>
-          <input bind:value={name} placeholder="e.g. TypeScript" required />
-        </div>
-
-        <div class="field">
-          <label class="mono">CATEGORY</label>
-          <select bind:value={category}>
-            {#each categories as cat}
-              <option value={cat.value}>{cat.label}</option>
-            {/each}
-          </select>
-        </div>
-
-        <div class="field">
-          <label class="mono">ICON URL</label>
-          <input bind:value={iconUrl} placeholder="https://..." />
+          <label for="name">Name</label>
+          <input id="name" bind:value={name} placeholder="e.g. TypeScript" required />
         </div>
 
         <div class="field-row">
           <div class="field">
-            <label class="mono">PROFICIENCY (1-5)</label>
-            <input type="number" min="1" max="5" bind:value={proficiency} />
+            <label for="category">Category</label>
+            <select id="category" bind:value={category}>
+              {#each categories as cat}
+                <option value={cat.value}>{cat.label}</option>
+              {/each}
+            </select>
+            <span class="hint">Groups the skill on the experience page and homepage ticker.</span>
           </div>
           <div class="field">
-            <label class="mono">SORT ORDER</label>
-            <input type="number" bind:value={sortOrder} />
+            <label for="prof">Proficiency (1–5)</label>
+            <input id="prof" type="number" min="1" max="5" bind:value={proficiency} />
           </div>
         </div>
 
+        <div class="field">
+          <label for="icon">Icon URL</label>
+          <div class="icon-row">
+            <span class="icon-preview">
+              {#if iconUrl}<img src={iconUrl} alt="" />{/if}
+            </span>
+            <input id="icon" bind:value={iconUrl} placeholder="https://cdn.simpleicons.org/typescript" />
+          </div>
+          <span class="hint">Skills with an icon scroll in the homepage logo ticker.</span>
+        </div>
+
+        <div class="field">
+          <label for="sort">Sort order</label>
+          <input id="sort" type="number" bind:value={sortOrder} />
+        </div>
+
         {#if error}
-          <div class="error mono">{error}</div>
+          <div class="error-box">{error}</div>
         {/if}
-
-        <button type="submit" class="submit-btn" disabled={saving}>
-          <FloppyDisk size={14} />
-          {saving ? 'Saving...' : id ? 'Update' : 'Create'}
-        </button>
-      </form>
-    </main>
+      </div>
+      <button type="submit" hidden aria-label="Save"></button>
+    </form>
   {/if}
-
-  <BottomNav />
-</div>
+</Shell>
 
 <style>
-  .form-page {
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-    background: #fff;
-  }
-
-  .loader-center {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 13px;
-    color: #999;
-  }
-
-  .form-content {
-    max-width: 520px;
-    width: 100%;
-    margin: 0 auto;
-    padding: 32px 24px 120px;
-  }
-
-  .back-link {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    font-size: 13px;
-    color: #666;
-    margin-bottom: 28px;
-    background: none;
-    border: none;
-    cursor: pointer;
-    padding: 0;
-  }
-
-  .back-link:hover { color: #111; }
-
-  form {
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-  }
-
-  .field {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    flex: 1;
-  }
-
-  .field label {
-    font-size: 11px;
-    font-weight: 500;
-    color: #999;
-    letter-spacing: 0.06em;
-  }
-
-  .field input,
-  .field select {
-    padding: 10px 12px;
-    border: 1px solid #e5e5e5;
-    border-radius: 6px;
-    font-size: 14px;
-  }
-
-  .field input:focus,
-  .field select:focus {
-    border-color: #111;
-    outline: none;
-  }
-
-  .field-row {
-    display: flex;
-    gap: 16px;
-  }
-
-  .error {
-    font-size: 12px;
-    color: #dc2626;
-    padding: 8px 12px;
-    background: #fef2f2;
-    border-radius: 6px;
-  }
-
-  .submit-btn {
+  .form { max-width: 640px; }
+  .stack { display: flex; flex-direction: column; gap: 18px; }
+  .icon-row { display: flex; gap: 10px; align-items: center; }
+  .icon-preview {
+    width: 38px;
+    height: 38px;
+    border-radius: var(--radius);
+    background: var(--surface-3);
+    border: 1px solid var(--border);
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 6px;
-    padding: 10px;
-    background: #111;
-    color: #fff;
-    border: none;
-    border-radius: 6px;
-    font-size: 14px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: opacity 0.12s;
+    flex-shrink: 0;
+    overflow: hidden;
   }
-
-  .submit-btn:hover { opacity: 0.85; }
-  .submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+  .icon-preview img { width: 22px; height: 22px; object-fit: contain; }
 </style>

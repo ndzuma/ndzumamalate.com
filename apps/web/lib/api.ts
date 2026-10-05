@@ -1,82 +1,108 @@
-import { Project, Blog, Skill, Experience, CV, Profile, Tag, F1WidgetData, SpaceLaunch } from '../types/api';
+import { Project, Blog, Skill, Experience, CV, Profile, Tag, F1WidgetData, SpaceLaunch, PageContent } from '../types/api';
+import { cached } from './cache';
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
 
-// Error handling helper
-async function fetchAPI<T>(endpoint: string, options: RequestInit & { next?: { tags?: string[], revalidate?: number } } = {}): Promise<T> {
-  const url = `${API_URL}/api/v1/public${endpoint}`;
-  
-  const response = await fetch(url, {
-    ...options,
-    next: { 
-      revalidate: options.next?.revalidate ?? 3600, // Fallback cache, we mainly rely on on-demand revalidation now
-      tags: ['cms', ...(options.next?.tags || [])]
-    }
-  });
+export class ApiError extends Error {
+  status: number;
+  constructor(status: number, message: string) {
+    super(message);
+    this.status = status;
+  }
+}
 
-  if (!response.ok) {
-    throw new Error(`Failed to fetch ${endpoint}: ${response.statusText}`);
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+/**
+ * Raw request against the public API. Retries transient failures (network
+ * errors, 5xx) so a briefly-restarting API doesn't poison a render, and never
+ * turns a failure into an empty success.
+ */
+async function requestAPI<T>(endpoint: string, init: RequestInit = {}, attempts = 3): Promise<T> {
+  const url = `${API_URL}/api/v1/public${endpoint}`;
+  let lastError: unknown;
+
+  for (let attempt = 0; attempt < attempts; attempt++) {
+    try {
+      const response = await fetch(url, { cache: 'no-store', ...init });
+      if (response.ok) {
+        return response.json();
+      }
+      const error = new ApiError(response.status, `Failed to fetch ${endpoint}: ${response.status} ${response.statusText}`);
+      if (response.status < 500) throw error;
+      lastError = error;
+    } catch (error) {
+      if (error instanceof ApiError && error.status < 500) throw error;
+      lastError = error;
+    }
+    if (attempt < attempts - 1) await sleep(250 * 2 ** attempt);
   }
 
-  return response.json();
+  throw lastError instanceof Error ? lastError : new Error(`Failed to fetch ${endpoint}`);
+}
+
+/** Server-side read that goes through the content cache. */
+function read<T>(endpoint: string): Promise<T> {
+  return cached<T>(endpoint, () => requestAPI<T>(endpoint));
 }
 
 export const api = {
   // Projects
-  async getProjects(): Promise<Project[]> {
-    return fetchAPI<Project[]>('/projects');
+  getProjects(): Promise<Project[]> {
+    return read<Project[]>('/projects');
   },
 
-  async getProjectBySlug(slug: string): Promise<Project> {
-    return fetchAPI<Project>(`/projects/${slug}`);
+  getProjectBySlug(slug: string): Promise<Project> {
+    return read<Project>(`/projects/${encodeURIComponent(slug)}`);
   },
 
-  // Blogs
-  async getBlogs(): Promise<Blog[]> {
-    return fetchAPI<Blog[]>('/blogs');
+  // Writings (the API still calls them blogs)
+  getBlogs(): Promise<Blog[]> {
+    return read<Blog[]>('/blogs');
   },
 
-  async getBlogBySlug(slug: string): Promise<Blog> {
-    return fetchAPI<Blog>(`/blogs/${slug}`);
+  getBlogBySlug(slug: string): Promise<Blog> {
+    return read<Blog>(`/blogs/${encodeURIComponent(slug)}`);
   },
 
   // Skills
-  async getSkills(): Promise<Skill[]> {
-    return fetchAPI<Skill[]>('/skills');
+  getSkills(): Promise<Skill[]> {
+    return read<Skill[]>('/skills');
   },
 
   // Experience
-  async getExperience(): Promise<Experience[]> {
-    return fetchAPI<Experience[]>('/experience');
+  getExperience(): Promise<Experience[]> {
+    return read<Experience[]>('/experience');
   },
 
   // CV
-  async getActiveCV(): Promise<CV> {
-    return fetchAPI<CV>('/cv/active');
+  getActiveCV(): Promise<CV> {
+    return read<CV>('/cv/active');
   },
 
   // Profile
-  async getProfile(): Promise<Profile> {
-    return fetchAPI<Profile>('/profile');
+  getProfile(): Promise<Profile> {
+    return read<Profile>('/profile');
   },
 
   // Tags
-  async getTags(): Promise<Tag[]> {
-    return fetchAPI<Tag[]>('/tags');
+  getTags(): Promise<Tag[]> {
+    return read<Tag[]>('/tags');
   },
 
-  // F1 Data
-  async getF1Data(): Promise<F1WidgetData> {
-    return fetchAPI<F1WidgetData>('/f1', {
-      cache: 'no-store'
-    });
+  // Editable page content
+  getPage(key: string): Promise<PageContent> {
+    return read<PageContent>(`/pages/${encodeURIComponent(key)}`);
   },
 
-  // Space Data
-  async getSpaceData(): Promise<SpaceLaunch> {
-    return fetchAPI<SpaceLaunch>('/space', {
-      cache: 'no-store'
-    });
+  // F1 Data (client-side, cached by the API in Redis)
+  getF1Data(): Promise<F1WidgetData> {
+    return requestAPI<F1WidgetData>('/f1', {}, 1);
+  },
+
+  // Space Data (client-side, cached by the API in Redis)
+  getSpaceData(): Promise<SpaceLaunch> {
+    return requestAPI<SpaceLaunch>('/space', {}, 1);
   },
 
   // Contact
@@ -90,9 +116,27 @@ export const api = {
 
     if (!response.ok) {
       const errData = await response.json().catch(() => ({}));
-      throw new Error(errData.error || 'Failed to submit contact form');
+      throw new Error(errData.message || errData.error || 'Failed to submit contact form');
     }
 
     return response.json();
   },
 };
+
+/**
+ * Warm every list endpoint the site renders from. Called by the sync layer right
+ * after invalidation so the next render (and the client refresh) is instant.
+ */
+export async function warmContentCache(): Promise<void> {
+  const reads: Promise<unknown>[] = [
+    api.getProjects(),
+    api.getBlogs(),
+    api.getSkills(),
+    api.getExperience(),
+    api.getTags(),
+    api.getProfile(),
+    api.getActiveCV(),
+    ...['home', 'stack', 'projects', 'writings', 'experience'].map((key) => api.getPage(key)),
+  ];
+  await Promise.allSettled(reads);
+}

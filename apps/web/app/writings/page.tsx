@@ -1,13 +1,15 @@
-import BlogClient from "../../components/blog-client";
+import WritingsClient from "../../components/writings-client";
 import { api } from "../../lib/api";
+import { content } from "../../lib/content";
 
 export const metadata = {
-  title: "Blog",
+  title: "Writings",
   description: "Writing about design engineering, building interfaces, and the intersection of human and agent experiences.",
 };
 
-export default async function BlogPage() {
-  const [allBlogs, allTags] = await Promise.all([
+export default async function WritingsPage() {
+  const [intro, allWritings, allTags] = await Promise.all([
+    content.intro("writings"),
     api.getBlogs().catch((e) => { console.error("Fetch error:", e); return []; }),
     api.getTags().catch((e) => { console.error("Fetch error:", e); return []; })
   ]);
@@ -16,14 +18,14 @@ export default async function BlogPage() {
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
-          blog
+          {intro.title}
         </h1>
         <p className="text-base sm:text-lg text-black/60 leading-relaxed">
-          Writing about design engineering, building interfaces, and the intersection of human and agent experiences.
+          {intro.intro}
         </p>
       </section>
 
-      <BlogClient initialBlogs={allBlogs} tags={allTags} />
+      <WritingsClient initialBlogs={allWritings} tags={allTags} />
     </main>
   );
 }

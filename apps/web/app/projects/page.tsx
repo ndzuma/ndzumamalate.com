@@ -1,5 +1,6 @@
 import ProjectsClient from "../../components/projects-client";
 import { api } from "../../lib/api";
+import { content } from "../../lib/content";
 
 export const metadata = {
   title: "Projects",
@@ -7,19 +8,20 @@ export const metadata = {
 };
 
 export default async function ProjectsPage() {
-  const [allProjects, allTags] = await Promise.all([
+  const [intro, allProjects, allTags] = await Promise.all([
+    content.intro("projects"),
     api.getProjects().catch((e) => { console.error("Fetch error:", e); return []; }),
     api.getTags().catch((e) => { console.error("Fetch error:", e); return []; })
   ]);
-  
+
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-12">
         <h1 className="text-2xl sm:text-3xl font-medium mb-4 tracking-tight">
-          projects
+          {intro.title}
         </h1>
         <p className="text-base sm:text-lg text-black/60 leading-relaxed">
-          A selection of my recent work, side projects, and ongoing experiments in pushing the boundaries of interface design.
+          {intro.intro}
         </p>
       </section>
 

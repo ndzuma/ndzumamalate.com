@@ -1,30 +1,28 @@
 import FeaturedCard from "../components/featured-card";
 import LogosTicker from "../components/logos-ticker";
 import Carousel from "../components/carousel";
-import InlineProjectLink from "../components/inline-project-link";
-import InlineSocialLink from "../components/inline-social-link";
-import InlineEmailLink from "../components/inline-email-link";
-import InlineCvLink from "../components/inline-cv-link";
-import InlineF1Widget from "../components/inline-f1-widget";
+import RichText from "../components/rich-text";
 import { api } from "../lib/api";
+import { content } from "../lib/content";
 
 export default async function Home() {
-  const [profile, projects, blogs, skills, cv] = await Promise.all([
+  const [home, profile, projects, writings, skills, cv] = await Promise.all([
+    content.home(),
     api.getProfile().catch((e) => { console.error("Profile fetch error:", e); return null; }),
     api.getProjects().catch((e) => { console.error("Projects fetch error:", e); return []; }),
-    api.getBlogs().catch((e) => { console.error("Blogs fetch error:", e); return []; }),
+    api.getBlogs().catch((e) => { console.error("Writings fetch error:", e); return []; }),
     api.getSkills().catch((e) => { console.error("Skills fetch error:", e); return []; }),
     api.getActiveCV().catch((e) => { console.error("CV fetch error:", e); return null; })
   ]);
 
-  // Projects and Blogs endpoints already return published=true.
-  // For the homepage we show the first few. If you had a 'featured' flag, you could filter by it here:
+  // Projects and writings endpoints already return published=true.
   const featuredProjects = projects?.filter(p => p.featured) || [];
   // If no featured projects, just show the top 3
   const displayProjects = featuredProjects.length > 0 ? featuredProjects : (projects || []).slice(0, 3);
-  const displayBlogs = (blogs || []).slice(0, 3);
+  const displayWritings = (writings || []).slice(0, 3);
 
   const isOpenToWork = profile?.open_to_work ?? false;
+  const ctx = { profile, cv, projects };
 
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24">
@@ -36,7 +34,7 @@ export default async function Home() {
         <section className="max-w-xl">
           <div className="flex items-center gap-4 mb-1">
             <h1 className="text-xl sm:text-2xl font-medium tracking-tight">
-              ndzuma malate
+              {home.name}
             </h1>
 
             {isOpenToWork && (
@@ -53,19 +51,15 @@ export default async function Home() {
           </div>
 
           <p className="text-sm sm:text-base text-black/50 mb-10">
-            London, UK
+            {home.location}
           </p>
 
           <div className="space-y-6 text-base sm:text-lg leading-relaxed tracking-tight text-black/80">
-            <div>
-              I'm a final-year CS & AI student who builds things. Pulseportfolio is live, <InlineProjectLink /> is in beta, and for my final year project an accessible software for visually impaired professionals. When I'm not coding I'm obsessing over music, learning about finance and rocketry, and I've recently fallen down an <InlineF1Widget /> rabbit hole.
-            </div>
-            <div>
-              If you want to connect on an ambitious project, reach out on my <InlineSocialLink profile={profile} /> or shoot me an <InlineEmailLink />.
-            </div>
-            <div>
-              Oh I forgot, here's my <InlineCvLink cv={cv} />.
-            </div>
+            {home.paragraphs.map((paragraph, index) => (
+              <div key={index}>
+                <RichText text={paragraph} ctx={ctx} />
+              </div>
+            ))}
           </div>
         </section>
 
@@ -76,7 +70,7 @@ export default async function Home() {
 
       {/* Featured Projects Carousel */}
       {displayProjects.length > 0 && (
-        <Carousel title="Featured projects">
+        <Carousel title={home.projects_title}>
           {displayProjects.map((project, index) => (
             <FeaturedCard
               key={project.id}
@@ -91,16 +85,16 @@ export default async function Home() {
         </Carousel>
       )}
 
-      {/* Featured Blogs Carousel */}
-      {displayBlogs.length > 0 && (
-        <Carousel title="Featured blogs">
-          {displayBlogs.map((blog, index) => (
+      {/* Featured Writings Carousel */}
+      {displayWritings.length > 0 && (
+        <Carousel title={home.writings_title}>
+          {displayWritings.map((writing, index) => (
             <FeaturedCard
-              key={blog.id}
-              href={`/blog/${blog.slug || blog.id}`}
-              title={blog.title}
-              date={blog.published_at ? new Date(blog.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined}
-              image={blog.cover_image_url}
+              key={writing.id}
+              href={`/writings/${writing.slug || writing.id}`}
+              title={writing.title}
+              date={writing.published_at ? new Date(writing.published_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : undefined}
+              image={writing.cover_image_url}
               className="w-[85vw] sm:w-[400px] lg:w-[480px]"
               priority={index < 2}
             />

@@ -137,6 +137,15 @@ func (s *stubStore) UpdateWebhookEndpoint(context.Context, string, models.Webhoo
 }
 func (s *stubStore) DeleteWebhookEndpoint(context.Context, string) error { return nil }
 func (s *stubStore) SwapProjectOrder(context.Context, string, int) error { return nil }
+func (s *stubStore) ListPageContent(context.Context) ([]models.PageContent, error) {
+	return []models.PageContent{}, nil
+}
+func (s *stubStore) GetPageContent(context.Context, string) (*models.PageContent, error) {
+	return &models.PageContent{Key: "home", Data: json.RawMessage(`{}`)}, nil
+}
+func (s *stubStore) UpsertPageContent(context.Context, string, models.PageContentInput) (*models.PageContent, error) {
+	return &models.PageContent{Key: "home", Data: json.RawMessage(`{}`)}, nil
+}
 
 type noopResend struct{}
 
@@ -169,6 +178,7 @@ type noopCacheStore struct{}
 func (n *noopCacheStore) Get(context.Context, string) ([]byte, error)              { return nil, nil }
 func (n *noopCacheStore) Set(context.Context, string, []byte, time.Duration) error { return nil }
 func (n *noopCacheStore) Delete(context.Context, string) error                     { return nil }
+func (n *noopCacheStore) Incr(context.Context, string) (int64, error)              { return 1, nil }
 
 func TestLoginSetsCookies(t *testing.T) {
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)

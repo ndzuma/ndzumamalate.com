@@ -16,9 +16,9 @@
     {#each toasts as t (t.id)}
       {@const Icon = icons[t.type] || Info}
       <div class="toast" class:error={t.type === 'error'} class:info={t.type === 'info'}>
-        <Icon size={15} weight="fill" />
+        <span class="toast-icon"><Icon size={15} weight="fill" /></span>
         <span class="toast-msg">{t.message}</span>
-        <button class="toast-close" onclick={() => dismiss(t.id)}>
+        <button class="toast-close" onclick={() => dismiss(t.id)} aria-label="Dismiss">
           <X size={12} />
         </button>
       </div>
@@ -29,7 +29,7 @@
 <style>
   .toast-container {
     position: fixed;
-    bottom: 80px;
+    bottom: 24px;
     left: 50%;
     transform: translateX(-50%);
     display: flex;
@@ -43,48 +43,39 @@
     pointer-events: all;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 10px 16px;
-    background: #111;
+    gap: 10px;
+    padding: 10px 12px 10px 14px;
+    background: var(--text);
     color: #fff;
-    border-radius: 10px;
+    border-radius: 12px;
     font-size: 13px;
     font-weight: 450;
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
-    animation: toast-in 0.2s ease-out;
+    box-shadow: var(--shadow-lg);
+    animation: toast-in 0.2s var(--ease);
     white-space: nowrap;
   }
 
-  .toast.error {
-    background: #dc2626;
-  }
+  .toast-icon { color: #7ee2a2; display: flex; }
+  .toast.error { background: var(--danger); }
+  .toast.error .toast-icon { color: #fff; }
+  .toast.info { background: #2a2d35; }
+  .toast.info .toast-icon { color: #9db9ff; }
 
-  .toast.info {
-    background: #555;
-  }
-
-  .toast-msg {
-    flex: 1;
-  }
+  .toast-msg { flex: 1; }
 
   .toast-close {
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 20px;
-    height: 20px;
-    border: none;
-    background: rgba(255, 255, 255, 0.15);
+    width: 22px;
+    height: 22px;
+    background: rgba(255, 255, 255, 0.14);
     color: #fff;
-    border-radius: 4px;
-    cursor: pointer;
+    border-radius: 6px;
     flex-shrink: 0;
     transition: background 0.1s;
   }
-
-  .toast-close:hover {
-    background: rgba(255, 255, 255, 0.25);
-  }
+  .toast-close:hover { background: rgba(255, 255, 255, 0.26); }
 
   @keyframes toast-in {
     from { opacity: 0; transform: translateY(8px); }
