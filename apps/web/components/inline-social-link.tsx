@@ -32,7 +32,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         social media
       </span>
@@ -46,13 +46,13 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1">
+            <div className="popup-surface p-1.5 flex items-center gap-1">
               <a 
                 href={profile?.linkedin_url || "https://linkedin.com"} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('social_link_clicked', { platform: 'LinkedIn' })}
-                className="flex items-center justify-center bg-[#0A66C2]/10 hover:bg-[#0A66C2]/20 text-[#0A66C2] p-2 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center justify-center popup-chip p-2 cursor-pointer"
                 aria-label="LinkedIn"
               >
                 <LinkedinLogo weight="fill" className="w-4 h-4" />
@@ -62,7 +62,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('social_link_clicked', { platform: 'GitHub' })}
-                className="flex items-center justify-center bg-black/5 hover:bg-black/10 text-black p-2 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center justify-center popup-chip p-2 cursor-pointer"
                 aria-label="GitHub"
               >
                 <GithubLogo weight="fill" className="w-4 h-4" />
@@ -72,7 +72,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('social_link_clicked', { platform: 'Twitter' })}
-                className="flex items-center justify-center bg-[#1DA1F2]/10 hover:bg-[#1DA1F2]/20 text-[#1DA1F2] p-2 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center justify-center popup-chip p-2 cursor-pointer"
                 aria-label="Twitter / X"
               >
                 <XLogo weight="fill" className="w-4 h-4" />
@@ -82,7 +82,7 @@ export default function InlineSocialLink({ profile }: InlineSocialLinkProps) {
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('social_link_clicked', { platform: 'Threads' })}
-                className="flex items-center justify-center bg-black/5 hover:bg-black/10 text-black p-2 rounded-lg transition-colors cursor-pointer"
+                className="flex items-center justify-center popup-chip p-2 cursor-pointer"
                 aria-label="Threads"
               >
                 <ThreadsLogo weight="fill" className="w-4 h-4" />

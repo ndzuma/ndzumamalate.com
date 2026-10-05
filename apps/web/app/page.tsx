@@ -6,8 +6,9 @@ import { api } from "../lib/api";
 import { content } from "../lib/content";
 
 export default async function Home() {
-  const [home, profile, projects, writings, skills, cv] = await Promise.all([
+  const [home, hiddenPages, profile, projects, writings, skills, cv] = await Promise.all([
     content.home(),
+    content.hiddenPages(),
     api.getProfile().catch((e) => { console.error("Profile fetch error:", e); return null; }),
     api.getProjects().catch((e) => { console.error("Projects fetch error:", e); return []; }),
     api.getBlogs().catch((e) => { console.error("Writings fetch error:", e); return []; }),
@@ -18,8 +19,9 @@ export default async function Home() {
   // Projects and writings endpoints already return published=true.
   const featuredProjects = projects?.filter(p => p.featured) || [];
   // If no featured projects, just show the top 3
-  const displayProjects = featuredProjects.length > 0 ? featuredProjects : (projects || []).slice(0, 3);
-  const displayWritings = (writings || []).slice(0, 3);
+  // Carousels link into their section, so a hidden section hides its carousel too.
+  const displayProjects = hiddenPages.includes("projects") ? [] : featuredProjects.length > 0 ? featuredProjects : (projects || []).slice(0, 3);
+  const displayWritings = hiddenPages.includes("writings") ? [] : (writings || []).slice(0, 3);
 
   const isOpenToWork = profile?.open_to_work ?? false;
   const ctx = { profile, cv, projects };

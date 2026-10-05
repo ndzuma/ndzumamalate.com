@@ -1,16 +1,17 @@
 <script>
   import Shell from '../components/Shell.svelte';
   import TokenField from '../components/TokenField.svelte';
+  import Switch from '../components/Switch.svelte';
   import { pages, projects as projectsApi } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
   import { FloppyDisk, Plus, Trash, ArrowUp, ArrowDown, ArrowSquareOut } from 'phosphor-svelte';
 
-  /** @type {{ page: 'home' | 'stack' | 'intros' }} */
+  /** @type {{ page: 'home' | 'stack' | 'intros' | 'this' }} */
   let { page = 'home' } = $props();
 
-  const titles = { home: 'Homepage', stack: 'Stack', intros: 'Section intros' };
+  const titles = { home: 'Homepage', stack: 'Stack', intros: 'Section intros', this: 'This' };
   const siteUrl = 'https://ndzumamalate.com';
-  const previewPath = { home: '/', stack: '/stack', intros: '/projects' };
+  const previewPath = { home: '/', stack: '/stack', intros: '/projects', this: '/this' };
 
   let loading = $state(true);
   let saving = $state(false);
@@ -20,14 +21,17 @@
   let home = $state({ name: '', location: '', paragraphs: [], projects_title: '', writings_title: '' });
 
   // ── Stack ──
-  let stack = $state({ title: '', intro: '', sections: [] });
+  let stack = $state({ title: '', intro: '', sections: [], hidden: false });
+
+  // ── This ──
+  let thisPage = $state({ hidden: false });
 
   // ── Intros ──
   const introKeys = ['projects', 'writings', 'experience'];
   let intros = $state({
-    projects: { title: '', intro: '' },
-    writings: { title: '', intro: '' },
-    experience: { title: '', intro: '' },
+    projects: { title: '', intro: '', hidden: false },
+    writings: { title: '', intro: '', hidden: false },
+    experience: { title: '', intro: '', hidden: false },
   });
 
   async function load() {
@@ -57,11 +61,14 @@
           sections: Array.isArray(d.sections)
             ? d.sections.map((s) => ({ title: s.title || '', items: Array.isArray(s.items) ? [...s.items] : [] }))
             : [],
+          hidden: d.hidden === true,
         };
+      } else if (page === 'this') {
+        thisPage = { hidden: byKey.this?.hidden === true };
       } else {
         for (const key of introKeys) {
           const d = byKey[key] || {};
-          intros[key] = { title: d.title || '', intro: d.intro || '' };
+          intros[key] = { title: d.title || '', intro: d.intro || '', hidden: d.hidden === true };
         }
       }
     } catch (_) {
@@ -90,6 +97,8 @@
             .map((s) => ({ title: s.title.trim(), items: s.items.map((i) => i.trim()).filter(Boolean) }))
             .filter((s) => s.title || s.items.length),
         });
+      } else if (page === 'this') {
+        await pages.update('this', thisPage);
       } else {
         await Promise.all(introKeys.map((key) => pages.update(key, intros[key])));
       }
@@ -199,6 +208,10 @@
     </div>
   {:else if page === 'stack'}
     <div class="stack">
+      <div class="card card-pad">
+        <Switch bind:checked={stack.hidden} label="Hide this page" hint="Removes Stack from the navigation and makes /stack return a 404." />
+      </div>
+
       <div class="card card-pad group">
         <div class="field-row">
           <div class="field">
@@ -255,6 +268,16 @@
         </div>
       {/each}
     </div>
+  {:else if page === 'this'}
+    <div class="stack">
+      <div class="card card-pad group">
+        <div>
+          <div class="card-title">Visibility</div>
+          <div class="card-subtitle">The /this page is written in code; only its visibility is managed here.</div>
+        </div>
+        <Switch bind:checked={thisPage.hidden} label="Hide this page" hint="Removes This from the navigation and makes /this return a 404." />
+      </div>
+    </div>
   {:else}
     <div class="stack">
       {#each introKeys as key}
@@ -263,6 +286,7 @@
             <div class="card-title">{key.charAt(0).toUpperCase() + key.slice(1)} page</div>
             <div class="card-subtitle">Heading and intro paragraph at the top of /{key}.</div>
           </div>
+          <Switch bind:checked={intros[key].hidden} label="Hide this page" hint="Removes it from the navigation and the homepage, and 404s /{key} and its detail pages." />
           <div class="field">
             <label for="{key}-t">Title</label>
             <input id="{key}-t" bind:value={intros[key].title} placeholder={key} />

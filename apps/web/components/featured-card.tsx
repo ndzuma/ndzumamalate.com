@@ -18,55 +18,57 @@ type FeaturedCardProps = {
 export default function FeaturedCard({ href, title, date, image, repoUrl, liveUrl, className = "", priority = false }: FeaturedCardProps) {
   return (
     <div className={`group flex flex-col gap-4 snap-start shrink-0 ${className}`}>
-      <div className="w-full aspect-[16/9] rounded-3xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm transition-transform duration-300 group-hover:-translate-y-1 group-hover:shadow-md block">
-        <Link href={href} className="absolute inset-0 z-0">
-          {image ? (
-            <Image 
-              src={image} 
-              alt={title} 
-              fill 
-              sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-              className="object-cover transition-transform duration-700 group-hover:scale-105" 
-              priority={priority}
-            />
-          ) : (
-            <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
+      <div className="image-frame [--frame-radius:1.75rem] transition-transform duration-300 group-hover:-translate-y-1">
+        <div className="image-frame-inner w-full aspect-[16/9]">
+          <Link href={href} className="absolute inset-0 z-0">
+            {image ? (
+              <Image 
+                src={image} 
+                alt={title} 
+                fill 
+                sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
+                className="object-cover transition-transform duration-700 group-hover:scale-105" 
+                priority={priority}
+              />
+            ) : (
+              <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#000_1px,transparent_1px)] [background-size:16px_16px]"></div>
+            )}
+          </Link>
+  
+          {/* Action Buttons (bottom-left) */}
+          {(repoUrl || liveUrl) && (
+            <div className="absolute bottom-3 left-3 flex gap-2 z-10">
+              {repoUrl && (
+                <a 
+                  href={repoUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group/btn flex items-center bg-white/60 backdrop-blur-md text-black/90 rounded-full p-2 hover:bg-white/90 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300 shadow-sm"
+                  title="Go to repo"
+                >
+                  <GithubLogo weight="bold" className="w-4 h-4 shrink-0" />
+                  <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
+                    Go to repo
+                  </span>
+                </a>
+              )}
+              {liveUrl && (
+                <a 
+                  href={liveUrl} 
+                  target="_blank" 
+                  rel="noopener noreferrer"
+                  className="group/btn flex items-center bg-white/60 backdrop-blur-md text-black/90 rounded-full p-2 hover:bg-white/90 hover:scale-[1.05] hover:rotate-2 transition-all duration-300 shadow-sm"
+                  title="Try it out"
+                >
+                  <Globe weight="bold" className="w-4 h-4 shrink-0" />
+                  <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
+                    Try it out
+                  </span>
+                </a>
+              )}
+            </div>
           )}
-        </Link>
-
-        {/* Action Buttons (bottom-left) */}
-        {(repoUrl || liveUrl) && (
-          <div className="absolute bottom-3 left-3 flex gap-2 z-10">
-            {repoUrl && (
-              <a 
-                href={repoUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group/btn flex items-center bg-white/60 backdrop-blur-md text-black/90 rounded-full p-2 hover:bg-white/90 hover:scale-[1.05] hover:-rotate-2 transition-all duration-300 shadow-sm"
-                title="Go to repo"
-              >
-                <GithubLogo weight="bold" className="w-4 h-4 shrink-0" />
-                <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
-                  Go to repo
-                </span>
-              </a>
-            )}
-            {liveUrl && (
-              <a 
-                href={liveUrl} 
-                target="_blank" 
-                rel="noopener noreferrer"
-                className="group/btn flex items-center bg-white/60 backdrop-blur-md text-black/90 rounded-full p-2 hover:bg-white/90 hover:scale-[1.05] hover:rotate-2 transition-all duration-300 shadow-sm"
-                title="Try it out"
-              >
-                <Globe weight="bold" className="w-4 h-4 shrink-0" />
-                <span className="max-w-[80px] ml-1.5 md:max-w-0 md:ml-0 overflow-hidden text-xs font-semibold whitespace-nowrap group-hover/btn:max-w-[80px] group-hover/btn:ml-1.5 transition-all duration-300 ease-out">
-                  Try it out
-                </span>
-              </a>
-            )}
-          </div>
-        )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-1 px-1">

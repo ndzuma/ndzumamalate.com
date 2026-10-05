@@ -4,8 +4,8 @@
   import { logout, getUser } from '../lib/auth.svelte.js';
   import {
     SquaresFour, Star, Article, Lightning, Briefcase, FilePdf, Tag,
-    House, Stack, TextAlignLeft, UserCircle, Plugs, Password, SignOut,
-    MagnifyingGlass, CaretUpDown, Plus
+    House, Stack, TextAlignLeft, Info, UserCircle, Plugs, Password, SignOut,
+    MagnifyingGlass, Plus
   } from 'phosphor-svelte';
 
   let { collapsed = false } = $props();
@@ -31,6 +31,7 @@
     { label: 'Homepage', href: '/pages/home', icon: House, match: (p) => p === '/pages/home' },
     { label: 'Stack', href: '/pages/stack', icon: Stack, match: (p) => p === '/pages/stack' },
     { label: 'Section intros', href: '/pages/intros', icon: TextAlignLeft, match: (p) => p === '/pages/intros' },
+    { label: 'This', href: '/pages/this', icon: Info, match: (p) => p === '/pages/this' },
   ];
 
   const settings = [
@@ -40,6 +41,7 @@
   ];
 
   let query = $state('');
+  let accountOpen = $state(false);
 
   const searchable = [
     ...mainMenu, ...collections, ...pages, ...settings,
@@ -67,17 +69,32 @@
   }
 </script>
 
+<svelte:window onclick={(e) => { if (!e.target.closest('.account')) accountOpen = false; }} />
+
 <aside class="sidebar" class:collapsed>
-  <div class="workspace">
-    <div class="workspace-logo">
-      <img src={logoIcon} alt="Malate" />
+  <div class="brand">
+    <div class="brand-logo">
+      <img src={logoIcon} alt="" />
     </div>
-    <div class="workspace-meta">
-      <div class="workspace-name">Malate</div>
-      <div class="workspace-sub">Personal site</div>
+    <span class="brand-name">Malate</span>
+
+    <div class="account">
+      <button class="avatar" onclick={() => accountOpen = !accountOpen} title={email} aria-label="Account" aria-expanded={accountOpen}>
+        {initials(email)}
+      </button>
+      {#if accountOpen}
+        <div class="account-menu fade-up">
+          <div class="account-meta">
+            <div class="account-email">{email || 'Signed in'}</div>
+            <div class="account-role">Admin</div>
+          </div>
+          <button class="menu-item danger" onclick={logout}><SignOut size={15} /> Log out</button>
+        </div>
+      {/if}
     </div>
-    <CaretUpDown size={14} class="workspace-caret" />
   </div>
+
+  <div class="rule"></div>
 
   <div class="search">
     <MagnifyingGlass size={14} />
@@ -102,10 +119,9 @@
   </div>
 
   <nav class="nav">
-    <div class="group-label">Main menu</div>
     {#each mainMenu as item}
       <button class="nav-item" class:active={item.match(path)} onclick={() => go(item.href)}>
-        <item.icon size={17} weight={item.match(path) ? 'fill' : 'regular'} />
+        <item.icon size={18} weight={item.match(path) ? 'fill' : 'regular'} />
         <span>{item.label}</span>
       </button>
     {/each}
@@ -113,7 +129,7 @@
     <div class="group-label">Collections</div>
     {#each collections as item}
       <button class="nav-item" class:active={item.match(path)} onclick={() => go(item.href)}>
-        <item.icon size={17} weight={item.match(path) ? 'fill' : 'regular'} />
+        <item.icon size={18} weight={item.match(path) ? 'fill' : 'regular'} />
         <span>{item.label}</span>
       </button>
     {/each}
@@ -121,88 +137,130 @@
     <div class="group-label">Pages</div>
     {#each pages as item}
       <button class="nav-item" class:active={item.match(path)} onclick={() => go(item.href)}>
-        <item.icon size={17} weight={item.match(path) ? 'fill' : 'regular'} />
+        <item.icon size={18} weight={item.match(path) ? 'fill' : 'regular'} />
         <span>{item.label}</span>
       </button>
     {/each}
   </nav>
 
+  <div class="rule"></div>
+
   <div class="bottom">
     {#each settings as item}
       <button class="nav-item" class:active={item.match(path)} onclick={() => go(item.href)}>
-        <item.icon size={17} weight={item.match(path) ? 'fill' : 'regular'} />
+        <item.icon size={18} weight={item.match(path) ? 'fill' : 'regular'} />
         <span>{item.label}</span>
       </button>
     {/each}
-
-    <div class="account">
-      <div class="avatar">{initials(email)}</div>
-      <div class="account-meta">
-        <div class="account-email" title={email}>{email || 'Signed in'}</div>
-        <div class="account-role">Admin</div>
-      </div>
-      <button class="btn btn-ghost btn-icon btn-sm" onclick={logout} title="Log out" aria-label="Log out">
-        <SignOut size={15} />
-      </button>
-    </div>
   </div>
 </aside>
 
 <style>
   .sidebar {
-    width: 256px;
+    width: 264px;
     flex-shrink: 0;
-    height: 100vh;
-    position: sticky;
-    top: 0;
+    height: 100%;
     display: flex;
     flex-direction: column;
-    background: var(--surface);
+    padding: 20px 14px 14px;
+    gap: 14px;
+    background: var(--frame);
     border-right: 1px solid var(--border);
-    padding: 14px 12px;
-    gap: 12px;
   }
 
-  .workspace {
+  /* ── Brand + account ── */
+  .brand {
     display: flex;
     align-items: center;
     gap: 10px;
-    padding: 8px 8px;
-    border-radius: var(--radius);
-    border: 1px solid var(--border);
-    background: var(--surface);
-    transition: background 0.15s;
+    padding: 0 6px 0 8px;
   }
-  .workspace:hover { background: var(--surface-2); }
-
-  .workspace-logo {
-    width: 32px;
-    height: 32px;
-    border-radius: 9px;
-    background: var(--surface-3);
+  .brand-logo {
+    width: 34px;
+    height: 34px;
+    border-radius: 11px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-sm);
     display: flex;
     align-items: center;
     justify-content: center;
-    overflow: hidden;
     flex-shrink: 0;
   }
-  .workspace-logo img { width: 24px; height: 24px; }
+  .brand-logo img { width: 24px; height: 24px; }
+  .brand-name {
+    flex: 1;
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--text);
+  }
 
-  .workspace-meta { flex: 1; min-width: 0; line-height: 1.2; }
-  .workspace-name { font-size: 13.5px; font-weight: 500; }
-  .workspace-sub { font-size: 11.5px; color: var(--text-3); margin-top: 2px; }
-  .workspace :global(.workspace-caret) { color: var(--text-3); }
+  .account { position: relative; }
+  .avatar {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    background: var(--text);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 0 3px var(--frame), 0 0 0 4px var(--border);
+    transition: transform 0.15s var(--ease);
+  }
+  .avatar:hover { transform: scale(1.05); }
 
+  .account-menu {
+    position: absolute;
+    top: calc(100% + 10px);
+    right: 0;
+    width: 220px;
+    padding: 6px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+    z-index: 40;
+  }
+  .account-meta { padding: 8px 10px 10px; border-bottom: 1px dashed var(--border-strong); margin-bottom: 4px; }
+  .account-email { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .account-role { font-size: 11px; color: var(--text-3); margin-top: 2px; }
+  .menu-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    width: 100%;
+    padding: 8px 10px;
+    border-radius: var(--radius-sm);
+    font-size: 13px;
+    color: var(--text-2);
+    text-align: left;
+  }
+  .menu-item:hover { background: var(--surface-3); color: var(--text); }
+  .menu-item.danger:hover { background: var(--danger-soft); color: var(--danger); }
+
+  .rule {
+    height: 0;
+    border-top: 1px dashed var(--border-strong);
+    margin: 4px 8px;
+    flex-shrink: 0;
+  }
+
+  /* ── Search ── */
   .search {
     position: relative;
     display: flex;
     align-items: center;
     gap: 8px;
-    padding: 0 10px;
-    height: 36px;
+    padding: 0 12px;
+    height: 38px;
     border: 1px solid var(--border);
-    border-radius: var(--radius);
-    background: var(--surface-2);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.6);
     color: var(--text-3);
     transition: border-color 0.15s, background 0.15s;
   }
@@ -243,76 +301,59 @@
   }
   .search-item:hover { background: var(--surface-3); }
 
+  /* ── Nav ── */
   .nav {
     display: flex;
     flex-direction: column;
-    gap: 2px;
+    gap: 3px;
     flex: 1;
     overflow-y: auto;
     min-height: 0;
   }
 
   .group-label {
-    font-size: 11.5px;
+    font-size: 12px;
     font-weight: 500;
     color: var(--text-3);
-    padding: 10px 10px 6px;
+    padding: 14px 12px 6px;
   }
 
   .nav-item {
     display: flex;
     align-items: center;
-    gap: 10px;
+    gap: 12px;
     width: 100%;
-    padding: 8px 10px;
-    border-radius: var(--radius-sm);
-    font-size: 13.5px;
-    color: var(--text-2);
+    min-height: 40px;
+    padding: 8px 12px;
+    border: 1px solid transparent;
+    border-radius: 12px;
+    font-size: 14px;
+    color: var(--text-3);
     text-align: left;
-    transition: background 0.14s var(--ease), color 0.14s;
+    transition: background 0.14s var(--ease), color 0.14s, border-color 0.14s;
   }
-  .nav-item:hover { background: var(--surface-3); color: var(--text); }
-  .nav-item.active { background: var(--surface-3); color: var(--text); font-weight: 500; }
+  .nav-item:hover { background: rgba(17, 19, 24, 0.035); color: var(--text); }
+  /* Active item is a raised pill sitting on the frame. */
+  .nav-item.active {
+    background: var(--surface);
+    border-color: var(--border);
+    color: var(--text);
+    box-shadow: 0 1px 2px rgba(17, 19, 24, 0.05), inset 0 1px 0 #fff;
+  }
 
   .bottom {
     display: flex;
     flex-direction: column;
-    gap: 2px;
-    padding-top: 10px;
-    border-top: 1px solid var(--border);
+    gap: 3px;
   }
-
-  .account {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    margin-top: 8px;
-    padding: 8px 8px;
-    border-radius: var(--radius);
-    background: var(--surface-2);
-  }
-  .avatar {
-    width: 30px;
-    height: 30px;
-    border-radius: 50%;
-    background: var(--text);
-    color: #fff;
-    font-size: 11px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-shrink: 0;
-  }
-  .account-meta { flex: 1; min-width: 0; line-height: 1.2; }
-  .account-email { font-size: 12.5px; font-weight: 500; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .account-role { font-size: 11px; color: var(--text-3); margin-top: 2px; }
 
   @media (max-width: 900px) {
     .sidebar {
       position: fixed;
       inset: 0 auto 0 0;
       z-index: 200;
+      background: var(--frame);
+      border-right: 1px solid var(--border);
       transform: translateX(-100%);
       transition: transform 0.22s var(--ease);
       box-shadow: var(--shadow-lg);

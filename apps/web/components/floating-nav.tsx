@@ -5,32 +5,22 @@ import Link from "next/link";
 import { useState, useEffect } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { List, X } from "@phosphor-icons/react";
+import { visibleNavItems, type HideablePage } from "../lib/nav";
 
 type FloatingNavProps = {
   pathname: string;
   hasWritings?: boolean;
+  hiddenPages?: HideablePage[];
 };
-
-const defaultNavItems = [
-  { href: "/projects", label: "Projects" },
-  { href: "/writings", label: "Writings" },
-  { href: "/experience", label: "Experience" },
-  { href: "/stack", label: "Stack" },
-  { href: "/this", label: "This" },
-];
 
 function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
-export default function FloatingNav({ pathname, hasWritings = true }: FloatingNavProps) {
+export default function FloatingNav({ pathname, hasWritings = true, hiddenPages = [] }: FloatingNavProps) {
   const [isOpen, setIsOpen] = useState(false);
 
-  // Hide writings until there is something to read
-  const navItems = defaultNavItems.filter((item) => {
-    if (item.href === "/writings" && !hasWritings) return false;
-    return true;
-  });
+  const navItems = visibleNavItems(hiddenPages, hasWritings);
 
   // Close mobile menu on route change
   useEffect(() => {

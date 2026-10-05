@@ -2,7 +2,7 @@
   import Shell from '../components/Shell.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { projects, blogs, skills, experience, cv, tags, auth, profile as profileApi } from '../lib/api.js';
-  import { Star, Article, Lightning, Briefcase, Plus, ArrowRight, House, Stack, PencilSimple, Broadcast } from 'phosphor-svelte';
+  import { Star, Article, Lightning, Briefcase, Plus, ArrowRight, House, Stack, PencilSimple, Broadcast, Info } from 'phosphor-svelte';
 
   let allProjects = $state([]);
   let allBlogs = $state([]);
@@ -115,9 +115,9 @@
       </div>
     </div>
 
-    <section class="stats">
+    <section class="stats card">
       {#each stats as s}
-        <button class="stat card" onclick={() => navigate(s.href)}>
+        <button class="stat" onclick={() => navigate(s.href)}>
           <div class="stat-top">
             <span class="stat-icon"><s.icon size={16} /></span>
             <span class="stat-label">{s.label}</span>
@@ -203,6 +203,11 @@
             <span class="row-title">Section intros</span>
             <ArrowRight size={12} class="row-arrow" />
           </button>
+          <button class="row" onclick={() => navigate('/pages/this')}>
+            <span class="row-icon"><Info size={14} /></span>
+            <span class="row-title">This</span>
+            <ArrowRight size={12} class="row-arrow" />
+          </button>
           <button class="row" onclick={() => navigate('/cv/new')}>
             <span class="row-icon"><Plus size={14} /></span>
             <span class="row-title">{activeCv ? `CV: ${activeCv.label || 'active'}` : 'Upload a CV'}</span>
@@ -255,21 +260,32 @@
   .hero p { font-size: 13.5px; }
   .hero-badges { display: flex; gap: 6px; }
 
+  /* One strip of figures split by dashed rules. */
   .stats {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
-    gap: 14px;
+    padding: 6px;
   }
 
   .stat {
-    padding: 16px 18px;
+    position: relative;
+    padding: 18px 20px;
     text-align: left;
     display: flex;
     flex-direction: column;
-    gap: 8px;
-    transition: border-color 0.15s, transform 0.15s var(--ease), box-shadow 0.15s;
+    gap: 10px;
+    border-radius: var(--radius);
+    transition: background 0.15s;
   }
-  .stat:hover { border-color: var(--border-strong); box-shadow: var(--shadow); transform: translateY(-1px); }
+  .stat + .stat::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 18px;
+    bottom: 18px;
+    border-left: 1px dashed var(--border-strong);
+  }
+  .stat:hover { background: var(--surface-2); }
 
   .stat-top { display: flex; align-items: center; gap: 8px; }
   .stat-icon {
@@ -342,6 +358,7 @@
 
   @media (max-width: 900px) {
     .stats { grid-template-columns: repeat(2, 1fr); }
+    .stat:nth-child(odd)::before { display: none; }
     .grid { grid-template-columns: 1fr; }
   }
 </style>

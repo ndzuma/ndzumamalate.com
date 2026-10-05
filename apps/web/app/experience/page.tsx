@@ -9,6 +9,7 @@ function formatDate(dateStr: string | undefined) {
 }
 
 export default async function ExperiencePage() {
+  await content.requireVisible("experience");
   const [intro, experience, skills] = await Promise.all([
     content.intro("experience"),
     api.getExperience().catch((e) => { console.error("Fetch error:", e); return []; }),

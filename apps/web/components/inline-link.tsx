@@ -8,6 +8,7 @@ type InlineLinkProps = {
   title: string;
   url: string;
   label?: string;
+  /** Kept for existing {{link:url|title|color}} tokens; triggers are now uniformly underlined. */
   color?: "blue" | "orange" | "purple" | "green" | "gray" | "red" | "black";
   iconType?: "link" | "x" | "youtube";
 };
@@ -16,7 +17,6 @@ export default function InlineLink({
   title, 
   url,
   label = "Visit link",
-  color = "blue",
   iconType = "link"
 }: InlineLinkProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -31,16 +31,6 @@ export default function InlineLink({
     timeoutRef.current = setTimeout(() => {
       setIsOpen(false);
     }, 150);
-  };
-
-  const colorStyles = {
-    blue: "bg-blue-100 hover:bg-blue-200 text-black",
-    orange: "bg-orange-100 hover:bg-orange-200 text-black",
-    purple: "bg-purple-100 hover:bg-purple-200 text-black",
-    green: "bg-green-100 hover:bg-green-200 text-black",
-    gray: "bg-gray-100 hover:bg-gray-200 text-black",
-    red: "bg-red-100 hover:bg-red-200 text-black",
-    black: "bg-black/10 hover:bg-black/20 text-black",
   };
 
   const getIcon = () => {
@@ -61,7 +51,7 @@ export default function InlineLink({
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className={`font-medium px-1.5 py-0.5 rounded transition-colors cursor-pointer ${colorStyles[color]}`}
+        className="inline-trigger"
       >
         {title}
       </span>
@@ -75,12 +65,12 @@ export default function InlineLink({
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               <a 
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
               >
                 {getIcon()}
                 {label}

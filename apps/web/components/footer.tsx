@@ -18,16 +18,11 @@ export default function Footer({ profile }: FooterProps) {
 
   return (
     <footer className="pt-12 pb-8 border-t border-black/10 flex flex-col gap-16 font-sans w-full">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-8">
+      {/* items-end lines the clock up with the email row on the right */}
+      <div className="flex flex-col-reverse sm:flex-row justify-between items-start sm:items-end gap-8">
 
         {/* Left: local time */}
-        <div className="flex items-center gap-2.5 text-sm text-black/60">
-          <span className="relative flex h-2 w-2">
-            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-black/20 opacity-75"></span>
-            <span className="relative inline-flex h-2 w-2 rounded-full bg-black/40"></span>
-          </span>
-          <LondonClock />
-        </div>
+        <LondonClock className="text-black/50 font-medium" />
 
         {/* Right: Message & Email */}
         <div className="flex flex-col sm:items-end gap-1">

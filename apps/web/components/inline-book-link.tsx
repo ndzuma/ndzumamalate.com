@@ -26,7 +26,7 @@ export default function InlineBookLink({ title, url }: { title: string; url: str
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-orange-100 px-1 rounded hover:bg-orange-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         {title}
       </span>
@@ -40,12 +40,12 @@ export default function InlineBookLink({ title, url }: { title: string; url: str
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               <a 
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
-                className="flex items-center gap-1.5 bg-[#e9e5cd]/60 hover:bg-[#e9e5cd] text-[#382110] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
               >
                 <BookOpen weight="fill" className="w-4 h-4" />
                 Book Link

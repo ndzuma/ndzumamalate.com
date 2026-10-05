@@ -136,7 +136,7 @@ export async function warmContentCache(): Promise<void> {
     api.getTags(),
     api.getProfile(),
     api.getActiveCV(),
-    ...['home', 'stack', 'projects', 'writings', 'experience'].map((key) => api.getPage(key)),
+    ...['home', 'stack', 'projects', 'writings', 'experience', 'this'].map((key) => api.getPage(key)),
   ];
   await Promise.allSettled(reads);
 }

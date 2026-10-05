@@ -26,7 +26,7 @@ export default function InlineEmailLink() {
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         email
       </span>
@@ -40,10 +40,10 @@ export default function InlineEmailLink() {
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               <a 
                 href={`mailto:${process.env.NEXT_PUBLIC_CONTACT_EMAIL}`} 
-                className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
               >
                 <EnvelopeSimple weight="bold" className="w-4 h-4" />
                 {process.env.NEXT_PUBLIC_CONTACT_EMAIL}

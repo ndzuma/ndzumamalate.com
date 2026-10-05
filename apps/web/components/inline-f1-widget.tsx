@@ -112,7 +112,7 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-red-100 px-1 rounded hover:bg-red-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         F1
       </span>
@@ -126,7 +126,7 @@ export default function InlineF1Widget({ align = "auto" }: { align?: "left" | "c
             transition={{ duration: 0.15 }}
             className={`absolute top-full pt-2 z-50 w-max ${positionClasses}`}
           >
-            <div className="bg-white/95 backdrop-blur-md border border-black/10 rounded-2xl p-1.5 shadow-xl font-sans">
+            <div className="popup-surface p-1.5 font-sans">
               
               <div className="bg-[#F6F5F3] rounded-xl flex flex-col">
                 

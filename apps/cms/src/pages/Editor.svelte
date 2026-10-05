@@ -2,6 +2,7 @@
   import Shell from '../components/Shell.svelte';
   import Switch from '../components/Switch.svelte';
   import Uploader from '../components/Uploader.svelte';
+  import FormatBar from '../components/FormatBar.svelte';
   import { navigate } from '../lib/router.svelte.js';
   import { projects, blogs, tags as tagsApi } from '../lib/api.js';
   import { toast } from '../lib/toast.svelte.js';
@@ -28,6 +29,8 @@
   let slug = $state('');
   let summary = $state('');
   let content = $state('');
+  let editorEl = $state(null);
+  let formatBar = $state(null);
   let imageUrl = $state('');
   let liveUrl = $state('');
   let repoUrl = $state('');
@@ -227,6 +230,14 @@
 
   function handleEditorKeydown(e) {
     // Cmd/Ctrl+S is handled by the window listener.
+    if (e.metaKey || e.ctrlKey) {
+      const shortcut = { b: 'bold', i: 'italic', k: 'link' }[e.key];
+      if (shortcut) {
+        e.preventDefault();
+        formatBar?.run(shortcut);
+        return;
+      }
+    }
     if (e.key === 'Tab') {
       e.preventDefault();
       const target = e.target;
@@ -522,6 +533,7 @@
           </button>
         </div>
         <textarea
+          bind:this={editorEl}
           class="editor-textarea"
           class:dragging={isDragging}
           bind:value={content}
@@ -532,6 +544,9 @@
           placeholder="Start writing markdown…"
           spellcheck="true"
         ></textarea>
+        <div class="format-dock">
+          <FormatBar bind:this={formatBar} el={editorEl} bind:value={content} tools={['link', 'heading', 'bold', 'italic', 'strike', 'code', 'quote']} />
+        </div>
       </div>
 
       {#if showPreview}
@@ -680,7 +695,7 @@
     flex: 1;
     display: grid;
     grid-template-columns: 1fr;
-    min-height: calc(100vh - 60px);
+    min-height: 0;
   }
   .content-layout.split { grid-template-columns: 1fr 1fr; }
 
@@ -689,7 +704,19 @@
     flex-direction: column;
     min-height: 0;
   }
-  .editor-pane { background: var(--surface); border-right: 1px solid var(--border); }
+  .editor-pane { position: relative; background: var(--surface); border-right: 1px solid var(--border); }
+
+  /* Format bar floats over the bottom of the visible writing area: a
+     zero-height sticky strip, with the pill lifted above it. */
+  .format-dock {
+    position: sticky;
+    bottom: 0;
+    height: 0;
+    display: flex;
+    justify-content: center;
+    z-index: 5;
+  }
+  .format-dock > :global(.format-bar) { transform: translateY(calc(-100% - 20px)); }
   .preview-pane { background: var(--bg); }
 
   .pane-head {

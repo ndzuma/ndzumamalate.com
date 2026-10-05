@@ -7,13 +7,15 @@ import { CmsPreviewCard } from "./cms-preview-card";
 import { ArchitectureDiagram } from "./architecture-diagram";
 import { DatabaseSchemaGrid } from "./database-schema";
 import { DesignSystemShowcase } from "./design-system";
+import { content } from "../../lib/content";
 
 export const metadata: Metadata = {
   title: "This",
   description: "About this website.",
 };
 
-export default function ThisPage() {
+export default async function ThisPage() {
+  await content.requireVisible("this");
   return (
     <main className="flex w-full flex-col font-sans text-[#111] max-w-6xl mx-auto pb-24 relative">
       <section className="mt-8 sm:mt-16 max-w-2xl mb-16">
@@ -28,7 +30,7 @@ export default function ThisPage() {
             I built this over a week with the help of <strong>OpenCode</strong> and <strong>Gemini 3.1 Pro Preview</strong>. I designed the systems and architecture, while agents handled boilerplate and rapid prototyping. I stepped in frequently to fix logic, rebuild components, and enforce my style guidelines.
           </div>
           <div>
-            This setup is intentionally over-engineered to demonstrate my technical capabilities. The design is heavily inspired by others, and you can find my references in the <a href="#inspirations" className="font-medium text-black bg-blue-100 px-1.5 py-0.5 rounded hover:bg-blue-200 transition-colors">inspirations</a> section below. The website uses Phosphor Icons, and the home screen logo ticker uses Simple Icons.
+            This setup is intentionally over-engineered to demonstrate my technical capabilities. The design is heavily inspired by others, and you can find my references in the <a href="#inspirations" className="inline-trigger">inspirations</a> section below. The website uses Phosphor Icons, and the home screen logo ticker uses Simple Icons.
           </div>
           <div>
             Check out the <InlineProjectLink title="project repo" url="https://github.com/ndzuma/ndzumamalate.com" label="View on Github" />.

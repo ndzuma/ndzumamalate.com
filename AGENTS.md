@@ -39,12 +39,13 @@ apps/
   cms/
     src/
       pages/                    # page components (Dashboard, Editor, forms)
-      components/               # shared UI (TopBar, BottomNav, Toast)
-      lib/                      # api.js, router.svelte.js, auth.svelte.js, toast.svelte.js
+      components/               # shared UI (Shell frame, Sidebar, FormatBar pill toolbar, TokenField, Toast)
+      lib/                      # api.js, router, auth, toast, widgets.js, format.js (+ *.test.js, vitest)
       styles/global.css
   web/
     app/                        # Next.js App Router (layout.tsx, page.tsx, route folders)
     components/                 # React components
+    lib/                        # API client, content cache, page content + visibility, nav (tests: bun test)
     public/                     # static assets (including copied CMS logos/favicons)
 ```
 
