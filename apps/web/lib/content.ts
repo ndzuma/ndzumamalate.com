@@ -1,4 +1,6 @@
-import { api } from "./api";
+import { notFound } from "next/navigation";
+import { api, ApiError } from "./api";
+import type { HideablePage } from "./nav";
 
 /**
  * Editable page content. The API stores each page as a JSON document
@@ -17,13 +19,17 @@ export type HomeContent = {
 
 export type StackSection = { title: string; items: string[] };
 
-export type StackContent = {
+// Pages that can be hidden from the CMS set `hidden: true` in their document;
+// a hidden page drops out of the nav and its routes 404.
+type Hideable = { hidden?: boolean };
+
+export type StackContent = Hideable & {
   title: string;
   intro: string;
   sections: StackSection[];
 };
 
-export type IntroContent = { title: string; intro: string };
+export type IntroContent = Hideable & { title: string; intro: string };
 
 export const DEFAULT_HOME: HomeContent = {
   name: "ndzuma malate",
@@ -107,9 +113,18 @@ async function loadPage<T extends object>(key: string, fallback: T): Promise<T> 
     const data = (page?.data ?? {}) as Partial<T>;
     return { ...fallback, ...stripEmpty(data) };
   } catch (error) {
-    console.error(`Page content fetch error (${key}):`, error);
+    if (!(error instanceof ApiError && error.status === 404)) {
+      console.error(`Page content fetch error (${key}):`, error);
+    }
     return fallback;
   }
+}
+
+const HIDEABLE: HideablePage[] = ["stack", "projects", "writings", "experience", "this"];
+
+async function isHidden(key: HideablePage): Promise<boolean> {
+  const page = await loadPage<Hideable>(key, {});
+  return page.hidden === true;
 }
 
 function stripEmpty<T extends object>(data: Partial<T>): Partial<T> {
@@ -126,4 +141,13 @@ export const content = {
   home: () => loadPage<HomeContent>("home", DEFAULT_HOME),
   stack: () => loadPage<StackContent>("stack", DEFAULT_STACK),
   intro: (key: keyof typeof DEFAULT_INTROS) => loadPage<IntroContent>(key, DEFAULT_INTROS[key]),
+  /** Keys of every page currently hidden from the CMS. */
+  hiddenPages: async (): Promise<HideablePage[]> => {
+    const flags = await Promise.all(HIDEABLE.map(isHidden));
+    return HIDEABLE.filter((_, i) => flags[i]);
+  },
+  /** 404 the current route when its page is hidden. */
+  requireVisible: async (key: HideablePage): Promise<void> => {
+    if (await isHidden(key)) notFound();
+  },
 };

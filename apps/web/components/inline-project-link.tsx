@@ -37,7 +37,7 @@ export default function InlineProjectLink({
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         {title}
       </span>
@@ -51,13 +51,13 @@ export default function InlineProjectLink({
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               <a 
                 href={url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('project_link_clicked', { project: title })}
-                className="flex items-center gap-1.5 bg-black/5 hover:bg-black/10 text-black px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
               >
                 <GithubLogo weight="fill" className="w-4 h-4" />
                 {label}

@@ -9,6 +9,7 @@ export const metadata: Metadata = {
 };
 
 export default async function StackPage() {
+  await content.requireVisible("stack");
   const [stack, profile, projects, cv] = await Promise.all([
     content.stack(),
     api.getProfile().catch(() => null),

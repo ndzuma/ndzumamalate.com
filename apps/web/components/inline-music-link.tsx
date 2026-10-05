@@ -26,7 +26,7 @@ export default function InlineMusicLink({ spotifyUrl, appleMusicUrl }: { spotify
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-purple-100 px-1 rounded hover:bg-purple-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         the most amazing playlist on earth
       </span>
@@ -40,13 +40,13 @@ export default function InlineMusicLink({ spotifyUrl, appleMusicUrl }: { spotify
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               {spotifyUrl && (
                 <a 
                   href={spotifyUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 bg-[#1DB954]/10 hover:bg-[#1DB954]/20 text-[#1DB954] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
                 >
                   <SpotifyLogo weight="fill" className="w-4 h-4" />
                   Spotify
@@ -57,7 +57,7 @@ export default function InlineMusicLink({ spotifyUrl, appleMusicUrl }: { spotify
                   href={appleMusicUrl} 
                   target="_blank" 
                   rel="noopener noreferrer"
-                  className="flex items-center gap-1.5 bg-[#FA243C]/10 hover:bg-[#FA243C]/20 text-[#FA243C] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
                 >
                   <AppleLogo weight="fill" className="w-4 h-4" />
                   Apple Music

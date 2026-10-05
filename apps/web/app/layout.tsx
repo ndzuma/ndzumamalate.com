@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Geist } from "next/font/google";
 import type { ReactNode } from "react";
 import { api } from "../lib/api";
+import { content } from "../lib/content";
 
 import "./globals.css";
 import SiteShell from "../components/site-shell";
@@ -78,7 +79,7 @@ type RootLayoutProps = {
 };
 
 export default async function RootLayout({ children }: RootLayoutProps) {
-  const [writings, profile] = await Promise.all([
+  const [writings, profile, hiddenPages] = await Promise.all([
     api.getBlogs().catch((error) => {
       console.error("Layout writings fetch error:", error);
       return [];
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       console.error("Layout profile fetch error:", error);
       return null;
     }),
+    content.hiddenPages(),
   ]);
   const hasWritings = writings.length > 0;
 
@@ -95,7 +97,7 @@ export default async function RootLayout({ children }: RootLayoutProps) {
       <body className={geist.variable}>
         <CSPostHogProvider>
           <LiveSync />
-          <SiteShell hasWritings={hasWritings} profile={profile}>{children}</SiteShell>
+          <SiteShell hasWritings={hasWritings} hiddenPages={hiddenPages} profile={profile}>{children}</SiteShell>
         </CSPostHogProvider>
       </body>
     </html>

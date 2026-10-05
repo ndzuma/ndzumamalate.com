@@ -32,7 +32,7 @@ export default function InlineTechLink() {
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-purple-100 px-1 rounded hover:bg-purple-200 transition-colors cursor-default"
+        className="inline-trigger cursor-default"
       >
         tech
       </span>
@@ -46,11 +46,11 @@ export default function InlineTechLink() {
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg grid grid-cols-2 gap-1">
+            <div className="popup-surface p-1.5 grid grid-cols-2 gap-1">
               {topics.map((topic, i) => (
                 <div 
                   key={i}
-                  className="bg-[#8B5CF6]/10 hover:bg-[#8B5CF6]/20 text-black transition-colors px-3 py-1.5 rounded-lg text-xs font-medium text-center cursor-default"
+                  className="popup-chip px-3 py-1.5 text-xs font-medium text-center cursor-default"
                 >
                   {topic}
                 </div>

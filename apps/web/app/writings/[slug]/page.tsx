@@ -3,7 +3,9 @@ import Image from "next/image";
 import Link from "next/link";
 import { ArrowLeft } from "@phosphor-icons/react/dist/ssr";
 import { api, ApiError } from "../../../lib/api";
+import { content } from "../../../lib/content";
 import ReactMarkdown from "react-markdown";
+import { markdownComponents } from "../../../components/markdown-image";
 import remarkGfm from "remark-gfm";
 import type { Metadata } from "next";
 
@@ -30,6 +32,7 @@ function formatDate(dateStr?: string) {
 }
 
 export default async function WritingPage({ params }: Props) {
+  await content.requireVisible("writings");
   const { slug } = await params;
   let writing;
 
@@ -66,26 +69,28 @@ export default async function WritingPage({ params }: Props) {
       </div>
 
       {/* Cover Image & Header Layout */}
-      <div className="relative w-full aspect-[16/9] rounded-2xl overflow-hidden mb-8 bg-black/5">
-        {writing.cover_image_url && (
-          <Image
-            src={writing.cover_image_url}
-            alt={writing.title}
-            fill
-            sizes="(max-width: 896px) 100vw, 896px"
-            className="object-cover"
-            priority
-          />
-        )}
+      <div className="image-frame mb-8">
+        <div className="image-frame-inner w-full aspect-[16/9]">
+          {writing.cover_image_url && (
+            <Image
+              src={writing.cover_image_url}
+              alt={writing.title}
+              fill
+              sizes="(max-width: 896px) 100vw, 896px"
+              className="object-cover"
+              priority
+            />
+          )}
 
-        {/* Soft diffused gradient from bottom left */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/10 to-transparent pointer-events-none" />
+          {/* Soft diffused gradient from bottom left */}
+          <div className="absolute inset-0 bg-gradient-to-tr from-black/80 via-black/10 to-transparent pointer-events-none" />
 
-        {/* Title bottom left, pure text */}
-        <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 z-10 max-w-[85%]">
-          <h1 className="text-xl md:text-3xl font-semibold tracking-tight text-white drop-shadow-md">
-            {writing.title}
-          </h1>
+          {/* Title bottom left, pure text */}
+          <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 z-10 max-w-[85%]">
+            <h1 className="text-xl md:text-3xl font-semibold tracking-tight text-white drop-shadow-md">
+              {writing.title}
+            </h1>
+          </div>
         </div>
       </div>
 
@@ -116,8 +121,8 @@ export default async function WritingPage({ params }: Props) {
 
       {/* Content */}
       {writing.content ? (
-        <article className="prose prose-neutral prose-a:text-black hover:prose-a:text-black/70 prose-a:underline-offset-4 prose-img:rounded-xl max-w-none">
-          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+        <article className="prose prose-neutral prose-a:text-black hover:prose-a:text-black/70 prose-a:underline-offset-4 max-w-none">
+          <ReactMarkdown remarkPlugins={[remarkGfm]} components={markdownComponents}>
             {writing.content}
           </ReactMarkdown>
         </article>

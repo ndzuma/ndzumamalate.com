@@ -28,28 +28,30 @@ export function CmsPreviewCard({ route, src, alt }: CmsPreviewCardProps) {
 
   return (
     <>
-      <div className="w-full aspect-[3568/2096] rounded-2xl bg-black/5 border border-black/10 overflow-hidden relative shadow-sm flex flex-col group">
-        <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2 shrink-0">
-          <div className="w-2 h-2 rounded-full bg-red-400" />
-          <div className="w-2 h-2 rounded-full bg-yellow-400" />
-          <div className="w-2 h-2 rounded-full bg-green-400" />
-          <span className="text-[10px] font-mono text-black/40 ml-2">{route}</span>
-        </div>
-        <div className="flex-1 relative bg-white">
-          <Image 
-            src={src} 
-            alt={alt} 
-            fill 
-            className="object-cover object-top"
-            unoptimized
-          />
-          <button 
-            onClick={() => setIsZoomed(true)}
-            className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md border border-white/10"
-            title="Zoom image"
-          >
-            <ArrowsOutSimple weight="bold" className="w-5 h-5" />
-          </button>
+      <div className="image-frame group">
+        <div className="image-frame-inner w-full aspect-[3568/2096] flex flex-col">
+          <div className="h-8 border-b border-black/10 bg-white/50 flex items-center px-4 gap-2 shrink-0">
+            <div className="w-2 h-2 rounded-full bg-red-400" />
+            <div className="w-2 h-2 rounded-full bg-yellow-400" />
+            <div className="w-2 h-2 rounded-full bg-green-400" />
+            <span className="text-[10px] font-mono text-black/40 ml-2">{route}</span>
+          </div>
+          <div className="flex-1 relative bg-white">
+            <Image 
+              src={src} 
+              alt={alt} 
+              fill 
+              className="object-cover object-top"
+              unoptimized
+            />
+            <button 
+              onClick={() => setIsZoomed(true)}
+              className="absolute top-4 right-4 p-2.5 bg-black/40 hover:bg-black/60 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity backdrop-blur-md border border-white/10"
+              title="Zoom image"
+            >
+              <ArrowsOutSimple weight="bold" className="w-5 h-5" />
+            </button>
+          </div>
         </div>
       </div>
 

@@ -37,7 +37,7 @@ export default function InlineCvLink({ cv }: InlineCvLinkProps) {
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-pink-100 px-1 rounded hover:bg-pink-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         CV
       </span>
@@ -51,13 +51,13 @@ export default function InlineCvLink({ cv }: InlineCvLinkProps) {
             transition={{ duration: 0.15 }}
             className="absolute left-0 top-full pt-2 z-10 w-max max-w-[85vw] sm:max-w-none"
           >
-            <div className="bg-white/90 backdrop-blur-md border border-black/10 rounded-xl p-1.5 shadow-lg flex items-center gap-1.5">
+            <div className="popup-surface p-1.5 flex items-center gap-1.5">
               <a 
                 href={cv.file_url} 
                 target="_blank" 
                 rel="noopener noreferrer"
                 onClick={() => posthog.capture('cv_viewed')}
-                className="flex items-center gap-1.5 bg-[#E23636]/10 hover:bg-[#E23636]/20 text-[#E23636] px-3 py-1.5 rounded-lg text-xs font-medium transition-colors cursor-pointer"
+                className="flex items-center gap-1.5 popup-chip px-3 py-1.5 text-xs font-medium cursor-pointer"
               >
                 <FilePdf weight="fill" className="w-4 h-4" />
                 {cv.label || "View Resume"}

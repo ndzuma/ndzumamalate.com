@@ -8,6 +8,7 @@ export const metadata = {
 };
 
 export default async function ProjectsPage() {
+  await content.requireVisible("projects");
   const [intro, allProjects, allTags] = await Promise.all([
     content.intro("projects"),
     api.getProjects().catch((e) => { console.error("Fetch error:", e); return []; }),

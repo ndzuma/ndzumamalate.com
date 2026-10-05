@@ -1,16 +1,18 @@
 <script>
   /**
-   * Text field with an inline-widget toolbar. Widgets are inserted as tokens
-   * like {{f1}} at the caret; the preview below shows them as chips so it's
+   * Text field with a pill format bar (widgets, links, bold) underneath. Widgets are inserted as tokens like
+   * {{f1}} at the caret; the preview below shows them as chips so it's
    * obvious what will render on the site.
    */
+  import FormatBar from './FormatBar.svelte';
   import { WIDGETS, segment, describeToken, insertAt } from '../lib/widgets.js';
-  import { Plus, Sparkle } from 'phosphor-svelte';
+  import { Plus } from 'phosphor-svelte';
 
   /** @type {{ value: string, placeholder?: string, rows?: number, projects?: any[], multiline?: boolean, preview?: boolean, id?: string }} */
   let { value = $bindable(''), placeholder = '', rows = 3, projects = [], multiline = true, preview = true, id = undefined } = $props();
 
   let el = $state(null);
+  let bar = $state(null);
   let menuOpen = $state(false);
   let projectPickerOpen = $state(false);
   let linkPickerOpen = $state(false);
@@ -18,6 +20,17 @@
   let linkLabel = $state('');
 
   const segments = $derived(segment(value || ''));
+
+  function handleKeydown(e) {
+    if (!(e.metaKey || e.ctrlKey)) return;
+    if (e.key === 'b') { e.preventDefault(); bar?.run('bold'); }
+    if (e.key === 'k') { e.preventDefault(); bar?.run('link'); }
+  }
+
+  // Menu buttons must not steal focus from the field.
+  function keepFocus(e) {
+    if (e.target.closest('button')) e.preventDefault();
+  }
 
   function insert(snippet) {
     const start = el?.selectionStart ?? (value || '').length;
@@ -67,57 +80,59 @@
 <div class="token-field">
   <div class="editor">
     {#if multiline}
-      <textarea {id} bind:this={el} bind:value {placeholder} {rows}></textarea>
+      <textarea {id} bind:this={el} bind:value {placeholder} {rows} onkeydown={handleKeydown}></textarea>
     {:else}
-      <input {id} bind:this={el} bind:value {placeholder} />
+      <input {id} bind:this={el} bind:value {placeholder} onkeydown={handleKeydown} />
     {/if}
 
-    <div class="toolbar">
-      <div class="menu-anchor">
-        <button type="button" class="btn btn-secondary btn-sm" onclick={() => { menuOpen = !menuOpen; projectPickerOpen = false; linkPickerOpen = false; }}>
-          <Sparkle size={13} weight="fill" class="spark" />
-          Insert widget
-        </button>
+    <!-- svelte-ignore a11y_no_static_element_interactions -->
+    <div class="bar-anchor" class:open={menuOpen || projectPickerOpen || linkPickerOpen} onmousedown={keepFocus}>
+      <FormatBar bind:this={bar} {el} bind:value tools={['link', 'bold']}>
+        {#snippet lead()}
+          <button type="button" class="fb-btn fb-label" class:on={menuOpen} onclick={() => { menuOpen = !menuOpen; projectPickerOpen = false; linkPickerOpen = false; }}>
+            <span class="fb-orb"></span>
+            Insert widget
+          </button>
+        {/snippet}
+      </FormatBar>
 
-        {#if menuOpen}
-          <div class="menu fade-up">
-            {#each WIDGETS as w}
-              <button type="button" class="menu-item" onclick={() => pick(w)}>
-                <span class="chip chip-{w.color}">{w.label}</span>
-                <span class="menu-desc">{w.description}</span>
+      {#if menuOpen}
+        <div class="menu fade-up">
+          {#each WIDGETS as w}
+            <button type="button" class="menu-item" onclick={() => pick(w)}>
+              <span class="chip chip-{w.color}">{w.label}</span>
+              <span class="menu-desc">{w.description}</span>
+            </button>
+          {/each}
+        </div>
+      {/if}
+
+      {#if projectPickerOpen}
+        <div class="menu fade-up">
+          <div class="menu-title">Pick a project</div>
+          {#if projects.length === 0}
+            <div class="menu-desc" style="padding: 8px 10px;">No projects yet</div>
+          {:else}
+            {#each projects as p}
+              <button type="button" class="menu-item" onclick={() => insert(`{{project:${p.slug || p.id}}}`)}>
+                <span class="chip chip-blue">{p.title}</span>
+                <span class="menu-desc">{p.repo_url || p.live_url || 'no link set'}</span>
               </button>
             {/each}
-          </div>
-        {/if}
+          {/if}
+        </div>
+      {/if}
 
-        {#if projectPickerOpen}
-          <div class="menu fade-up">
-            <div class="menu-title">Pick a project</div>
-            {#if projects.length === 0}
-              <div class="menu-desc" style="padding: 8px 10px;">No projects yet</div>
-            {:else}
-              {#each projects as p}
-                <button type="button" class="menu-item" onclick={() => insert(`{{project:${p.slug || p.id}}}`)}>
-                  <span class="chip chip-blue">{p.title}</span>
-                  <span class="menu-desc">{p.repo_url || p.live_url || 'no link set'}</span>
-                </button>
-              {/each}
-            {/if}
-          </div>
-        {/if}
-
-        {#if linkPickerOpen}
-          <div class="menu link-menu fade-up">
-            <div class="menu-title">Custom link</div>
-            <input placeholder="https://…" bind:value={linkUrl} onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), insertLink())} />
-            <input placeholder="Label (optional)" bind:value={linkLabel} onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), insertLink())} />
-            <button type="button" class="btn btn-primary btn-sm" onclick={insertLink} disabled={!linkUrl.trim()}>
-              <Plus size={12} weight="bold" /> Insert
-            </button>
-          </div>
-        {/if}
-      </div>
-      <span class="hint">**bold** and [text](url) also work</span>
+      {#if linkPickerOpen}
+        <div class="menu link-menu fade-up">
+          <div class="menu-title">Link card</div>
+          <input placeholder="https://…" bind:value={linkUrl} onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), insertLink())} />
+          <input placeholder="Label (optional)" bind:value={linkLabel} onkeydown={(e) => e.key === 'Enter' && (e.preventDefault(), insertLink())} />
+          <button type="button" class="btn btn-primary btn-sm" onclick={insertLink} disabled={!linkUrl.trim()}>
+            <Plus size={12} weight="bold" /> Insert
+          </button>
+        </div>
+      {/if}
     </div>
   </div>
 
@@ -140,22 +155,20 @@
 
 <style>
   .token-field { display: flex; flex-direction: column; gap: 8px; }
-  .editor { display: flex; flex-direction: column; gap: 8px; }
+  .editor { display: flex; flex-direction: column; gap: 10px; }
 
-  .toolbar {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    flex-wrap: wrap;
+  /* Menus open below the pill. */
+  .bar-anchor {
+    position: relative;
+    align-self: flex-start;
+    z-index: 20;
   }
-  .toolbar .hint { font-size: 11.5px; color: var(--text-4); }
-  .toolbar :global(.spark) { color: var(--token); }
-
-  .menu-anchor { position: relative; }
+  /* Lift the open one above the pills of the fields below it. */
+  .bar-anchor.open { z-index: 60; }
 
   .menu {
     position: absolute;
-    top: calc(100% + 6px);
+    top: calc(100% + 8px);
     left: 0;
     width: 340px;
     max-height: 320px;

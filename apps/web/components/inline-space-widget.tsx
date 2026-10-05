@@ -107,7 +107,7 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
       onMouseLeave={handleMouseLeave}
     >
       <span 
-        className="font-medium text-black bg-blue-100 px-1 rounded hover:bg-blue-200 transition-colors cursor-pointer"
+        className="inline-trigger"
       >
         rocketry
       </span>
@@ -122,7 +122,7 @@ export default function InlineSpaceWidget({ align = "auto" }: { align?: "left" |
             className={`absolute top-full pt-2 z-50 w-max ${positionClasses}`}
           >
             {/* Outer wrapper */}
-            <div className="bg-white/95 backdrop-blur-md border border-black/10 rounded-2xl p-1.5 shadow-xl font-sans w-max max-w-[calc(100vw-2rem)] sm:max-w-none">
+            <div className="popup-surface p-1.5 font-sans w-max max-w-[calc(100vw-2rem)] sm:max-w-none">
               
               {/* Inner container */}
               <div className="bg-[#F6F5F3] rounded-xl flex flex-col overflow-hidden relative w-[340px] sm:w-[460px]">

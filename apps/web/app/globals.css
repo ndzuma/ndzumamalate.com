@@ -22,8 +22,13 @@
   box-sizing: border-box;
 }
 
+/* The carousels bleed to the viewport edge with 50vw maths, and vw includes
+   the vertical scrollbar, so they overshoot by a few px. clip (unlike hidden)
+   stops the sideways scroll without creating a scroll container, so sticky
+   and fixed elements keep working. */
 html {
   background: var(--background);
+  overflow-x: clip;
 }
 
 body {
@@ -36,7 +41,7 @@ body {
     linear-gradient(180deg, #fcfbf8 0%, var(--background) 100%);
   -webkit-font-smoothing: antialiased;
   text-rendering: optimizeLegibility;
-  overflow-x: hidden;
+  overflow-x: clip;
 }
 
 a {
@@ -58,6 +63,66 @@ svg {
 ::selection {
   background: rgba(17, 17, 17, 0.1);
   color: var(--foreground);
+}
+
+@layer components {
+  /* Inline widget trigger: an underlined word, quiet until hovered. */
+  .inline-trigger {
+    font-weight: 500;
+    color: var(--foreground);
+    text-decoration-line: underline;
+    text-decoration-color: rgba(17, 17, 17, 0.2);
+    text-decoration-thickness: 1.5px;
+    text-underline-offset: 4px;
+    cursor: pointer;
+    transition: text-decoration-color 150ms ease;
+  }
+  .inline-trigger:hover {
+    text-decoration-color: rgba(17, 17, 17, 0.6);
+  }
+
+  /* Every image on the site sits in a doubled hairline frame: an outer ring
+     (.image-frame) around a bordered, rounded inner box (.image-frame-inner). */
+  .image-frame {
+    --frame-radius: 1.5rem;
+    display: block;
+    padding: 6px;
+    border-radius: var(--frame-radius);
+    border: 1px solid rgba(17, 17, 17, 0.07);
+    background: rgba(255, 255, 255, 0.45);
+  }
+  .image-frame-inner {
+    position: relative;
+    display: block;
+    overflow: hidden;
+    border-radius: calc(var(--frame-radius) - 7px);
+    border: 1px solid rgba(17, 17, 17, 0.08);
+    background: rgba(17, 17, 17, 0.03);
+  }
+  .image-frame-inner > img {
+    display: block;
+    width: 100%;
+    height: auto;
+  }
+
+  /* Every widget popup shares one surface and one chip colour. */
+  .popup-surface {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border: 1px solid rgba(17, 17, 17, 0.08);
+    border-radius: 1rem;
+    box-shadow: 0 12px 32px rgba(17, 17, 17, 0.1), 0 2px 6px rgba(17, 17, 17, 0.04);
+  }
+  .popup-chip {
+    background: #f6f5f3;
+    color: var(--foreground);
+    border-radius: 0.625rem;
+    transition: background-color 150ms ease;
+  }
+  .popup-chip:hover {
+    background: #ecebe7;
+  }
 }
 
 /* Logo — spring hover, kept on CSS side intentionally */
